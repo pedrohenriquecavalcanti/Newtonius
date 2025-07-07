@@ -157,6 +157,33 @@ button:hover{background:var(--accent);}button:active{transform:scale(.96);}#mess
 #mathMenu button{background:var(--surface);color:var(--text);border:none;border-radius:var(--radius);padding:var(--pad);cursor:pointer;}
 #mathMenu button:hover{background:var(--accent);}
 
+/* ---------- MENU UNICODE ---------- */
+#unicodeMenu {
+  position: fixed;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  padding: 6px;
+  border-radius: var(--radius);
+  visibility: hidden;
+  opacity: 0;
+}
+#unicodeMenu.show{visibility:visible;opacity:1;}
+#unicodeMenu button{background:var(--surface);color:var(--text);border:none;border-radius:var(--radius);padding:var(--pad);cursor:pointer;}
+#unicodeMenu button:hover{background:var(--accent);}
+
+/* ---------- FONT SIZE SELECT ---------- */
+#fontSizeSelect {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--pad);
+  cursor: pointer;
+}
+
 /* ---------- DIALOGO LATEX ---------- */
 #latexDialog{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:1000;}
 #latexDialog .box{background:var(--surface);padding:10px;border-radius:var(--radius);min-width:260px;}
@@ -179,14 +206,24 @@ button:hover{background:var(--accent);}button:active{transform:scale(.96);}#mess
   <button id="boldBtn" title="Negrito (Ctrl+B)"><b>B</b></button>
   <button id="italicBtn" title="Itálico (Ctrl+I)"><i>I</i></button>
   <button id="underlineBtn" title="Sublinhado (Ctrl+U)"><u>U</u></button>
+  <select id="fontSizeSelect" title="Tamanho da fonte">
+    <option value="12">12</option>
+    <option value="14">14</option>
+    <option value="16" selected>16</option>
+    <option value="18">18</option>
+    <option value="24">24</option>
+    <option value="32">32</option>
+  </select>
   <button id="colorBtn" title="Cor do texto">🎨</button>
   <div id="palette"></div>
   <button id="mathBtn" title="Funções Matemáticas">🧮</button>
   <div id="mathMenu">
     <button id="supBtn">Sobrescrito</button>
     <button id="subBtn">Subscrito</button>
+    <button id="unicodeBtn">Símbolos Unicode</button>
     <button id="latexBtn">LaTeX</button>
   </div>
+  <div id="unicodeMenu"></div>
 
   <button id="hideBtn">🤫 Ocultar Texto</button>
   <button id="clearBtn">🧹 Limpar Formatação</button>
@@ -254,6 +291,10 @@ const saveSel = ()=>{const s=window.getSelection();if(s.rangeCount)savedRange=s.
 const restoreSel=()=>{if(!savedRange)return;const s=window.getSelection();s.removeAllRanges();s.addRange(savedRange);} ;
 let savedRange=null;
 
+const fontSizeSelect = document.getElementById('fontSizeSelect');
+const unicodeBtn     = document.getElementById('unicodeBtn');
+const unicodeMenu    = document.getElementById('unicodeMenu');
+
 // Mapas de caracteres Unicode para sobrescrito/subscrito
 const SUPER_MAP = {
   '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
@@ -265,6 +306,19 @@ const SUB_MAP = {
   '+':'₊','-':'₋','=':'₌','(':'₍',')':'₎',
   'a':'ₐ','e':'ₑ','o':'ₒ','x':'ₓ','h':'ₕ','k':'ₖ','l':'ₗ','m':'ₘ','n':'ₙ','p':'ₚ','s':'ₛ','t':'ₜ'
 };
+
+const UNICODE_SYMBOLS = ["→","⇌","√","∛","≈","≠","×","±","Δ","θ","π","λ","σ","Ω","μ"];
+
+UNICODE_SYMBOLS.forEach(sym=>{
+  const b=document.createElement('button');
+  b.textContent=sym;
+  b.addEventListener('click',()=>{
+    restoreSel();
+    insertNode(document.createTextNode(sym));
+    unicodeMenu.classList.remove('show');
+  });
+  unicodeMenu.appendChild(b);
+});
 
 defaultColors.forEach(c=>{
   const sw=document.createElement('div');
@@ -290,6 +344,23 @@ colorBtn.onclick = () => {
   }
 };
 document.addEventListener('click',e=>{if(!palette.contains(e.target)&&e.target!==colorBtn)palette.classList.remove('show');});
+
+fontSizeSelect.addEventListener('mousedown',saveSel);
+fontSizeSelect.addEventListener('change',()=>{
+  restoreSel();
+  const size=parseInt(fontSizeSelect.value,10);
+  const sel=window.getSelection();
+  if(!sel.rangeCount||sel.isCollapsed||!size)return;
+  const range=sel.getRangeAt(0);
+  const span=document.createElement('span');
+  span.style.fontSize=size+'px';
+  span.appendChild(range.extractContents());
+  range.insertNode(span);
+  range.setStartAfter(span);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  fontSizeSelect.value='16';
+});
 
 /* ---------- MENU MATEMÁTICO ---------- */
 const mathMenu = document.getElementById('mathMenu');
@@ -336,6 +407,15 @@ function convertSelection(map,tipo){
 }
 supBtn.onclick=()=>convertSelection(SUPER_MAP,"sobrescrito");
 subBtn.onclick=()=>convertSelection(SUB_MAP,"subscrito");
+unicodeBtn.onclick=()=>{
+  mathMenu.classList.remove('show');
+  saveSel();
+  const {left,bottom}=unicodeBtn.getBoundingClientRect();
+  unicodeMenu.style.left=`${left}px`;
+  unicodeMenu.style.top=`${bottom}px`;
+  unicodeMenu.classList.add('show');
+};
+document.addEventListener('click',e=>{if(!unicodeMenu.contains(e.target)&&e.target!==unicodeBtn)unicodeMenu.classList.remove('show');});
 latexBtn.onclick=()=>{
   mathMenu.classList.remove('show');
   restoreSel();
