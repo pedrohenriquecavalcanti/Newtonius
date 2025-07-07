@@ -167,6 +167,7 @@ button:hover{background:var(--accent);}button:active{transform:scale(.96);}#mess
   border: 1px solid var(--accent);
   padding: 6px;
   border-radius: var(--radius);
+  z-index: 1000;
   visibility: hidden;
   opacity: 0;
 }
@@ -210,9 +211,6 @@ button:hover{background:var(--accent);}button:active{transform:scale(.96);}#mess
     <option value="12">12</option>
     <option value="14">14</option>
     <option value="16" selected>16</option>
-    <option value="18">18</option>
-    <option value="24">24</option>
-    <option value="32">32</option>
   </select>
   <button id="colorBtn" title="Cor do texto">🎨</button>
   <div id="palette"></div>
@@ -359,7 +357,6 @@ fontSizeSelect.addEventListener('change',()=>{
   range.setStartAfter(span);
   sel.removeAllRanges();
   sel.addRange(range);
-  fontSizeSelect.value='16';
 });
 
 /* ---------- MENU MATEMÁTICO ---------- */
@@ -408,9 +405,9 @@ function convertSelection(map,tipo){
 supBtn.onclick=()=>convertSelection(SUPER_MAP,"sobrescrito");
 subBtn.onclick=()=>convertSelection(SUB_MAP,"subscrito");
 unicodeBtn.onclick=()=>{
+  const {left,bottom}=unicodeBtn.getBoundingClientRect();
   mathMenu.classList.remove('show');
   saveSel();
-  const {left,bottom}=unicodeBtn.getBoundingClientRect();
   unicodeMenu.style.left=`${left}px`;
   unicodeMenu.style.top=`${bottom}px`;
   unicodeMenu.classList.add('show');
