@@ -1052,10 +1052,20 @@ function showExam(exam){
     const qBtn=document.createElement('button');
     qBtn.innerHTML=`<span class="ms-topic">${getFriendlyName(disc,sub)}</span><br><span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
-    qBtn.querySelector('.ms-topic').style.color=discColors[disc];
+    const topicSpan=qBtn.querySelector('.ms-topic');
+    topicSpan.style.color=discColors[disc];
     const m=q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
     if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
-    qBtn.onclick=()=>openPdf(q.QPDFName,q.page);
+    qBtn.addEventListener('click',e=>{
+      if(e.target.closest('.ms-topic')){
+        currentDisc=disc;
+        currentSub=sub;
+        openSummary();
+        e.stopPropagation();
+      }else{
+        openPdf(q.QPDFName,q.page);
+      }
+    });
     row.appendChild(qBtn);
     row.appendChild(Object.assign(document.createElement('button'),{textContent:'Gabarito',className:'small-btn',onclick:()=>openPdf(q.GPDFName,q.gabaritoPage)}));
     const key=qKey(disc,sub,q.label);
