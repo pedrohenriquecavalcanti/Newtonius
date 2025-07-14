@@ -149,6 +149,8 @@ const examsBtn     = document.getElementById("examsBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
 const pickerSub     = document.getElementById("pickerSub");
+const pickerExamMode= document.getElementById("pickerExamMode");
+const pickerExam    = document.getElementById("pickerExam");
 const pickerComment = document.getElementById("pickerComment");
 const pickerAdd     = document.getElementById("pickerAdd");
 const pickerMicro   = document.getElementById("pickerMicro");
@@ -725,12 +727,20 @@ function countMicroProgress(entry){
 function openPicker(callback){
   pickerDisc.innerHTML = '';
   pickerSub.innerHTML  = '';
+  pickerExamMode.innerHTML='';
+  pickerExam.innerHTML='';
+  pickerExamMode.style.display='none';
+  pickerExam.style.display='none';
   for(const d of Object.keys(SUBJECT_NAMES)){
     const opt = document.createElement('option');
     opt.value = d;
     opt.textContent = d;
     pickerDisc.appendChild(opt);
   }
+  const optExam=document.createElement('option');
+  optExam.value='__exams__';
+  optExam.textContent='Provas e Simulados';
+  pickerDisc.appendChild(optExam);
   const optComment=document.createElement('option');
   optComment.value='__comment__';
   optComment.textContent='Comentário';
@@ -740,6 +750,27 @@ function openPicker(callback){
       pickerSub.style.display='none';
       pickerComment.style.display='inline-block';
       pickerMicro.style.display='none';
+      pickerExamMode.style.display='none';
+      pickerExam.style.display='none';
+    }else if(pickerDisc.value==='__exams__'){
+      pickerSub.style.display='none';
+      pickerComment.style.display='none';
+      pickerMicro.style.display='none';
+      pickerExamMode.style.display='';
+      pickerExam.style.display='';
+      pickerExamMode.innerHTML='<option value="nat">Natureza</option><option value="mat">Matemática</option>';
+      const populateExam=()=>{
+        const order=pickerExamMode.value==='mat'? examOrderMat : examOrderNat;
+        pickerExam.innerHTML='';
+        order.forEach(ex=>{
+          const o=document.createElement('option');
+          o.value=ex;
+          o.textContent=ex;
+          pickerExam.appendChild(o);
+        });
+      };
+      pickerExamMode.onchange=populateExam;
+      populateExam();
     }else{
       pickerSub.style.display='';
       pickerComment.style.display='none';
@@ -752,6 +783,8 @@ function openPicker(callback){
       });
       pickerMicro.style.display =
         pickerDisc.value==='Matemática'? 'inline-block' : 'none';
+      pickerExamMode.style.display='none';
+      pickerExam.style.display='none';
     }
   };
   pickerDisc.onchange();
@@ -760,6 +793,8 @@ function openPicker(callback){
       const txt=pickerComment.value.trim();
       if(txt) callback({comment:txt});
       pickerComment.value='';
+    }else if(pickerDisc.value==='__exams__'){
+      callback({exam:pickerExam.value,mode:pickerExamMode.value});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -835,6 +870,27 @@ function renderTrailDay(day,expand){
             showTrail(dayStr, true);
           }
         };
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
+
+      if(s.exam){
+        const subj=document.createElement('button');
+        subj.className='trail-subject';
+        subj.textContent=s.exam;
+        const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
+        if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
+        subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
         const rm=document.createElement('button');
         rm.className='trail-remove';
         rm.textContent='\u00D7';
@@ -1794,8 +1850,15 @@ importFile.addEventListener("change", ({ target }) => {
 /* Botão Voltar → decide se volta à lista de assuntos, trilha ou menu */
 backBtn.onclick = () => {
   if(currentExam){
-    currentExam=null;
-    showExamList(currentExamMode);
+    if(trailReturn){
+      const d=trailReturn;
+      currentExam=null;
+      trailReturn=null;
+      showTrail(d);
+    }else{
+      currentExam=null;
+      showExamList(currentExamMode);
+    }
     return;
   }
   if(examListOpen){
