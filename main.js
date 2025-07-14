@@ -731,6 +731,10 @@ function openPicker(callback){
     opt.textContent = d;
     pickerDisc.appendChild(opt);
   }
+  const optExam=document.createElement('option');
+  optExam.value='__exams__';
+  optExam.textContent='Provas e Simulados';
+  pickerDisc.appendChild(optExam);
   const optComment=document.createElement('option');
   optComment.value='__comment__';
   optComment.textContent='Comentário';
@@ -739,6 +743,10 @@ function openPicker(callback){
     if(pickerDisc.value==='__comment__'){
       pickerSub.style.display='none';
       pickerComment.style.display='inline-block';
+      pickerMicro.style.display='none';
+    }else if(pickerDisc.value==='__exams__'){
+      pickerSub.style.display='none';
+      pickerComment.style.display='none';
       pickerMicro.style.display='none';
     }else{
       pickerSub.style.display='';
@@ -760,6 +768,8 @@ function openPicker(callback){
       const txt=pickerComment.value.trim();
       if(txt) callback({comment:txt});
       pickerComment.value='';
+    }else if(pickerDisc.value==='__exams__'){
+      callback({examMenu:true});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -835,6 +845,25 @@ function renderTrailDay(day,expand){
             showTrail(dayStr, true);
           }
         };
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
+
+      if(s.examMenu){
+        const subj=document.createElement('button');
+        subj.className='trail-subject';
+        subj.textContent='Provas e Simulados';
+        subj.onclick=()=>{ trailReturn=dayStr; showExamMenu(); };
         const rm=document.createElement('button');
         rm.className='trail-remove';
         rm.textContent='\u00D7';
