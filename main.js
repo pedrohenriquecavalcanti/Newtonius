@@ -1645,7 +1645,17 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     alert('Visualização de PDF indisponível.');
     return;
   }
-  const pdf   = await pdfjsLib.getDocument(`PDFs/${pdfName}`).promise;
+  let pdf;
+  try {
+    pdf = await pdfjsLib.getDocument(`PDFs/${pdfName}`).promise;
+  } catch (err) {
+    try {
+      pdf = await pdfjsLib.getDocument(`PDFsD1/${pdfName}`).promise;
+    } catch (err2) {
+      alert('PDF não encontrado.');
+      return;
+    }
+  }
   const dpr   = window.devicePixelRatio || 1;
   const scale = quality * dpr * zoom;
 
