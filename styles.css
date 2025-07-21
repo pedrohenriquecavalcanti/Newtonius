@@ -835,7 +835,7 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.quimica    { background: var(--c-qui); }
 .trail-subject.fisica     { background: var(--c-fis); }
 .trail-subject.matematica { background: var(--c-mat); }
-.trail-subject.d1         { background: var(--c-d1); }
+.trail-subject.d1         { background: #F5C500; }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
