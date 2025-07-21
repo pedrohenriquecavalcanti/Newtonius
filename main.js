@@ -247,6 +247,8 @@ const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
 const closeImgBtn  = document.getElementById("closeImgBtn");
 const previewImg   = document.getElementById("imgPreview");
+const answerModal  = document.getElementById("answerModal");
+const answerBox    = document.getElementById("answerBox");
 const summaryContainer = document.getElementById("summaryContainer");
 const summaryFrame     = document.getElementById("summaryFrame");
 
@@ -1256,7 +1258,17 @@ function showExam(exam){
       }
     });
     row.appendChild(qBtn);
-    row.appendChild(Object.assign(document.createElement('button'),{textContent:'Gabarito',className:'small-btn',onclick:()=>openPdf(q.GPDFName,q.gabaritoPage)}));
+    row.appendChild(Object.assign(document.createElement('button'), {
+      textContent: 'Gabarito',
+      className: 'small-btn',
+      onclick: () => {
+        if (q.gabaritoAnswer) {
+          openAnswer(q.gabaritoAnswer);
+        } else {
+          openPdf(q.GPDFName, q.gabaritoPage);
+        }
+      }
+    }));
     const key=qKey(disc,sub,q.label);
     let st=+localStorage.getItem(key)||0;
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
@@ -1468,8 +1480,17 @@ function showQuestions(disc, sub, fromStar = false) {
 
     /* Botão gabarito */
     row.appendChild(Object.assign(
-      document.createElement("button"), { textContent:"Gabarito", className:"small-btn",
-      onclick: () => openPdf(q.GPDFName, q.gabaritoPage) }));
+      document.createElement("button"), {
+        textContent: "Gabarito",
+        className: "small-btn",
+        onclick: () => {
+          if (q.gabaritoAnswer) {
+            openAnswer(q.gabaritoAnswer);
+          } else {
+            openPdf(q.GPDFName, q.gabaritoPage);
+          }
+        }
+      }));
 
     /* Caixa ✓ / ✗ */
     const key    = qKey(disc, sub, q.label);          // estado ✓/✗
@@ -1683,6 +1704,24 @@ if (imgContainer) {
   });
 }
 
+function openAnswer(letter) {
+  if (!answerBox) {
+    alert(`Gabarito: ${letter}`);
+    return;
+  }
+  answerBox.textContent = letter;
+  answerModal.style.display = 'flex';
+}
+function closeAnswer(){
+  answerModal.style.display = 'none';
+  if (answerBox) answerBox.textContent = '';
+}
+if (answerModal) {
+  answerModal.addEventListener('click', e => {
+    if (e.target === answerModal) closeAnswer();
+  });
+}
+
 // --- Simulado de Matemática (10 questões de assuntos aleatórios) ---
 function showMicroSim(entry) {
   currentDisc = 'Matemática';
@@ -1760,8 +1799,17 @@ function showMicroSim(entry) {
     row.appendChild(qBtn);
 
     row.appendChild(Object.assign(
-      document.createElement('button'),{textContent:'Gabarito',className:'small-btn',
-      onclick:()=>openPdf(q.GPDFName,q.gabaritoPage)}));
+      document.createElement('button'), {
+        textContent: 'Gabarito',
+        className: 'small-btn',
+        onclick: () => {
+          if (q.gabaritoAnswer) {
+            openAnswer(q.gabaritoAnswer);
+          } else {
+            openPdf(q.GPDFName, q.gabaritoPage);
+          }
+        }
+      }));
 
     const key = qKey(disc,sub,q.label);
     let st = +localStorage.getItem(key)||0;
