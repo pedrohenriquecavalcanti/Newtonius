@@ -829,7 +829,7 @@ toggleD1Btn.onclick = () => {
 
 function loadTrail(dayStr){
   const raw = localStorage.getItem(`trail_${dayStr}`);
-  return raw ? JSON.parse(raw) : { novo: [], revisao: [] };
+  return raw ? JSON.parse(raw) : { novo: [] };
 }
 function saveTrail(dayStr,data){
   localStorage.setItem(`trail_${dayStr}`, JSON.stringify(data));
@@ -1073,7 +1073,6 @@ function renderTrailDay(day,expand){
     return sec;
   };
   content.appendChild(makeSection('Novo','novo'));
-  content.appendChild(makeSection('Revisão','revisao'));
 
   btn.onclick=()=>{
     const open=btn.classList.toggle('open');
