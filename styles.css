@@ -398,6 +398,12 @@ button:hover { filter: brightness(1.2); }
   max-height: 80%;
   box-shadow: 0 0 10px rgba(0, 0, 0, .5);
 }
+.answer-letter{
+  margin:40px;
+  font-size:48px;
+  color:#fff;
+  text-align:center;
+}
 #closePdfBtn {
   position: fixed;
   top: 24px;

@@ -348,7 +348,8 @@ function buildExamMap(list, mode='nat'){
         QPDFName: item.QPDFName,
         page: item.page,
         GPDFName: item.GPDFName,
-        gabaritoPage: item.gabaritoPage
+        gabaritoPage: item.gabaritoPage,
+        gabaritoAnswer: item.gabaritoAnswer
       }
     });
   });
@@ -1256,7 +1257,16 @@ function showExam(exam){
       }
     });
     row.appendChild(qBtn);
-    row.appendChild(Object.assign(document.createElement('button'),{textContent:'Gabarito',className:'small-btn',onclick:()=>openPdf(q.GPDFName,q.gabaritoPage)}));
+    row.appendChild(Object.assign(document.createElement('button'),{
+      textContent:'Gabarito',
+      className:'small-btn',
+      onclick:()=>{
+        if(q.gabaritoAnswer){
+          openAnswer(q.gabaritoAnswer);
+        }else{
+          openPdf(q.GPDFName,q.gabaritoPage);
+        }
+      }}));
     const key=qKey(disc,sub,q.label);
     let st=+localStorage.getItem(key)||0;
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
@@ -1468,8 +1478,17 @@ function showQuestions(disc, sub, fromStar = false) {
 
     /* Botão gabarito */
     row.appendChild(Object.assign(
-      document.createElement("button"), { textContent:"Gabarito", className:"small-btn",
-      onclick: () => openPdf(q.GPDFName, q.gabaritoPage) }));
+      document.createElement("button"), {
+        textContent:"Gabarito",
+        className:"small-btn",
+        onclick: () => {
+          if(q.gabaritoAnswer){
+            openAnswer(q.gabaritoAnswer);
+          } else {
+            openPdf(q.GPDFName, q.gabaritoPage);
+          }
+        }
+      }));
 
     /* Caixa ✓ / ✗ */
     const key    = qKey(disc, sub, q.label);          // estado ✓/✗
@@ -1639,7 +1658,7 @@ editDiv.addEventListener('click', function(e) {
 async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const pageList = Array.isArray(pages) ? pages : [pages];
   pdfContainer.style.display = "flex";
-  pdfContainer.querySelectorAll("canvas").forEach(c=>c.remove());
+  pdfContainer.querySelectorAll("canvas, .answer-letter").forEach(el=>el.remove());
 
   if (!window.pdfjsLib) {
     alert('Visualização de PDF indisponível.');
@@ -1672,7 +1691,21 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
   }
 }
-closeBtn.onclick = () => (pdfContainer.style.display = "none");
+
+function openAnswer(answer){
+  pdfContainer.style.display = 'flex';
+  pdfContainer.querySelectorAll('canvas, .answer-letter').forEach(el=>el.remove());
+  const div = Object.assign(document.createElement('div'),{
+    className:'answer-letter',
+    textContent: `Gabarito: ${answer}`
+  });
+  div.style.cssText = 'font-size:48px;color:#fff;margin:40px;text-align:center;';
+  pdfContainer.appendChild(div);
+}
+closeBtn.onclick = () => {
+  pdfContainer.style.display = "none";
+  pdfContainer.querySelectorAll("canvas, .answer-letter").forEach(el=>el.remove());
+};
 
 function openImage(url) {
   if (!previewImg) {
@@ -1770,8 +1803,16 @@ function showMicroSim(entry) {
     row.appendChild(qBtn);
 
     row.appendChild(Object.assign(
-      document.createElement('button'),{textContent:'Gabarito',className:'small-btn',
-      onclick:()=>openPdf(q.GPDFName,q.gabaritoPage)}));
+      document.createElement('button'),{
+        textContent:'Gabarito',
+        className:'small-btn',
+        onclick:()=>{
+          if(q.gabaritoAnswer){
+            openAnswer(q.gabaritoAnswer);
+          }else{
+            openPdf(q.GPDFName,q.gabaritoPage);
+          }
+        }}));
 
     const key = qKey(disc,sub,q.label);
     let st = +localStorage.getItem(key)||0;
