@@ -177,27 +177,27 @@ const INCIDENCE_RANKINGS = {
     "21": '8º',  "22": '21º'
   },
   'Linguagens': {
-    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
-    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
-    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
-    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
-    "21": '21º', "22": '22º', "23": '23º'
+    "01": '13º', "02": '6º',  "03": '8º',  "04": '7º',  "05": '14º',
+    "06": '12º', "07": '10º', "08": '11º', "09": '19º', "10": '22º',
+    "11": '20º', "12": '23º', "13": '21º', "14": '4º',  "15": '15º',
+    "16": '17º', "17": '18º', "18": '1º',  "19": '2º',  "20": '9º',
+    "21": '5º',  "22": '3º',  "23": '16º'
   },
   'Geografia e Sociologia': {
-    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
-    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
-    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
-    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
-    "21": '21º', "22": '22º', "23": '23º', "24": '24º', "25": '25º',
-    "26": '26º'
+    "01": '11º', "02": '19º', "03": '10º', "04": '21º', "05": '14º',
+    "06": '16º', "07": '25º', "08": '1º',  "09": '6º',  "10": '8º',
+    "11": '17º', "12": '7º',  "13": '23º', "14": '13º', "15": '5º',
+    "16": '22º', "17": '26º', "18": '3º',  "19": '4º',  "20": '2º',
+    "21": '9º',  "22": '20º', "23": '15º', "24": '12º', "25": '24º',
+    "26": '18º'
   },
   'História e Filosofia': {
-    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
-    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
-    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
-    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
-    "21": '21º', "22": '22º', "23": '23º', "24": '24º', "25": '25º',
-    "26": '26º', "27": '27º', "28": '28º'
+    "01": '21º', "02": '26º', "03": '1º',  "04": '24º', "05": '3º',
+    "06": '5º',  "07": '11º', "08": '4º',  "09": '13º', "10": '2º',
+    "11": '22º', "12": '23º', "13": '17º', "14": '25º', "15": '14º',
+    "16": '15º', "17": '9º',  "18": '20º', "19": '18º', "20": '19º',
+    "21": '27º', "22": '7º',  "23": '28º', "24": '6º',  "25": '8º',
+    "26": '12º', "27": '10º', "28": '16º'
   },
   'Redação': { "01": '1º' }
 };
@@ -661,12 +661,10 @@ function getTodaySolvedCount() {
 
 function getTotalXPCount() {
   let count = 0;
-  // Para cada disciplina...
   for (const disc in questoesData) {
-    // ...para cada assunto...
+    if (D1_DISCIPLINES.includes(disc)) continue;
     for (const sub in questoesData[disc]) {
       const qs = questoesData[disc][sub];
-      // ...para cada questão, conta se st===1 (✓) ou st===2 (✗)
       qs.forEach(q => {
         const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
         if (st === 1 || st === 2) count++;
@@ -678,9 +676,9 @@ function getTotalXPCount() {
 
 /** Retorna o total de questões disponíveis no banco */
 function getTotalQuestionsCount() {
-  // percorre questoesData somando todos os comprimentos dos arrays
-  return Object.values(questoesData)
-    .flatMap(subs => Object.values(subs))
+  return Object.entries(questoesData)
+    .filter(([d]) => !D1_DISCIPLINES.includes(d))
+    .flatMap(([, subs]) => Object.values(subs))
     .reduce((sum, arr) => sum + arr.length, 0);
 }
 if (typeof sessionStorage !== 'undefined' &&
@@ -740,7 +738,7 @@ function showMenu () {
   for (const disc of discList) {
     const line = lines.appendChild(Object.assign(
       document.createElement("div"), { className: "disc-line" }));
-    line.appendChild(Object.assign(
+    const btn = Object.assign(
       document.createElement("button"), {
         className: `disc-btn ${discClasses[disc]}`,
         textContent: disc,
@@ -753,9 +751,11 @@ function showMenu () {
             showSubjects(disc);
           }
         },
-      }));
+      });
+    if(disc === 'Geografia e Sociologia') btn.style.padding='0 4px';
+    line.appendChild(btn);
 
-    if (disc !== 'Redação') {
+    if (!D1_DISCIPLINES.includes(disc)) {
       const stars = line.appendChild(Object.assign(
         document.createElement("div"), { className: "stars-container" }));
       for (const sub of Object.keys(questoesData[disc]).sort()) {
@@ -1262,7 +1262,7 @@ function showExam(exam){
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
     const paint=()=>{box.textContent=st===1?'\u2713':st===2?'\u2717':'';box.style.color=st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';};
     paint();
-    box.onclick=()=>{st=(st+1)%3;localStorage.setItem(key,st);const today=getTodayStr();const logKey=`log_${today}_${key}`;if(st===1||st===2){localStorage.setItem(logKey,'1');}else{localStorage.removeItem(logKey);}paint();refresh();};
+    box.onclick=()=>{st=(st+1)%3;localStorage.setItem(key,st);const today=getTodayStr();const logKey=`log_${today}_${key}`;if(!D1_DISCIPLINES.includes(disc)){if(st===1||st===2){localStorage.setItem(logKey,'1');}else{localStorage.removeItem(logKey);}}paint();refresh();};
     const cKey=`comment_${key}`;
     const editDiv=document.createElement('div');
     editDiv.className='comment-edit';
@@ -1489,12 +1489,14 @@ function showQuestions(disc, sub, fromStar = false) {
       const today  = getTodayStr();
       const logKey = `log_${today}_${key}`;             // registro diário
 
-      if (st === 1 || st === 2) {
-        // marcou ✓ ou ✗ → garante o log
-        localStorage.setItem(logKey, "1");
-      } else {
-        // voltou pra “não marcado” → remove o log
-        localStorage.removeItem(logKey);
+      if (!D1_DISCIPLINES.includes(disc)) {
+        if (st === 1 || st === 2) {
+          // marcou ✓ ou ✗ → garante o log
+          localStorage.setItem(logKey, "1");
+        } else {
+          // voltou pra “não marcado” → remove o log
+          localStorage.removeItem(logKey);
+        }
       }
 
       paint();
@@ -1776,12 +1778,14 @@ function showMicroSim(entry) {
       const today=getTodayStr();
       const logKey=`log_${today}_${key}`;
       const msKey=`logmicro_${today}_${key}`;
-      if(st===1||st===2){
-        localStorage.setItem(logKey,'1');
-        localStorage.setItem(msKey,'1');
-      } else {
-        localStorage.removeItem(logKey);
-        localStorage.removeItem(msKey);
+      if(!D1_DISCIPLINES.includes(disc)){
+        if(st===1||st===2){
+          localStorage.setItem(logKey,'1');
+          localStorage.setItem(msKey,'1');
+        } else {
+          localStorage.removeItem(logKey);
+          localStorage.removeItem(msKey);
+        }
       }
       paint();
       refreshStats();
