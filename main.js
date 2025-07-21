@@ -224,6 +224,9 @@ const discColors = {
   'Redação': "var(--c-d1)"
 };
 
+// Valor especial usado para representar a disciplina inteira
+const ALL_SUB = '__all__';
+
 const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação'];
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
@@ -846,6 +849,15 @@ function countDailySolved(dateStr, disc, sub){
   return c;
 }
 
+// Soma o progresso do dia em todas as matérias de uma disciplina
+function countDailySolvedDisc(dateStr, disc){
+  let tot=0;
+  for(const sub of Object.keys(questoesData[disc]||{})){
+    tot += countDailySolved(dateStr,disc,sub);
+  }
+  return tot;
+}
+
 // Conta quantas questões de um micro simulado já foram respondidas
 function countMicroProgress(entry){
   if(!entry || !Array.isArray(entry.qs)) return 0;
@@ -909,6 +921,10 @@ function openPicker(callback){
       pickerSub.style.display='';
       pickerComment.style.display='none';
       pickerSub.innerHTML = '';
+      const optAll=document.createElement('option');
+      optAll.value=ALL_SUB;
+      optAll.textContent='Disciplina Inteira';
+      pickerSub.appendChild(optAll);
       SUBJECT_NAMES[pickerDisc.value].forEach((n,i)=>{
         const o=document.createElement('option');
         o.value=String(i+1).padStart(2,'0');
@@ -1040,17 +1056,27 @@ function renderTrailDay(day,expand){
       }
 
       const isMicro = s.sub==='micro';
+      const isDisc  = s.sub===ALL_SUB;
       const label = isMicro
         ? 'Simulado de Matemática'
-        : `${s.disc}: ${getFriendlyName(s.disc,s.sub)}`;
+        : isDisc
+          ? s.disc
+          : `${s.disc}: ${getFriendlyName(s.disc,s.sub)}`;
       const qcount = isMicro
         ? countMicroProgress(s)
-        : countDailySolved(dayStr,s.disc,s.sub);
+        : isDisc
+          ? countDailySolvedDisc(dayStr,s.disc)
+          : countDailySolved(dayStr,s.disc,s.sub);
 
       const subj=document.createElement('button');
       subj.className=`trail-subject ${discClasses[s.disc]}`;
       subj.textContent=label;
-      subj.onclick=()=>{ trailReturn=dayStr; isMicro? showMicroSim(s) : showQuestions(s.disc,s.sub); };
+      subj.onclick=()=>{ 
+        trailReturn=dayStr; 
+        if(isMicro) showMicroSim(s); 
+        else if(isDisc) showSubjects(s.disc); 
+        else showQuestions(s.disc,s.sub); 
+      };
 
       const count=document.createElement('span');
       count.className='trail-count';
