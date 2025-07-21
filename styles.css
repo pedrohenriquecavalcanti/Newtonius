@@ -30,7 +30,7 @@
   --c-qui:  #0093D6;
   --c-fis:  #904992;
   --c-mat:  #F5821F;
-  --c-d1:   #F5C500;
+  --c-d1:   var(--c-bg-panel);
 }
 
 /* =====================================================================================
@@ -221,6 +221,7 @@ button:hover { filter: brightness(1.2); }
   display: inline-flex;        /* ativa modelo flex no próprio botão   */
   align-items: center;         /* centra o conteúdo na altura          */
   justify-content: center;     /* já centraliza horizontalmente também */
+  white-space: nowrap;
 }
 .disc-btn.biologia   { background: var(--c-bio); }
 .disc-btn.quimica    { background: var(--c-qui); }
