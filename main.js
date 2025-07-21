@@ -586,7 +586,7 @@ function showMenu () {
   headerTitle.onclick = null;
   enterHome();            // aplica o visual preto + ajustes
   updateHeader(true);
-  document.getElementById('headerStats').style.visibility='visible';
+  document.getElementById('headerStats').style.visibility='hidden';
   clear();                   // <- apaga o conteúdo de #app sem afetar xpModal
 
   /* 3 ▸ Introdução */
@@ -626,28 +626,20 @@ function showMenu () {
       }));
     const stars = line.appendChild(Object.assign(
       document.createElement("div"), { className: "stars-container" }));
-    for (const sub of Object.keys(questoesData[disc]).sort()) {
-      const star = stars.appendChild(Object.assign(
-        document.createElement("span"), { className: "star" }));
-      star.innerHTML = `<span class="star-index">${sub}</span>`;
-      let st;
-      if (disc === 'D1') {
-        st = +localStorage.getItem(`d1_star_${sub}`) || 0;
-      } else {
-        st = calcStarState(disc, sub);
-      }
-      updateStar(star, st);
-      if (disc === 'D1') {
-        star.onclick = () => {
-          st = (st + 1) % 5;
-          localStorage.setItem(`d1_star_${sub}`, st);
-          updateStar(star, st);
-        };
-      } else {
+    if (disc !== 'D1') {
+      for (const sub of Object.keys(questoesData[disc]).sort()) {
+        const star = stars.appendChild(Object.assign(
+          document.createElement("span"), { className: "star" }));
+        star.innerHTML = `<span class="star-index">${sub}</span>`;
+        let st = calcStarState(disc, sub);
+        updateStar(star, st);
         star.onclick = () => {
           showQuestions(disc, sub, true); // se veio da estrela, volta para Home
         };
       }
+    } else {
+      // mantém largura do contêiner sem exibir estrelas
+      stars.style.minHeight = "44px";
     }
   }
   toggleSettingsVisibility(true);   // mostra engrenagem
@@ -1227,7 +1219,7 @@ function showSubjects(disc) {
       document.createElement("button"), {
         className: "subject-btn",
         textContent: getFriendlyName(disc, sub),
-        onclick: () => showQuestions(disc, sub)
+        onclick: () => { currentDisc = disc; currentSub = sub; openSummary(); }
       }
     ));
 
