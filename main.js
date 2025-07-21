@@ -624,26 +624,16 @@ function showMenu () {
         textContent: disc,
         onclick: () => showSubjects(disc),
       }));
-    const stars = line.appendChild(Object.assign(
-      document.createElement("div"), { className: "stars-container" }));
-    for (const sub of Object.keys(questoesData[disc]).sort()) {
-      const star = stars.appendChild(Object.assign(
-        document.createElement("span"), { className: "star" }));
-      star.innerHTML = `<span class="star-index">${sub}</span>`;
-      let st;
-      if (disc === 'D1') {
-        st = +localStorage.getItem(`d1_star_${sub}`) || 0;
-      } else {
-        st = calcStarState(disc, sub);
-      }
-      updateStar(star, st);
-      if (disc === 'D1') {
-        star.onclick = () => {
-          st = (st + 1) % 5;
-          localStorage.setItem(`d1_star_${sub}`, st);
-          updateStar(star, st);
-        };
-      } else {
+
+    if (disc !== 'D1') {
+      const stars = line.appendChild(Object.assign(
+        document.createElement("div"), { className: "stars-container" }));
+      for (const sub of Object.keys(questoesData[disc]).sort()) {
+        const star = stars.appendChild(Object.assign(
+          document.createElement("span"), { className: "star" }));
+        star.innerHTML = `<span class="star-index">${sub}</span>`;
+        let st = calcStarState(disc, sub);
+        updateStar(star, st);
         star.onclick = () => {
           showQuestions(disc, sub, true); // se veio da estrela, volta para Home
         };
@@ -1207,7 +1197,13 @@ function showSubjects(disc) {
       : pct >= 60 ? "stat orange"
       : "stat red";
   }
-  refreshDiscStats();
+  if (disc === 'D1') {
+    statDiv.style.visibility = 'hidden';
+    statDiv.textContent = '';
+  } else {
+    statDiv.style.visibility = 'visible';
+    refreshDiscStats();
+  }
 
   // 5) Monta a lista de assuntos na ordem certa
   let subs = Object.keys(questoesData[disc]);
@@ -1227,15 +1223,25 @@ function showSubjects(disc) {
       document.createElement("button"), {
         className: "subject-btn",
         textContent: getFriendlyName(disc, sub),
-        onclick: () => showQuestions(disc, sub)
+        onclick: () => {
+          if (disc === 'D1') {
+            currentDisc = disc;
+            currentSub = sub;
+            openSummary();
+          } else {
+            showQuestions(disc, sub);
+          }
+        }
       }
     ));
 
-    // badge de ranking de incidência
-    btn.insertAdjacentHTML("beforeend",
-      `<span class="subject-badge-rect">
-         ${INCIDENCE_RANKINGS[disc]?.[sub]||""}
-       </span>`);
+    if (disc !== 'D1') {
+      // badge de ranking de incidência
+      btn.insertAdjacentHTML("beforeend",
+        `<span class="subject-badge-rect">
+           ${INCIDENCE_RANKINGS[disc]?.[sub]||""}
+         </span>`);
+    }
 
     // faixa de cor de desempenho
     const qs = questoesData[disc][sub];
