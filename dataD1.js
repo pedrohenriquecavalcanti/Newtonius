@@ -1,0 +1,1 @@
+window.listaQuestoesD1 = [];

@@ -16,7 +16,10 @@ const SUBJECT_TOTALS = {
   Química: 24,
   Física: 20,
   Matemática: 22,
-  D1: 6,
+  'Linguagens': 23,
+  'Geografia e Sociologia': 26,
+  'História e Filosofia': 28,
+  'Redação': 1,
 };
 
 /* Lista “amigável” dos assuntos: índice → nome completo.
@@ -57,14 +60,90 @@ const SUBJECT_NAMES = {
     '15. Paralelogramos', '16. Triângulos', '17. Cículos e Projeção', '18. Prismas e Pirâmides',
     '19. Esferas e Cones', '20. Análise Combinatória', '21. Probabilidade', '22. Matriz e Determinante'
   ],
-  D1: [
-    'Linguagens',
-    'História',
-    'Geografia',
-    'Filosofia',
-    'Sociologia',
-    'Redação'
+  'Linguagens': [
+    '1. Funções de Linguagem',
+    '2. Gêneros Textuais',
+    '3. Linguística e Formação do Português',
+    '4. Variantes Linguísticas',
+    '5. Linguagem Formal e Informal',
+    '6. Argumentação e Progressão Temática',
+    '7. Recursos Expressivos',
+    '8. Figuras de Linguagem',
+    '9. Seleção Lexical',
+    '10. Texto Literário e Utilitário',
+    '11. Modos e Tempos Verbais',
+    '12. Concordância',
+    '13. Estrutura Sintática',
+    '14. Análise de Poemas',
+    '15. Romantismo e Realismo',
+    '16. Vanguardas Europeias e Pré-Modernismo',
+    '17. Modernismo',
+    '18. Artes e Expressão Artística no Brasil',
+    '19. Mundo Globalizado e Tecnologia',
+    '20. Direitos Humanos e Luta Social',
+    '21. Preconceito e Violência contra a Mulher',
+    '22. Educação Física, Saúde e Estética',
+    '23. Interpretação de Temas Diversos'
   ],
+  'Geografia e Sociologia': [
+    '1. Cartografia e Meteorologia',
+    '2. Tectonismo',
+    '3. Estrutura Geológica e Formação de Rochas',
+    '4. Relevo Brasileiro',
+    '5. Clima Brasileiro',
+    '6. Massas de Ar e Correntes Marítimas',
+    '7. Geografia Mundo',
+    '8. Demografia',
+    '9. Urbanização',
+    '10. Agricultura Moderna',
+    '11. Sistemas Agrários e Solos',
+    '12. Impacto Ambiental',
+    '13. Hidrografia Brasileira',
+    '14. Preservação do Meio Ambiente',
+    '15. ONU e Direitos Humanos',
+    '16. Conflitos do Oriente Médio',
+    '17. Conceitos de Sociologia',
+    '18. Segregação Racial e Lutas Sociais',
+    '19. Questões de Gênero',
+    '20. Globalização e Precarização do Trabalho',
+    '21. Tecnologia',
+    '22. Pós-Modernidade',
+    '23. Indústria Cultural',
+    '24. Modelos de Produção',
+    '25. Economia Mundial Recente',
+    '26. Blocos Econômicos e Separatismo'
+  ],
+  'História e Filosofia': [
+    '1. Antiguidade Oriental',
+    '2. Mundo Grego',
+    '3. Surgimento da Filosofia',
+    '4. Império Romano',
+    '5. História do Direito e da Democracia',
+    '6. Ascensão do Feudalismo',
+    '7. Queda do Feudalismo',
+    '8. Revolução Científica',
+    '9. Era Pré-Colombiana e América Espanhola',
+    '10. Escravidão e Pacto Colonial',
+    '11. Ciclos Econômicos Brasileiros',
+    '12. Contratualismo e Estados Modernos',
+    '13. Antigo Regime e Iluminismo',
+    '14. Revolução Francesa',
+    '15. Revolução Industrial',
+    '16. Kant e Nietzsche',
+    '17. Brasil Imperial',
+    '18. República Velha',
+    '19. Revoltas e Guerras do Brasil',
+    '20. Imperialismo',
+    '21. História dos EUA e da Rússia',
+    '22. Era Vargas',
+    '23. Industrialização Brasileira',
+    '24. Segunda Grande Guerra e Totalitarismo',
+    '25. Guerra Fria',
+    '26. República Populista',
+    '27. Ditadura e Nova República',
+    '28. Constituições Brasileiras'
+  ],
+  'Redação': ['1. Redação']
 };
 
 /* Ranking de incidência (com base no ENEM) para mostrar badge.      */
@@ -97,9 +176,30 @@ const INCIDENCE_RANKINGS = {
     "16": '9º',  "17": '4º',  "18": '13º', "19": '10º', "20": '11º',
     "21": '8º',  "22": '21º'
   },
-  D1: {
-    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º', "06": '6º'
-  }
+  'Linguagens': {
+    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
+    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
+    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
+    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
+    "21": '21º', "22": '22º', "23": '23º'
+  },
+  'Geografia e Sociologia': {
+    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
+    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
+    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
+    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
+    "21": '21º', "22": '22º', "23": '23º', "24": '24º', "25": '25º',
+    "26": '26º'
+  },
+  'História e Filosofia': {
+    "01": '1º', "02": '2º', "03": '3º', "04": '4º', "05": '5º',
+    "06": '6º', "07": '7º', "08": '8º', "09": '9º', "10": '10º',
+    "11": '11º', "12": '12º', "13": '13º', "14": '14º', "15": '15º',
+    "16": '16º', "17": '17º', "18": '18º', "19": '19º', "20": '20º',
+    "21": '21º', "22": '22º', "23": '23º', "24": '24º', "25": '25º',
+    "26": '26º', "27": '27º', "28": '28º'
+  },
+  'Redação': { "01": '1º' }
 };
 
 /* Mapeia cada disciplina para a classe CSS que define sua cor.      */
@@ -108,15 +208,25 @@ const discClasses = {
   Química:    "quimica",
   Física:     "fisica",
   Matemática: "matematica",
-  D1:         "d1",
+  'Linguagens': "d1",
+  'Geografia e Sociologia': "d1",
+  'História e Filosofia': "d1",
+  'Redação': "d1",
 };
 const discColors = {
   Biologia: "var(--c-bio)",
   Química:  "var(--c-qui)",
   Física:   "var(--c-fis)",
   Matemática: "var(--c-mat)",
-  D1: "var(--c-d1)"
+  'Linguagens': "var(--c-d1)",
+  'Geografia e Sociologia': "var(--c-d1)",
+  'História e Filosofia': "var(--c-d1)",
+  'Redação': "var(--c-d1)"
 };
+
+const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação'];
+
+let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
 const EXAM_DATE = new Date('2025-11-09T00:00:00-03:00');
@@ -156,6 +266,7 @@ const pickerAdd     = document.getElementById("pickerAdd");
 const pickerMicro   = document.getElementById("pickerMicro");
 const pickerCancel  = document.getElementById("pickerCancel");
 const orderHint     = document.getElementById("orderHint");
+const toggleD1Btn   = document.getElementById("toggleD1Btn");
 
 /* ================================================================
    3. ESTADO MUTÁVEL
@@ -172,9 +283,18 @@ let currentExamMode = 'nat'; // 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
-const questoesData = buildBancoQuestoes(window.listaQuestoes || []);
-const { map: examsDataNat, order: examOrderNat } = buildExamMap(window.listaQuestoes || [], 'nat');
-const { map: examsDataMat, order: examOrderMat } = buildExamMap(window.listaQuestoes || [], 'mat');
+const questoesData = buildBancoQuestoes([
+  ...(window.listaQuestoes || []),
+  ...(window.listaQuestoesD1 || [])
+]);
+const { map: examsDataNat, order: examOrderNat } = buildExamMap([
+  ...(window.listaQuestoes || []),
+  ...(window.listaQuestoesD1 || [])
+], 'nat');
+const { map: examsDataMat, order: examOrderMat } = buildExamMap([
+  ...(window.listaQuestoes || []),
+  ...(window.listaQuestoesD1 || [])
+], 'mat');
 
 /* ================================================================
    4. FUNÇÕES UTILITÁRIAS (não tocam no DOM)
@@ -615,17 +735,27 @@ function showMenu () {
   const lines = app.appendChild(Object.assign(
     document.createElement("div"), { className: "metacog-lines" }));
 
-  for (const disc of ["Biologia","Química","Física","Matemática","D1"]) {
+  const discList = ["Biologia","Química","Física","Matemática"];
+  if(d1Enabled) discList.push(...D1_DISCIPLINES);
+  for (const disc of discList) {
     const line = lines.appendChild(Object.assign(
       document.createElement("div"), { className: "disc-line" }));
     line.appendChild(Object.assign(
       document.createElement("button"), {
         className: `disc-btn ${discClasses[disc]}`,
         textContent: disc,
-        onclick: () => showSubjects(disc),
+        onclick: () => {
+          if(disc === 'Redação') {
+            currentDisc = disc;
+            currentSub = '01';
+            openDisciplineSummary(disc);
+          } else {
+            showSubjects(disc);
+          }
+        },
       }));
 
-    if (disc !== 'D1') {
+    if (disc !== 'Redação') {
       const stars = line.appendChild(Object.assign(
         document.createElement("div"), { className: "stars-container" }));
       for (const sub of Object.keys(questoesData[disc]).sort()) {
@@ -683,6 +813,18 @@ examsBtn.onclick = () => {
   showExamMenu();
 };
 
+function updateD1Btn(){
+  toggleD1Btn.textContent = d1Enabled ? 'Desativar D1' : 'Ativar D1';
+}
+
+toggleD1Btn.onclick = () => {
+  d1Enabled = !d1Enabled;
+  localStorage.setItem('d1Enabled', JSON.stringify(d1Enabled));
+  settingsMenu.style.display = 'none';
+  updateD1Btn();
+  if(currentDisc === null) showMenu();
+};
+
 
 function loadTrail(dayStr){
   const raw = localStorage.getItem(`trail_${dayStr}`);
@@ -722,6 +864,7 @@ function openPicker(callback){
   pickerExamMode.style.display='none';
   pickerExam.style.display='none';
   for(const d of Object.keys(SUBJECT_NAMES)){
+    if(!d1Enabled && D1_DISCIPLINES.includes(d)) continue;
     const opt = document.createElement('option');
     opt.value = d;
     opt.textContent = d;
@@ -1143,13 +1286,19 @@ function showSubjects(disc) {
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
 
+  if(disc === 'Redação') {
+    currentSub = '01';
+    openDisciplineSummary(disc);
+    return;
+  }
+
   // 1) Atualiza o cabeçalho normalmente
   updateHeader(true, disc);
   document.getElementById('headerStats').style.visibility='visible';
   orderHint.style.display = 'none';
 
   // 2) Botão Resumo e ordenação
-  if (disc === 'Física' || disc === 'Matemática') {
+  if (['Física','Matemática','Linguagens','Geografia e Sociologia','História e Filosofia'].includes(disc)) {
     summaryBtn.style.display = 'inline-block';
     summaryBtn.textContent = 'Resumo';
     summaryBtn.onclick = () => openDisciplineSummary(disc);
@@ -1197,13 +1346,8 @@ function showSubjects(disc) {
       : pct >= 60 ? "stat orange"
       : "stat red";
   }
-  if (disc === 'D1') {
-    statDiv.style.visibility = 'hidden';
-    statDiv.textContent = '';
-  } else {
-    statDiv.style.visibility = 'visible';
-    refreshDiscStats();
-  }
+  statDiv.style.visibility = 'visible';
+  refreshDiscStats();
 
   // 5) Monta a lista de assuntos na ordem certa
   let subs = Object.keys(questoesData[disc]);
@@ -1223,19 +1367,11 @@ function showSubjects(disc) {
       document.createElement("button"), {
         className: "subject-btn",
         textContent: getFriendlyName(disc, sub),
-        onclick: () => {
-          if (disc === 'D1') {
-            currentDisc = disc;
-            currentSub = sub;
-            openSummary();
-          } else {
-            showQuestions(disc, sub);
-          }
-        }
+        onclick: () => showQuestions(disc, sub)
       }
     ));
 
-    if (disc !== 'D1') {
+    if (disc !== 'Redação') {
       // badge de ranking de incidência
       btn.insertAdjacentHTML("beforeend",
         `<span class="subject-badge-rect">
@@ -2322,4 +2458,5 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
 /* ================================================================
    8. BOOT (primeira renderização)
    ============================================================== */
+updateD1Btn();
 showMenu(); // Render inicial da aplicação
