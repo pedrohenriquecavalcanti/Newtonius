@@ -1,1 +1,1187 @@
-window.listaQuestoesD1 = [];
+window.listaQuestoesD1 = [
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2024-REG-Q-83", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2022-REG-Q-78", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2021-REG-Q-89", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2020-REG-Q-53", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2019-REG-Q-89", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2018-REG-Q-56", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "ENEM-2017-REG-Q-87", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "PPL2-2021-REG-Q-47", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "PPL2-2020-REG-Q-69", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "PPL2-2019-REG-Q-58", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "01", "label": "PPL2-2017-REG-Q-90", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "02", "label": "ENEM-2024-REG-Q-46", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "02", "label": "ENEM-2020-REG-Q-67", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "02", "label": "ENEM-2019-REG-Q-59", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "02", "label": "ENEM-2017-REG-Q-86", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "02", "label": "PPL2-2021-REG-Q-56", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2023-REG-Q-53", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2022-REG-Q-64", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2022-REG-Q-82", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2021-REG-Q-71", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2020-REG-Q-59", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2020-REG-Q-82", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "ENEM-2020-REG-Q-84", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "PPL2-2018-REG-Q-86", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "PPL2-2017-REG-Q-67", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "PPL2-2017-REG-Q-76", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "PPL2-2017-REG-Q-79", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "03", "label": "DIG3-2020-REG-Q-66", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [74], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "ENEM-2024-REG-Q-86", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "ENEM-2023-REG-Q-68", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "ENEM-2021-REG-Q-58", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "ENEM-2018-REG-Q-77", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "PPL2-2018-REG-Q-64", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "DIG3-2020-REG-Q-74", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [82], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "04", "label": "DIG3-2020-REG-Q-89", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [97], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "ENEM-2023-REG-Q-46", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "ENEM-2022-REG-Q-46", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "ENEM-2022-REG-Q-76", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "ENEM-2019-REG-Q-57", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "ENEM-2017-REG-Q-68", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "05", "label": "PPL2-2020-REG-Q-80", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "ENEM-2022-REG-Q-74", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "ENEM-2018-REG-Q-63", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "ENEM-2018-REG-Q-82", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "ENEM-2017-REG-Q-77", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "PPL2-2021-REG-Q-83", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "PPL2-2020-REG-Q-84", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "PPL2-2019-REG-Q-89", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "PPL2-2018-REG-Q-51", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "PPL2-2017-REG-Q-78", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "06", "label": "DIG3-2020-REG-Q-50", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [58], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "07", "label": "ENEM-2017-REG-Q-59", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "07", "label": "PPL2-2019-REG-Q-87", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2024-REG-Q-56", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2024-REG-Q-73", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2024-REG-Q-74", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2024-REG-Q-84", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2023-REG-Q-58", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2023-REG-Q-82", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2023-REG-Q-87", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2022-REG-Q-59", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2022-REG-Q-72", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2022-REG-Q-75", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2022-REG-Q-79", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2022-REG-Q-90", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2021-REG-Q-63", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2021-REG-Q-68", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2021-REG-Q-84", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2019-REG-Q-68", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2019-REG-Q-88", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2018-REG-Q-75", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "ENEM-2017-REG-Q-50", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2021-REG-Q-72", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2020-REG-Q-77", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2019-REG-Q-49", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2019-REG-Q-64", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2018-REG-Q-54", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2018-REG-Q-58", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2017-REG-Q-50", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2017-REG-Q-59", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "PPL2-2017-REG-Q-89", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "08", "label": "DIG3-2020-REG-Q-69", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [77], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2024-REG-Q-57", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2024-REG-Q-88", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2023-REG-Q-78", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2022-REG-Q-49", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2022-REG-Q-87", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2021-REG-Q-72", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2020-REG-Q-50", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2020-REG-Q-58", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2020-REG-Q-88", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2019-REG-Q-77", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2018-REG-Q-53", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2018-REG-Q-67", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "ENEM-2017-REG-Q-52", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2021-REG-Q-58", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2021-REG-Q-74", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2020-REG-Q-53", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2020-REG-Q-63", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2020-REG-Q-88", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2019-REG-Q-76", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2019-REG-Q-77", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2019-REG-Q-78", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2018-REG-Q-80", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2018-REG-Q-81", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "PPL2-2017-REG-Q-46", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "DIG3-2020-REG-Q-75", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [83], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "DIG3-2020-REG-Q-83", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [91], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "09", "label": "DIG3-2020-REG-Q-88", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [96], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2023-REG-Q-48", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2023-REG-Q-71", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2022-REG-Q-52", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2021-REG-Q-48", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2020-REG-Q-47", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2020-REG-Q-49", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2020-REG-Q-56", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2020-REG-Q-71", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2019-REG-Q-49", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2019-REG-Q-69", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "ENEM-2018-REG-Q-86", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2021-REG-Q-59", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2021-REG-Q-60", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2020-REG-Q-47", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2020-REG-Q-49", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2020-REG-Q-78", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2018-REG-Q-65", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2018-REG-Q-72", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2018-REG-Q-84", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2018-REG-Q-88", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2017-REG-Q-49", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2017-REG-Q-71", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2017-REG-Q-74", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "PPL2-2017-REG-Q-83", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "DIG3-2020-REG-Q-61", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [69], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "DIG3-2020-REG-Q-63", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [71], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "DIG3-2020-REG-Q-73", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [81], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "DIG3-2020-REG-Q-82", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [90], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "10", "label": "DIG3-2020-REG-Q-86", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [94], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "ENEM-2023-REG-Q-83", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "ENEM-2022-REG-Q-55", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "ENEM-2020-REG-Q-51", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "ENEM-2017-REG-Q-55", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2021-REG-Q-57", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2021-REG-Q-80", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2021-REG-Q-84", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2020-REG-Q-66", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2019-REG-Q-88", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2018-REG-Q-47", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2018-REG-Q-87", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "11", "label": "PPL2-2017-REG-Q-88", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2024-REG-Q-48", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2024-REG-Q-53", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2024-REG-Q-68", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2023-REG-Q-64", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2023-REG-Q-67", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2021-REG-Q-51", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2021-REG-Q-70", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2020-REG-Q-90", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2019-REG-Q-46", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2019-REG-Q-75", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2018-REG-Q-72", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2018-REG-Q-89", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "ENEM-2017-REG-Q-72", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2020-REG-Q-56", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2020-REG-Q-62", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2020-REG-Q-75", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2020-REG-Q-82", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2019-REG-Q-84", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2017-REG-Q-47", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "12", "label": "PPL2-2017-REG-Q-57", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "13", "label": "ENEM-2017-REG-Q-54", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "13", "label": "ENEM-2017-REG-Q-71", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "13", "label": "PPL2-2020-REG-Q-64", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2024-REG-Q-60", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2024-REG-Q-71", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2023-REG-Q-89", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2020-REG-Q-80", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2019-REG-Q-61", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "ENEM-2018-REG-Q-88", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "PPL2-2021-REG-Q-68", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "PPL2-2019-REG-Q-85", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "PPL2-2019-REG-Q-86", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "PPL2-2018-REG-Q-50", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "PPL2-2018-REG-Q-89", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "14", "label": "DIG3-2020-REG-Q-65", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [73], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2024-REG-Q-79", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2024-REG-Q-89", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2022-REG-Q-83", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2021-REG-Q-49", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2021-REG-Q-53", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2021-REG-Q-55", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2020-REG-Q-73", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2019-REG-Q-50", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2019-REG-Q-53", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2019-REG-Q-84", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2019-REG-Q-85", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2018-REG-Q-60", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "ENEM-2017-REG-Q-73", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "PPL2-2021-REG-Q-51", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "PPL2-2019-REG-Q-55", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "PPL2-2019-REG-Q-61", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "PPL2-2018-REG-Q-55", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "PPL2-2018-REG-Q-57", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "15", "label": "DIG3-2020-REG-Q-52", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [60], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "16", "label": "ENEM-2023-REG-Q-51", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "16", "label": "ENEM-2018-REG-Q-62", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "16", "label": "ENEM-2017-REG-Q-75", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "16", "label": "PPL2-2019-REG-Q-57", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "17", "label": "ENEM-2019-REG-Q-74", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "17", "label": "PPL2-2020-REG-Q-81", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "17", "label": "PPL2-2017-REG-Q-81", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2024-REG-Q-52", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2024-REG-Q-54", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2024-REG-Q-72", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2023-REG-Q-52", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2023-REG-Q-59", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2023-REG-Q-66", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2023-REG-Q-75", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2022-REG-Q-48", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2022-REG-Q-56", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2022-REG-Q-70", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2021-REG-Q-60", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2021-REG-Q-64", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2021-REG-Q-66", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2019-REG-Q-87", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2018-REG-Q-50", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2017-REG-Q-76", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "ENEM-2017-REG-Q-90", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2021-REG-Q-54", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2021-REG-Q-85", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2020-REG-Q-87", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2018-REG-Q-68", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2018-REG-Q-82", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2017-REG-Q-58", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2017-REG-Q-69", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2017-REG-Q-73", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2017-REG-Q-77", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "PPL2-2017-REG-Q-82", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "DIG3-2020-REG-Q-77", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [85], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "18", "label": "DIG3-2020-REG-Q-81", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [89], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2024-REG-Q-66", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2024-REG-Q-69", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-47", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-60", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-65", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-69", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-76", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-84", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2023-REG-Q-86", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2022-REG-Q-65", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2022-REG-Q-66", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2021-REG-Q-56", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2020-REG-Q-48", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2018-REG-Q-87", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "ENEM-2017-REG-Q-74", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "PPL2-2021-REG-Q-55", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "PPL2-2019-REG-Q-67", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "PPL2-2018-REG-Q-60", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "PPL2-2018-REG-Q-77", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "19", "label": "PPL2-2017-REG-Q-65", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2024-REG-Q-65", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2024-REG-Q-70", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2024-REG-Q-80", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2023-REG-Q-88", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2022-REG-Q-51", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2021-REG-Q-46", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2021-REG-Q-50", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2021-REG-Q-54", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2021-REG-Q-61", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2021-REG-Q-62", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2020-REG-Q-61", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2019-REG-Q-56", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2019-REG-Q-71", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2019-REG-Q-83", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2019-REG-Q-90", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2018-REG-Q-65", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2018-REG-Q-80", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "ENEM-2017-REG-Q-57", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2021-REG-Q-46", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2021-REG-Q-49", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2021-REG-Q-65", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2021-REG-Q-70", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2020-REG-Q-76", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2018-REG-Q-74", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "PPL2-2017-REG-Q-52", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "DIG3-2020-REG-Q-79", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [87], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "20", "label": "DIG3-2020-REG-Q-85", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [93], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2024-REG-Q-67", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2023-REG-Q-61", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2023-REG-Q-72", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2022-REG-Q-60", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2022-REG-Q-61", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2020-REG-Q-57", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2019-REG-Q-47", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "ENEM-2018-REG-Q-73", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2021-REG-Q-64", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2020-REG-Q-79", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2020-REG-Q-83", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2019-REG-Q-60", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2019-REG-Q-72", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2018-REG-Q-67", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "PPL2-2018-REG-Q-75", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "DIG3-2020-REG-Q-78", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [86], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "DIG3-2020-REG-Q-80", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [88], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "21", "label": "DIG3-2020-REG-Q-87", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [95], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "ENEM-2024-REG-Q-61", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "ENEM-2024-REG-Q-76", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "ENEM-2018-REG-Q-70", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "ENEM-2017-REG-Q-89", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "PPL2-2021-REG-Q-71", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "PPL2-2020-REG-Q-46", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "PPL2-2019-REG-Q-75", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "PPL2-2019-REG-Q-79", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "PPL2-2018-REG-Q-76", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "22", "label": "DIG3-2020-REG-Q-68", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [76], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "ENEM-2024-REG-Q-63", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "ENEM-2023-REG-Q-55", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "ENEM-2021-REG-Q-57", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "ENEM-2020-REG-Q-66", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "ENEM-2019-REG-Q-70", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2020-REG-Q-48", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2020-REG-Q-51", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2018-REG-Q-53", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2018-REG-Q-72", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2017-REG-Q-54", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2017-REG-Q-62", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "23", "label": "PPL2-2017-REG-Q-70", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2021-REG-Q-79", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2020-REG-Q-46", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2020-REG-Q-78", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2017-REG-Q-56", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2017-REG-Q-60", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "ENEM-2017-REG-Q-69", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "PPL2-2020-REG-Q-86", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "PPL2-2019-REG-Q-74", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "24", "label": "PPL2-2018-REG-Q-69", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "25", "label": "ENEM-2018-REG-Q-48", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "25", "label": "ENEM-2017-REG-Q-62", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "26", "label": "ENEM-2023-REG-Q-49", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "E"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "26", "label": "ENEM-2023-REG-Q-85", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "26", "label": "ENEM-2022-REG-Q-62", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "26", "label": "ENEM-2017-REG-Q-53", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "Geografia e Sociologia", "Assunto": "26", "label": "PPL2-2017-REG-Q-68", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "ENEM-2021-REG-Q-83", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "ENEM-2020-REG-Q-54", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "ENEM-2020-REG-Q-68", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "PPL2-2020-REG-Q-72", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "PPL2-2019-REG-Q-47", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "01", "label": "PPL2-2019-REG-Q-71", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "02", "label": "ENEM-2019-REG-Q-79", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "02", "label": "PPL2-2019-REG-Q-83", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2024-REG-Q-55", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2024-REG-Q-58", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2024-REG-Q-62", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2023-REG-Q-90", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2022-REG-Q-80", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2022-REG-Q-84", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2022-REG-Q-86", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2022-REG-Q-88", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2021-REG-Q-59", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2021-REG-Q-82", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2020-REG-Q-74", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2020-REG-Q-77", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2020-REG-Q-89", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2018-REG-Q-49", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2018-REG-Q-79", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2017-REG-Q-65", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2017-REG-Q-66", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "ENEM-2017-REG-Q-88", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2021-REG-Q-87", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2021-REG-Q-89", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2020-REG-Q-50", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2020-REG-Q-52", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2020-REG-Q-54", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2019-REG-Q-56", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2019-REG-Q-82", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2019-REG-Q-90", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2017-REG-Q-55", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2017-REG-Q-61", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2017-REG-Q-63", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2018-REG-Q-46", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "PPL2-2018-REG-Q-90", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "DIG3-2020-REG-Q-51", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [59], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "03", "label": "DIG3-2020-REG-Q-76", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [84], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "04", "label": "ENEM-2020-REG-Q-70", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "04", "label": "ENEM-2020-REG-Q-83", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2024-REG-Q-87", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2023-REG-Q-56", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2023-REG-Q-57", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2022-REG-Q-71", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2021-REG-Q-47", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2020-REG-Q-62", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2020-REG-Q-76", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2020-REG-Q-87", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2019-REG-Q-51", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2019-REG-Q-62", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2018-REG-Q-90", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2017-REG-Q-58", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2017-REG-Q-64", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2017-REG-Q-67", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2017-REG-Q-79", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "ENEM-2017-REG-Q-84", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "PPL2-2021-REG-Q-73", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "PPL2-2021-REG-Q-88", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "PPL2-2018-REG-Q-61", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "PPL2-2017-REG-Q-48", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "PPL2-2017-REG-Q-72", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "DIG3-2020-REG-Q-60", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [68], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "05", "label": "DIG3-2020-REG-Q-71", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [79], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2024-REG-Q-59", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2022-REG-Q-58", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2022-REG-Q-63", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2021-REG-Q-76", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2021-REG-Q-88", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2019-REG-Q-58", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2019-REG-Q-73", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2018-REG-Q-51", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "ENEM-2018-REG-Q-83", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "PPL2-2019-REG-Q-52", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "PPL2-2019-REG-Q-54", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "PPL2-2019-REG-Q-66", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "06", "label": "DIG3-2020-REG-Q-47", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [55], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "ENEM-2021-REG-Q-67", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "ENEM-2019-REG-Q-60", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "ENEM-2018-REG-Q-47", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "ENEM-2018-REG-Q-85", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "ENEM-2017-REG-Q-70", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "PPL2-2020-REG-Q-65", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "PPL2-2018-REG-Q-49", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "07", "label": "DIG3-2020-REG-Q-54", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [62], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2024-REG-Q-82", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2023-REG-Q-54", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2022-REG-Q-85", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2021-REG-Q-86", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2020-REG-Q-52", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2020-REG-Q-63", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2020-REG-Q-72", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2019-REG-Q-48", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2019-REG-Q-64", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2019-REG-Q-67", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "ENEM-2017-REG-Q-48", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "PPL2-2021-REG-Q-66", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "PPL2-2020-REG-Q-57", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "PPL2-2020-REG-Q-74", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "PPL2-2019-REG-Q-68", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "DIG3-2020-REG-Q-53", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [61], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "08", "label": "DIG3-2020-REG-Q-84", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [92], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "ENEM-2024-REG-Q-50", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "ENEM-2023-REG-Q-74", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "ENEM-2022-REG-Q-89", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "ENEM-2021-REG-Q-77", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "ENEM-2018-REG-Q-68", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "PPL2-2019-REG-Q-51", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "09", "label": "PPL2-2018-REG-Q-70", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2023-REG-Q-50", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2023-REG-Q-73", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2022-REG-Q-77", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2021-REG-Q-74", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2021-REG-Q-75", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2021-REG-Q-85", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2021-REG-Q-90", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2020-REG-Q-75", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2020-REG-Q-81", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2019-REG-Q-52", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2018-REG-Q-54", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2018-REG-Q-57", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2018-REG-Q-64", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2017-REG-Q-46", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2017-REG-Q-51", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "ENEM-2017-REG-Q-80", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2021-REG-Q-62", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2020-REG-Q-61", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2020-REG-Q-70", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2019-REG-Q-80", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2018-REG-Q-52", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2017-REG-Q-51", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2017-REG-Q-53", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "PPL2-2017-REG-Q-66", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "DIG3-2020-REG-Q-55", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [63], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "10", "label": "DIG3-2020-REG-Q-58", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [66], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "ENEM-2023-REG-Q-63", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "ENEM-2022-REG-Q-50", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "ENEM-2019-REG-Q-81", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "PPL2-2021-REG-Q-53", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "PPL2-2021-REG-Q-79", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "PPL2-2020-REG-Q-60", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "11", "label": "PPL2-2018-REG-Q-85", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "ENEM-2020-REG-Q-69", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "ENEM-2019-REG-Q-65", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "ENEM-2018-REG-Q-52", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2021-REG-Q-76", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2021-REG-Q-81", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2020-REG-Q-89", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2019-REG-Q-53", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2019-REG-Q-73", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "PPL2-2019-REG-Q-81", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "12", "label": "DIG3-2020-REG-Q-64", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [72], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "ENEM-2024-REG-Q-51", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "ENEM-2024-REG-Q-75", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "ENEM-2023-REG-Q-77", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "ENEM-2019-REG-Q-63", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "ENEM-2018-REG-Q-66", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "PPL2-2021-REG-Q-63", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "PPL2-2020-REG-Q-58", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "PPL2-2019-REG-Q-50", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "PPL2-2017-REG-Q-75", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "PPL2-2017-REG-Q-84", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "13", "label": "DIG3-2020-REG-Q-72", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [80], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "14", "label": "ENEM-2020-REG-Q-86", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "14", "label": "ENEM-2017-REG-Q-49", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "14", "label": "DIG3-2020-REG-Q-48", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [56], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "ENEM-2024-REG-Q-90", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "ENEM-2022-REG-Q-73", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "ENEM-2021-REG-Q-65", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "ENEM-2021-REG-Q-78", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "ENEM-2019-REG-Q-54", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2021-REG-Q-50", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2021-REG-Q-86", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2021-REG-Q-90", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2020-REG-Q-85", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2018-REG-Q-63", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "15", "label": "PPL2-2018-REG-Q-73", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "ENEM-2024-REG-Q-78", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "ENEM-2021-REG-Q-87", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "ENEM-2020-REG-Q-55", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "ENEM-2019-REG-Q-78", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "ENEM-2017-REG-Q-85", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "PPL2-2019-REG-Q-46", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "PPL2-2019-REG-Q-65", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "PPL2-2018-REG-Q-79", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "PPL2-2018-REG-Q-83", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "16", "label": "DIG3-2020-REG-Q-57", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [65], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2024-REG-Q-64", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2022-REG-Q-53", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2022-REG-Q-54", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2021-REG-Q-52", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2020-REG-Q-85", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "ENEM-2019-REG-Q-55", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "PPL2-2021-REG-Q-52", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "PPL2-2019-REG-Q-48", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "PPL2-2019-REG-Q-62", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "PPL2-2019-REG-Q-69", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "PPL2-2018-REG-Q-48", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "17", "label": "DIG3-2020-REG-Q-46", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [54], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "ENEM-2024-REG-Q-47", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "ENEM-2024-REG-Q-49", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "ENEM-2018-REG-Q-76", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "ENEM-2018-REG-Q-84", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "PPL2-2017-REG-Q-56", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "18", "label": "DIG3-2020-REG-Q-67", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [75], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "ENEM-2019-REG-Q-80", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "ENEM-2018-REG-Q-59", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "ENEM-2018-REG-Q-71", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "ENEM-2017-REG-Q-82", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "PPL2-2021-REG-Q-75", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "PPL2-2020-REG-Q-68", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "PPL2-2019-REG-Q-70", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "DIG3-2020-REG-Q-49", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [57], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "19", "label": "DIG3-2020-REG-Q-90", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [98], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "ENEM-2020-REG-Q-79", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "ENEM-2019-REG-Q-86", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "ENEM-2018-REG-Q-46", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2021-REG-Q-67", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2021-REG-Q-77", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2021-REG-Q-78", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2021-REG-Q-82", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2017-REG-Q-64", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "PPL2-2017-REG-Q-86", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "20", "label": "DIG3-2020-REG-Q-56", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [64], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "21", "label": "PPL2-2020-REG-Q-55", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2024-REG-Q-77", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2022-REG-Q-81", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2021-REG-Q-69", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2021-REG-Q-73", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2021-REG-Q-81", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2018-REG-Q-74", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2017-REG-Q-78", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "ENEM-2017-REG-Q-81", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "PPL2-2017-REG-Q-60", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "PPL2-2017-REG-Q-85", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "22", "label": "DIG3-2020-REG-Q-70", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [78], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "23", "label": "PPL2-2019-REG-Q-59", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "23", "label": "PPL2-2017-REG-Q-80", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2023-REG-Q-79", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2023-REG-Q-81", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2022-REG-Q-47", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [21], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2022-REG-Q-57", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2020-REG-Q-55", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2020-REG-Q-60", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2019-REG-Q-76", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "ENEM-2017-REG-Q-47", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "PPL2-2020-REG-Q-73", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "24", "label": "PPL2-2018-REG-Q-56", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2023-REG-Q-62", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2022-REG-Q-68", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2022-REG-Q-69", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2018-REG-Q-55", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2018-REG-Q-81", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "ENEM-2017-REG-Q-61", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "PPL2-2020-REG-Q-59", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "PPL2-2019-REG-Q-63", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "PPL2-2017-REG-Q-87", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "25", "label": "DIG3-2020-REG-Q-59", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [67], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "ENEM-2021-REG-Q-80", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "ENEM-2020-REG-Q-65", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "ENEM-2019-REG-Q-82", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "ENEM-2018-REG-Q-58", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "ENEM-2018-REG-Q-61", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "PPL2-2018-REG-Q-59", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "PPL2-2018-REG-Q-66", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "26", "label": "PPL2-2018-REG-Q-78", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2024-REG-Q-85", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2023-REG-Q-70", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2023-REG-Q-80", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "A"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2020-REG-Q-64", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2018-REG-Q-69", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "ENEM-2017-REG-Q-83", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "PPL2-2020-REG-Q-71", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "PPL2-2018-REG-Q-62", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "27", "label": "DIG3-2020-REG-Q-62", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [70], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "ENEM-2024-REG-Q-81", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "ENEM-2022-REG-Q-67", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "D"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "ENEM-2019-REG-Q-66", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "ENEM-2019-REG-Q-72", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "ENEM-2018-REG-Q-78", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "E"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "PPL2-2021-REG-Q-61", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "PPL2-2021-REG-Q-69", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "B"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "PPL2-2020-REG-Q-67", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "C"}
+{"Disciplina": "História e Filosofia", "Assunto": "28", "label": "PPL2-2020-REG-Q-90", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2024-REG-Q-13", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2023-REG-Q-28", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2022-REG-Q-26", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2021-REG-Q-32", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2020-REG-Q-6", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2019-REG-Q-15", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2018-REG-Q-12", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2018-REG-Q-24", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "ENEM-2017-REG-Q-29", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "DIG3-2020-REG-Q-23", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [28], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "DIG3-2020-REG-Q-29", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [34], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "PPL2-2020-REG-Q-33", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "PPL2-2018-REG-Q-19", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "01", "label": "PPL2-2017-REG-Q-8", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2024-REG-Q-42", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2023-REG-Q-9", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2023-REG-Q-17", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2022-REG-Q-15", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2022-REG-Q-16", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2022-REG-Q-35", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2021-REG-Q-13", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2021-REG-Q-25", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2021-REG-Q-33", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2021-REG-Q-44", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2020-REG-Q-27", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2020-REG-Q-31", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2020-REG-Q-44", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2019-REG-Q-10", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2019-REG-Q-16", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2019-REG-Q-24", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2019-REG-Q-28", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2019-REG-Q-43", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2018-REG-Q-28", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2018-REG-Q-33", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2017-REG-Q-6", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2017-REG-Q-14", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "ENEM-2017-REG-Q-34", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "DIG3-2020-REG-Q-7", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "DIG3-2020-REG-Q-8", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "DIG3-2020-REG-Q-34", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [39], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "DIG3-2020-REG-Q-37", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [42], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2021-REG-Q-25", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2021-REG-Q-31", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2021-REG-Q-39", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2021-REG-Q-40", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2021-REG-Q-45", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2020-REG-Q-16", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2020-REG-Q-20", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2020-REG-Q-22", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2020-REG-Q-32", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2020-REG-Q-34", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2019-REG-Q-7", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2019-REG-Q-8", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-8", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-20", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-23", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-25", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-26", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2018-REG-Q-30", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2017-REG-Q-29", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2017-REG-Q-30", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "02", "label": "PPL2-2017-REG-Q-45", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2024-REG-Q-34", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2023-REG-Q-15", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2023-REG-Q-16", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2023-REG-Q-22", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2023-REG-Q-39", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2022-REG-Q-11", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2022-REG-Q-14", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2021-REG-Q-11", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2019-REG-Q-6", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2019-REG-Q-12", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2019-REG-Q-30", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2019-REG-Q-34", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2018-REG-Q-22", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2018-REG-Q-37", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2017-REG-Q-12", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2017-REG-Q-20", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2017-REG-Q-22", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2017-REG-Q-24", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "ENEM-2017-REG-Q-32", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "DIG3-2020-REG-Q-6", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "DIG3-2020-REG-Q-24", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [29], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "DIG3-2020-REG-Q-35", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [40], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-8", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-15", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-24", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-30", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-38", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2021-REG-Q-41", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2020-REG-Q-28", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2019-REG-Q-9", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2019-REG-Q-23", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2019-REG-Q-39", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2018-REG-Q-11", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2018-REG-Q-15", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2017-REG-Q-15", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2017-REG-Q-21", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "03", "label": "PPL2-2017-REG-Q-26", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-6", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-11", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-12", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-14", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-24", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2024-REG-Q-39", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2023-REG-Q-8", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2023-REG-Q-20", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2023-REG-Q-21", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2022-REG-Q-12", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2022-REG-Q-24", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2022-REG-Q-40", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2021-REG-Q-7", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2021-REG-Q-15", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2021-REG-Q-39", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2020-REG-Q-7", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2020-REG-Q-9", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2019-REG-Q-45", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2018-REG-Q-7", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2017-REG-Q-38", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "ENEM-2017-REG-Q-39", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2020-REG-Q-6", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2020-REG-Q-7", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2020-REG-Q-26", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2020-REG-Q-30", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2019-REG-Q-37", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "04", "label": "PPL2-2017-REG-Q-42", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2024-REG-Q-37", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2021-REG-Q-9", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2021-REG-Q-30", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2020-REG-Q-32", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2020-REG-Q-41", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2018-REG-Q-8", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "ENEM-2018-REG-Q-21", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "DIG3-2020-REG-Q-11", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "DIG3-2020-REG-Q-22", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [27], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "DIG3-2020-REG-Q-33", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [38], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2021-REG-Q-9", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2021-REG-Q-29", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2019-REG-Q-10", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2019-REG-Q-45", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2018-REG-Q-10", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "05", "label": "PPL2-2018-REG-Q-35", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2024-REG-Q-20", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2024-REG-Q-23", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2023-REG-Q-19", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2023-REG-Q-27", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2021-REG-Q-6", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2021-REG-Q-8", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2021-REG-Q-10", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2021-REG-Q-16", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2021-REG-Q-22", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2018-REG-Q-18", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "ENEM-2018-REG-Q-41", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2021-REG-Q-12", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2021-REG-Q-44", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2020-REG-Q-12", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2020-REG-Q-45", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2019-REG-Q-18", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2019-REG-Q-42", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2018-REG-Q-7", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2018-REG-Q-28", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2017-REG-Q-16", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2017-REG-Q-20", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2017-REG-Q-24", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2017-REG-Q-28", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "06", "label": "PPL2-2017-REG-Q-33", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2023-REG-Q-7", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2023-REG-Q-29", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2021-REG-Q-12", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2021-REG-Q-24", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2020-REG-Q-11", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2020-REG-Q-23", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2019-REG-Q-42", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2018-REG-Q-16", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2018-REG-Q-17", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2017-REG-Q-10", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "ENEM-2017-REG-Q-35", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "PPL2-2019-REG-Q-16", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "PPL2-2019-REG-Q-24", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "PPL2-2018-REG-Q-33", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "07", "label": "PPL2-2018-REG-Q-39", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2024-REG-Q-31", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2023-REG-Q-25", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2023-REG-Q-43", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2022-REG-Q-6", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2022-REG-Q-29", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2022-REG-Q-42", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2021-REG-Q-26", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2020-REG-Q-10", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2020-REG-Q-38", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2019-REG-Q-41", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "ENEM-2018-REG-Q-42", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "PPL2-2019-REG-Q-14", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "08", "label": "PPL2-2019-REG-Q-36", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "09", "label": "ENEM-2022-REG-Q-18", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "09", "label": "ENEM-2018-REG-Q-36", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "09", "label": "ENEM-2017-REG-Q-27", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "09", "label": "PPL2-2021-REG-Q-11", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "10", "label": "ENEM-2017-REG-Q-16", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "10", "label": "PPL2-2021-REG-Q-13", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "10", "label": "PPL2-2019-REG-Q-43", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "11", "label": "ENEM-2020-REG-Q-24", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "11", "label": "ENEM-2018-REG-Q-38", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "11", "label": "ENEM-2017-REG-Q-33", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "11", "label": "PPL2-2017-REG-Q-13", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "ENEM-2022-REG-Q-23", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "ENEM-2022-REG-Q-33", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "DIG3-2020-REG-Q-10", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "PPL2-2020-REG-Q-11", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "PPL2-2019-REG-Q-33", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "PPL2-2018-REG-Q-24", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "13", "label": "PPL2-2018-REG-Q-42", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2024-REG-Q-22", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2024-REG-Q-38", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2023-REG-Q-13", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2023-REG-Q-18", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2023-REG-Q-31", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2022-REG-Q-17", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2021-REG-Q-38", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2021-REG-Q-40", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2021-REG-Q-41", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-12", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-18", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-19", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-21", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-29", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-33", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2020-REG-Q-39", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2019-REG-Q-14", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2019-REG-Q-22", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2019-REG-Q-33", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2019-REG-Q-39", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2019-REG-Q-44", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2018-REG-Q-15", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2018-REG-Q-30", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2018-REG-Q-35", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2017-REG-Q-15", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2017-REG-Q-18", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2017-REG-Q-23", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "ENEM-2017-REG-Q-30", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "DIG3-2020-REG-Q-12", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "DIG3-2020-REG-Q-16", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "DIG3-2020-REG-Q-38", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [43], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2021-REG-Q-43", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2020-REG-Q-9", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2020-REG-Q-40", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2019-REG-Q-15", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2019-REG-Q-29", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2019-REG-Q-31", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2019-REG-Q-44", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2018-REG-Q-6", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2018-REG-Q-32", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2017-REG-Q-9", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "14", "label": "PPL2-2017-REG-Q-43", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2024-REG-Q-19", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2024-REG-Q-28", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2024-REG-Q-35", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2022-REG-Q-21", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2022-REG-Q-30", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2021-REG-Q-18", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "ENEM-2017-REG-Q-7", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "DIG3-2020-REG-Q-30", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [35], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "DIG3-2020-REG-Q-40", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [45], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2021-REG-Q-32", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2021-REG-Q-33", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2020-REG-Q-41", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2019-REG-Q-41", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2018-REG-Q-37", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2018-REG-Q-40", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "15", "label": "PPL2-2017-REG-Q-6", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2024-REG-Q-25", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2023-REG-Q-12", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2019-REG-Q-13", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2019-REG-Q-40", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2017-REG-Q-21", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "ENEM-2017-REG-Q-63", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "PPL2-2021-REG-Q-36", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "PPL2-2020-REG-Q-35", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "PPL2-2019-REG-Q-19", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "16", "label": "PPL2-2017-REG-Q-34", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "ENEM-2023-REG-Q-14", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "ENEM-2022-REG-Q-31", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "ENEM-2020-REG-Q-45", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "ENEM-2017-REG-Q-13", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "DIG3-2020-REG-Q-32", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [37], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "PPL2-2021-REG-Q-23", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "PPL2-2019-REG-Q-25", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "PPL2-2018-REG-Q-17", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "17", "label": "PPL2-2017-REG-Q-36", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-8", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-16", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-21", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-30", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-36", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-40", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2024-REG-Q-43", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2023-REG-Q-32", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2023-REG-Q-33", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2023-REG-Q-34", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2023-REG-Q-36", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2023-REG-Q-38", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2022-REG-Q-10", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2022-REG-Q-39", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2022-REG-Q-41", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2022-REG-Q-44", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2022-REG-Q-45", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-14", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-20", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-23", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-27", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-36", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-42", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2021-REG-Q-45", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2020-REG-Q-8", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2020-REG-Q-14", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2020-REG-Q-25", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2020-REG-Q-34", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2019-REG-Q-25", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2019-REG-Q-31", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2019-REG-Q-36", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-11", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-25", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-29", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-32", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-34", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2018-REG-Q-45", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2017-REG-Q-25", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2017-REG-Q-36", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2017-REG-Q-37", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2017-REG-Q-43", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "ENEM-2017-REG-Q-45", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "DIG3-2020-REG-Q-17", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [22], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "DIG3-2020-REG-Q-36", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [41], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2021-REG-Q-16", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2021-REG-Q-17", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2021-REG-Q-18", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2021-REG-Q-35", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2021-REG-Q-37", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2020-REG-Q-13", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2020-REG-Q-38", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2019-REG-Q-12", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2019-REG-Q-27", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2019-REG-Q-40", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-16", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-21", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-27", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-29", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-31", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-34", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2018-REG-Q-45", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-10", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-19", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-23", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-27", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-31", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-38", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "18", "label": "PPL2-2017-REG-Q-40", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2024-REG-Q-10", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2024-REG-Q-15", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2024-REG-Q-45", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2023-REG-Q-10", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2023-REG-Q-35", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2023-REG-Q-37", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2022-REG-Q-13", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2022-REG-Q-22", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2022-REG-Q-32", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2022-REG-Q-37", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2021-REG-Q-28", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2021-REG-Q-29", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2021-REG-Q-34", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2020-REG-Q-13", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2020-REG-Q-20", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2020-REG-Q-26", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2020-REG-Q-28", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2020-REG-Q-42", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-9", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-17", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-18", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-19", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-20", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-29", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-37", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2019-REG-Q-38", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2018-REG-Q-9", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2018-REG-Q-19", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2018-REG-Q-40", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2018-REG-Q-45", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2017-REG-Q-8", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2017-REG-Q-11", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "ENEM-2017-REG-Q-17", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-6", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-7", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-10", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-22", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-26", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2021-REG-Q-27", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-15", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-17", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-25", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-29", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-31", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2020-REG-Q-36", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2019-REG-Q-6", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2019-REG-Q-26", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2018-REG-Q-9", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2018-REG-Q-12", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2018-REG-Q-18", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2018-REG-Q-22", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2018-REG-Q-41", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-7", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-11", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-17", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-25", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-32", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-35", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "PPL2-2017-REG-Q-39", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-13", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-15", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-18", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [23], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-19", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [24], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-20", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [25], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-28", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [33], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "19", "label": "DIG3-2020-REG-Q-43", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [48], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2024-REG-Q-18", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2024-REG-Q-27", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2024-REG-Q-29", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2024-REG-Q-32", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2023-REG-Q-30", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2022-REG-Q-28", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2022-REG-Q-43", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [19], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2021-REG-Q-37", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2020-REG-Q-16", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2020-REG-Q-17", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2020-REG-Q-40", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2019-REG-Q-11", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2019-REG-Q-23", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2019-REG-Q-26", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2018-REG-Q-6", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "ENEM-2017-REG-Q-42", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "PPL2-2020-REG-Q-43", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "PPL2-2019-REG-Q-11", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "DIG3-2020-REG-Q-44", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [49], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "20", "label": "DIG3-2020-REG-Q-45", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [50], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2024-REG-Q-17", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2024-REG-Q-26", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2023-REG-Q-23", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2023-REG-Q-24", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2023-REG-Q-26", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2022-REG-Q-8", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2022-REG-Q-25", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2022-REG-Q-27", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2021-REG-Q-35", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2021-REG-Q-43", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [20], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2020-REG-Q-15", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2020-REG-Q-22", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2020-REG-Q-30", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2020-REG-Q-35", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2020-REG-Q-43", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2019-REG-Q-7", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2019-REG-Q-21", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2018-REG-Q-10", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2018-REG-Q-14", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2018-REG-Q-23", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2018-REG-Q-43", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2017-REG-Q-9", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2017-REG-Q-28", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "ENEM-2017-REG-Q-40", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "DIG3-2020-REG-Q-9", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "DIG3-2020-REG-Q-21", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [26], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "DIG3-2020-REG-Q-26", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [31], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "DIG3-2020-REG-Q-27", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [32], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "PPL2-2020-REG-Q-14", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "PPL2-2020-REG-Q-18", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "21", "label": "PPL2-2020-REG-Q-39", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2024-REG-Q-7", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [5], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2024-REG-Q-9", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2024-REG-Q-33", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2024-REG-Q-41", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2024-REG-Q-44", "QPDFName": "Enem.2024.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-6", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-11", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-40", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-41", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-42", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-44", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2023-REG-Q-45", "QPDFName": "Enem.2023.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-7", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-9", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-19", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-20", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-34", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2022-REG-Q-36", "QPDFName": "Enem.2022.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2021-REG-Q-17", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2021-REG-Q-19", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2021-REG-Q-21", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2021-REG-Q-31", "QPDFName": "Enem.2021.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2020-REG-Q-36", "QPDFName": "Enem.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2019-REG-Q-27", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2019-REG-Q-32", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2019-REG-Q-35", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2018-REG-Q-13", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2018-REG-Q-26", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2018-REG-Q-31", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2018-REG-Q-39", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2017-REG-Q-19", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2017-REG-Q-31", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "ENEM-2017-REG-Q-41", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-14", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-25", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [30], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-31", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [36], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-39", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [44], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-41", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [46], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "DIG3-2020-REG-Q-42", "QPDFName": "Dig3.2020.1.AZ1.pdf", "page": [47], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2021-REG-Q-19", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2021-REG-Q-20", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2021-REG-Q-21", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2021-REG-Q-28", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2021-REG-Q-42", "QPDFName": "PPL2.2021.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-8", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-19", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-21", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-23", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-24", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-27", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-37", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-42", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2020-REG-Q-44", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-13", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-17", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-20", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-21", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [11], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-28", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [13], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-32", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-34", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-35", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2019-REG-Q-38", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2018-REG-Q-13", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [8], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2018-REG-Q-14", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2018-REG-Q-38", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2018-REG-Q-43", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2018-REG-Q-44", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-12", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-14", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-18", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-37", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [15], "gabaritoAnswer": "A"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-41", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [17], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "22", "label": "PPL2-2017-REG-Q-44", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "ENEM-2019-REG-Q-8", "QPDFName": "Enem.2019.1.AZ1.pdf", "page": [6], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "ENEM-2018-REG-Q-20", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [9], "gabaritoAnswer": "B"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "ENEM-2018-REG-Q-27", "QPDFName": "Enem.2018.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "ENEM-2017-REG-Q-26", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [12], "gabaritoAnswer": "D"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "ENEM-2017-REG-Q-44", "QPDFName": "Enem.2017.1.AZ1.pdf", "page": [18], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "PPL2-2020-REG-Q-10", "QPDFName": "PPL2.2020.1.AZ1.pdf", "page": [7], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "PPL2-2019-REG-Q-30", "QPDFName": "PPL2.2019.1.AZ1.pdf", "page": [14], "gabaritoAnswer": "E"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "PPL2-2018-REG-Q-36", "QPDFName": "PPL2.2018.1.AZ1.pdf", "page": [16], "gabaritoAnswer": "C"}
+{"Disciplina": "Linguagens", "Assunto": "23", "label": "PPL2-2017-REG-Q-22", "QPDFName": "PPL2.2017.1.AZ1.pdf", "page": [10], "gabaritoAnswer": "E"}
+ ];
