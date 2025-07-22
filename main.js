@@ -2093,9 +2093,13 @@ backBtn.onclick = () => {
     return;
   }
   if(trailReturn){
-    const d = trailReturn;
-    trailReturn = null;
-    showTrail(d);
+    if(currentSub){
+      showSubjects(currentDisc);
+    } else {
+      const d = trailReturn;
+      trailReturn = null;
+      showTrail(d);
+    }
   }else if(starReturn){
     starReturn = false;
     showMenu();
@@ -2370,7 +2374,8 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
     const counts = [];
     for(let i=0;i<7;i++){
       const d = new Date(monday.getTime() + i*DAY_MS);
-      counts.push( countXpOn(d.toISOString().slice(0,10)) );
+      const dStr = d.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
+      counts.push( countXpOn(dStr) );
     }
     return { labels, counts };
   }
@@ -2378,9 +2383,11 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
   /* ---------- Média móvel dos últimos 7 dias ---------- */
   function last7DaysAvg(){
     let sum=0;
+    const today = getTodayDateBR();
     for(let i=0;i<7;i++){
-      const d = new Date(Date.now() - i*DAY_MS);
-      sum += countXpOn(d.toISOString().slice(0,10));
+      const d = new Date(today.getTime() - i*DAY_MS);
+      const dStr = d.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
+      sum += countXpOn(dStr);
     }
     return sum/7;
   }
