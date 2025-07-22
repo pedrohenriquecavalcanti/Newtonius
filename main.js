@@ -280,6 +280,7 @@ let currentSub  = null;   // Código do assunto selecionado
 let subjectsOrder = {};
 let trailReturn  = null;  // data da trilha para voltar após questões
 let starReturn   = false; // flag para voltar à Home ao sair de um assunto aberto pela estrela
+let trailReturnSub = false; // flag para voltar direto à Trilha se abriu sub específico
 let examListOpen = false; // menu Provas e Simulados aberto
 let currentExam  = null; // nome do exame em exibicao
 let currentExamMode = 'nat'; // 'nat' ou 'mat'
@@ -701,6 +702,7 @@ function showMenu () {
 
   /* 2 ▸ layout padrão */
   currentDisc = currentSub = null;
+  trailReturnSub = false;
   summaryBtn.style.display = 'none';
   orderHint.style.display = 'none';
   headerTitle.onmouseenter = null;
@@ -769,7 +771,7 @@ function showMenu () {
         let st = calcStarState(disc, sub);
         updateStar(star, st);
         star.onclick = () => {
-          showQuestions(disc, sub, true); // se veio da estrela, volta para Home
+          showQuestions(disc, sub, true, false); // se veio da estrela, volta para Home
         };
       }
     }
@@ -1071,11 +1073,12 @@ function renderTrailDay(day,expand){
       const subj=document.createElement('button');
       subj.className=`trail-subject ${discClasses[s.disc]}`;
       subj.textContent=label;
-      subj.onclick=()=>{ 
-        trailReturn=dayStr; 
-        if(isMicro) showMicroSim(s); 
-        else if(isDisc) showSubjects(s.disc); 
-        else showQuestions(s.disc,s.sub); 
+      subj.onclick=()=>{
+        trailReturn=dayStr;
+        trailReturnSub = !isDisc && !isMicro;
+        if(isMicro) showMicroSim(s);
+        else if(isDisc) showSubjects(s.disc);
+        else showQuestions(s.disc,s.sub,false,true);
       };
 
       const count=document.createElement('span');
@@ -1115,6 +1118,7 @@ function showTrail(expandDay, preserveScroll=false){
   currentExam=null;
   currentDisc=currentSub=null;
   trailReturn=null;
+  trailReturnSub=false;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Trilha Estratégica');
@@ -1318,6 +1322,7 @@ function showExam(exam){
 function showSubjects(disc) {
   currentDisc = disc;
   currentSub  = null;
+  trailReturnSub = false;
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
 
@@ -1402,7 +1407,7 @@ function showSubjects(disc) {
       document.createElement("button"), {
         className: "subject-btn",
         textContent: getFriendlyName(disc, sub),
-        onclick: () => showQuestions(disc, sub)
+        onclick: () => showQuestions(disc, sub, false, false)
       }
     ));
 
@@ -1436,8 +1441,9 @@ function showSubjects(disc) {
 }
 
 /* ---------------- LISTA DE QUESTÕES ---------------- */
-function showQuestions(disc, sub, fromStar = false) {
+function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   starReturn = fromStar;   // registra se veio direto da Home pela estrela
+  trailReturnSub = fromTrailSub; // registra se veio direto da Trilha para um sub
   currentDisc = disc;
   currentSub  = sub;
   leaveHome();            // volta ao visual normal fora da Home
@@ -2076,6 +2082,7 @@ backBtn.onclick = () => {
       const d=trailReturn;
       currentExam=null;
       trailReturn=null;
+      trailReturnSub=false;
       showTrail(d);
     }else{
       currentExam=null;
@@ -2094,14 +2101,23 @@ backBtn.onclick = () => {
   }
   if(trailReturn){
     if(currentSub){
-      showSubjects(currentDisc);
+      if(trailReturnSub){
+        const d = trailReturn;
+        trailReturn = null;
+        trailReturnSub = false;
+        showTrail(d);
+      } else {
+        showSubjects(currentDisc);
+      }
     } else {
       const d = trailReturn;
       trailReturn = null;
+      trailReturnSub = false;
       showTrail(d);
     }
   }else if(starReturn){
     starReturn = false;
+    trailReturnSub = false;
     showMenu();
   }else if(currentSub){
     showSubjects(currentDisc);
