@@ -839,6 +839,29 @@ function loadTrail(dayStr){
 function saveTrail(dayStr,data){
   localStorage.setItem(`trail_${dayStr}`, JSON.stringify(data));
 }
+
+function moveTrailItem(fromDay, fromKey, fromIdx, toDay, toKey, toIdx){
+  if(!fromDay || !toDay) return;
+  const fromData = loadTrail(fromDay);
+  const item = fromData[fromKey].splice(fromIdx,1)[0];
+  saveTrail(fromDay, fromData);
+  const toData = fromDay===toDay ? fromData : loadTrail(toDay);
+  if(toIdx<0 || toIdx>toData[toKey].length) toIdx = toData[toKey].length;
+  toData[toKey].splice(toIdx,0,item);
+  saveTrail(toDay, toData);
+}
+
+function getDragAfterElement(container, y){
+  const els=[...container.querySelectorAll('.trail-item:not(.dragging)')];
+  return els.reduce((closest,el)=>{
+    const box=el.getBoundingClientRect();
+    const offset=y - box.top - box.height/2;
+    if(offset<0 && offset>closest.offset){
+      return {offset, element: el};
+    }
+    return closest;
+  }, {offset:Number.NEGATIVE_INFINITY}).element;
+}
 function countDailySolved(dateStr, disc, sub){
   const prefix = sub==='micro'
     ? `logmicro_${dateStr}_${disc}_`
@@ -988,6 +1011,29 @@ function renderTrailDay(day,expand){
   const makeSection=(label,key)=>{
     const sec=document.createElement('div');
     sec.className='trail-section';
+    sec.dataset.day=dayStr;
+    sec.dataset.key=key;
+    sec.addEventListener('dragover',e=>{
+      e.preventDefault();
+      const after=getDragAfterElement(sec,e.clientY);
+      const dragging=document.querySelector('.dragging');
+      if(!dragging) return;
+      if(after==null) sec.appendChild(dragging); else sec.insertBefore(dragging,after);
+    });
+    sec.addEventListener('drop',e=>{
+      e.preventDefault();
+      sec.classList.remove('dragover');
+      const dataTrans=e.dataTransfer.getData('text/plain');
+      if(!dataTrans) return;
+      const info=JSON.parse(dataTrans);
+      const items=[...sec.querySelectorAll('.trail-item')];
+      const dragging=document.querySelector('.dragging');
+      const destIdx=items.indexOf(dragging);
+      moveTrailItem(info.day,info.key,info.idx,dayStr,key,destIdx);
+      showTrail(dayStr,true);
+    });
+    sec.addEventListener('dragenter',()=>sec.classList.add('dragover'));
+    sec.addEventListener('dragleave',e=>{if(!sec.contains(e.relatedTarget)) sec.classList.remove('dragover');});
     const wrap=document.createElement('div');
     wrap.className='trail-section-header';
     const btnAdd=document.createElement('button');
@@ -1004,6 +1050,15 @@ function renderTrailDay(day,expand){
     data[key].forEach((s,idx)=>{
       const item=document.createElement('div');
       item.className='trail-item';
+      item.draggable=true;
+      item.dataset.day=dayStr;
+      item.dataset.key=key;
+      item.dataset.idx=idx;
+      item.addEventListener('dragstart',e=>{
+        e.dataTransfer.setData('text/plain',JSON.stringify({day:dayStr,key,idx}));
+        item.classList.add('dragging');
+      });
+      item.addEventListener('dragend',()=>item.classList.remove('dragging'));
 
       if(s.comment){
         const subj=document.createElement('span');

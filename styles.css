@@ -789,6 +789,15 @@ button:hover { filter: brightness(1.2); }
   align-items: center;
   gap: 6px;
   margin: 4px 0;
+  user-select: none; /* evita seleção acidental durante arraste */
+}
+
+.trail-item.dragging {
+  opacity: 0.5;
+}
+
+.trail-section.dragover {
+  background: #222;
 }
 
 .trail-subject {
