@@ -1221,7 +1221,11 @@ function renderExamSummary(){
   const container=document.createElement('div');
   container.id='examSummary';
   container.innerHTML='<h3>Resumo por Simulado</h3>';
-  for(const [exam,data] of Object.entries(exams)){
+
+  const order=[...new Set([...examOrderNat, ...examOrderMat])];
+  order.forEach(exam=>{
+    const data=exams[exam];
+    if(!data) return;
     const nat=data.Nat; const mat=data.Mat;
     const row=document.createElement('div');
     row.className='exam-row';
@@ -1240,7 +1244,7 @@ function renderExamSummary(){
       row.appendChild(s);
     }
     container.appendChild(row);
-  }
+  });
   app.appendChild(container);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
