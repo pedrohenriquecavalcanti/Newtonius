@@ -285,6 +285,7 @@ let examListOpen = false; // menu Provas e Simulados aberto
 let currentExam  = null; // nome do exame em exibicao
 let currentExamMode = 'nat'; // 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
+const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -840,6 +841,28 @@ function saveTrail(dayStr,data){
   localStorage.setItem(`trail_${dayStr}`, JSON.stringify(data));
 }
 
+function migratePastTrailToAgenda(){
+  const today = getTodayStr();
+  const last = localStorage.getItem('trail_last_day') || today;
+  if(last < today){
+    const agendaData = loadTrail(AGENDA_DAY);
+    let d = new Date(`${last}T00:00:00-03:00`);
+    const todayDate = new Date(`${today}T00:00:00-03:00`);
+    while(d < todayDate){
+      const dStr = d.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
+      const dayData = loadTrail(dStr);
+      for(const key in dayData){
+        agendaData[key] = agendaData[key] || [];
+        agendaData[key].push(...dayData[key]);
+      }
+      localStorage.removeItem(`trail_${dStr}`);
+      d.setDate(d.getDate()+1);
+    }
+    saveTrail(AGENDA_DAY, agendaData);
+  }
+  localStorage.setItem('trail_last_day', today);
+}
+
 function moveTrailItem(fromDay, fromKey, fromIdx, toDay, toKey, toIdx){
   if(!fromDay || !toDay) return;
   const fromData = loadTrail(fromDay);
@@ -994,14 +1017,22 @@ function openPicker(callback){
 }
 
 function renderTrailDay(day,expand){
-  const dayStr = day.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
-  const diffDays = Math.ceil((EXAM_DATE - day)/(86400000));
+  const isAgenda = day === AGENDA_DAY;
+  const dayStr = isAgenda
+    ? AGENDA_DAY
+    : day.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
   const btn = document.createElement('button');
-  const weekDay = day.toLocaleDateString('pt-BR',{weekday:'long'});
-  const dateFmt = day.toLocaleDateString('pt-BR');
   btn.className='day-btn';
-  btn.innerHTML=`<span class="day-label">${weekDay} - ${dateFmt} - ${diffDays} dias</span>`+
-    `<i class="day-arrow fas fa-chevron-down"></i>`;
+  if(isAgenda){
+    btn.innerHTML=`<span class="day-label">Agenda, Planejamento e Metodologia</span>`+
+      `<i class="day-arrow fas fa-chevron-down"></i>`;
+  }else{
+    const diffDays = Math.ceil((EXAM_DATE - day)/(86400000));
+    const weekDay = day.toLocaleDateString('pt-BR',{weekday:'long'});
+    const dateFmt = day.toLocaleDateString('pt-BR');
+    btn.innerHTML=`<span class="day-label">${weekDay} - ${dateFmt} - ${diffDays} dias</span>`+
+      `<i class="day-arrow fas fa-chevron-down"></i>`;
+  }
 
   const content=document.createElement('div');
   content.className='day-content';
@@ -1169,6 +1200,7 @@ function renderTrailDay(day,expand){
 }
 
 function showTrail(expandDay, preserveScroll=false){
+  migratePastTrailToAgenda();
   examListOpen=false;
   currentExam=null;
   currentDisc=currentSub=null;
@@ -1185,6 +1217,8 @@ function showTrail(expandDay, preserveScroll=false){
   clear();
   if(!preserveScroll) window.scrollTo(0,0);
   if(expandDay) openTrailDays.add(expandDay);
+  const agendaOpen = openTrailDays.has(AGENDA_DAY);
+  renderTrailDay(AGENDA_DAY, agendaOpen);
   const start=getTodayDateBR();
   for(let d=new Date(start);d<=EXAM_DATE;d.setDate(d.getDate()+1)){
     const dStr=d.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
@@ -2621,4 +2655,5 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
    8. BOOT (primeira renderização)
    ============================================================== */
 updateD1Btn();
+migratePastTrailToAgenda();
 showMenu(); // Render inicial da aplicação
