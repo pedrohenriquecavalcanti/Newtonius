@@ -503,6 +503,7 @@ button:hover { filter: brightness(1.2); }
   --c-exam-sas:        #3774FF;
   --c-exam-bernoulli:  #00A98F;
   --c-exam-poliedro:   #F7A407;
+  --c-exam-somos:      #E31C79;
 }
 
 /* cada exame injeta a cor da faixa */
@@ -510,6 +511,7 @@ button:hover { filter: brightness(1.2); }
 .exam-sas        { --stripe-color: var(--c-exam-sas); }
 .exam-bernoulli  { --stripe-color: var(--c-exam-bernoulli); }
 .exam-poliedro   { --stripe-color: var(--c-exam-poliedro); }
+.exam-somos      { --stripe-color: var(--c-exam-somos); }
 
 /* === Botão Pomodoro === */
 #pomodoroBtn {
@@ -850,6 +852,7 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
 .trail-subject.exam-bernoulli { background: var(--c-exam-bernoulli); }
 .trail-subject.exam-poliedro  { background: var(--c-exam-poliedro); }
+.trail-subject.exam-somos     { background: var(--c-exam-somos); }
 
 .trail-comment {
   flex: 1 1 auto;
