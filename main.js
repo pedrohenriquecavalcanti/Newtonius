@@ -1122,12 +1122,12 @@ function renderTrailDay(day,expand){
         return;
       }
 
-      if(s.exam){
-        const subj=document.createElement('button');
-        subj.className='trail-subject';
-        subj.textContent=s.exam;
-        const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
-        if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
+        if(s.exam){
+          const subj=document.createElement('button');
+          subj.className='trail-subject';
+          subj.textContent=s.exam;
+          const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS/i);
+          if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
         subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
         const rm=document.createElement('button');
         rm.className='trail-remove';
@@ -1324,7 +1324,7 @@ function showExamList(mode='nat'){
     const btn=document.createElement('button');
     btn.textContent=ex;
     btn.className='btn exam-btn';
-    const m=ex.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
+    const m=ex.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS/i);
     if(m) btn.classList.add(`exam-${m[0].toLowerCase()}`);
     btn.onclick=()=>showExam(ex);
     app.appendChild(btn);
@@ -1366,7 +1366,7 @@ function showExam(exam){
     qBtn.classList.add('btn','question-btn','two-line-btn');
     const topicSpan=qBtn.querySelector('.ms-topic');
     topicSpan.style.color=discColors[disc];
-    const m=q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
+    const m=q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS/i);
     if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
     qBtn.addEventListener('click',e=>{
       if(e.target.closest('.ms-topic')){
@@ -1590,11 +1590,11 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
     qBtn.textContent = q.label;
     qBtn.classList.add("btn");
 
-    // detecta ENEM, SAS ou BERNOULLI no label
-    const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
+    // detecta ENEM, SAS, BERNOULLI, POLIEDRO ou SOMOS no label
+    const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS/i);
     if (m) {
-      const exam = m[0].toLowerCase();          // "enem", "sas" ou "bernoulli"
-      qBtn.classList.add(`exam-${exam}`);       // .exam-enem / .exam-sas / .exam-bernoulli
+      const exam = m[0].toLowerCase();          // "enem", "sas", "bernoulli", "poliedro" ou "somos"
+      qBtn.classList.add(`exam-${exam}`);       // .exam-enem / .exam-sas / .exam-bernoulli / .exam-poliedro / .exam-somos
     }
 
     qBtn.onclick = () => openPdf(q.QPDFName, q.page);
@@ -1918,7 +1918,7 @@ function showMicroSim(entry) {
       <span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
     qBtn.querySelector('.ms-topic').style.color = discColors[disc];
-    const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO/i);
+    const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS/i);
     if(m){
       const exam = m[0].toLowerCase();
       qBtn.classList.add(`exam-${exam}`);
