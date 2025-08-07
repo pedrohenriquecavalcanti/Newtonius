@@ -3622,7 +3622,7 @@ window.listaQuestoes = [
 {"Disciplina": "Biologia", "Assunto": "25", "label": "SOMOS-2025-2-Q-108", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [6], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [7]},
 {"Disciplina": "Química", "Assunto": "05", "label": "SOMOS-2025-2-Q-109", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [7], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [7]},
 {"Disciplina": "Física", "Assunto": "04", "label": "SOMOS-2025-2-Q-110", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [7], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [7]},
-{"Disciplina": "Física", "Assunto": "24", "label": "SOMOS-2025-2-Q-111", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [7], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [7, 8]},
+{"Disciplina": "Química", "Assunto": "24", "label": "SOMOS-2025-2-Q-111", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [7], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [7, 8]},
 {"Disciplina": "Biologia", "Assunto": "08", "label": "SOMOS-2025-2-Q-112", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [8], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [8]},
 {"Disciplina": "Química", "Assunto": "23", "label": "SOMOS-2025-2-Q-113", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [8], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [8]},
 {"Disciplina": "Química", "Assunto": "06", "label": "SOMOS-2025-2-Q-114", "QPDFName": "SOMOS_2025_2_Nat.pdf", "page": [8], "GPDFName": "SOMOS_2025_2_Nat_Gabarito.pdf", "gabaritoPage": [8, 9]},
@@ -3738,4 +3738,5 @@ window.listaQuestoes = [
 {"Disciplina": "Biologia", "Assunto": "25", "label": "SOMOS-2025-4-Q-134", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [17], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [19]},
 {"Disciplina": "Química", "Assunto": "20", "label": "SOMOS-2025-4-Q-135", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [17], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [19, 20]},
 ];
+
 
