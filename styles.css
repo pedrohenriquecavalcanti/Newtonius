@@ -227,7 +227,7 @@ button:hover { filter: brightness(1.2); }
 .disc-btn.quimica    { background: var(--c-qui); }
 .disc-btn.fisica     { background: var(--c-fis); }
 .disc-btn.matematica { background: var(--c-mat); }
-.disc-btn.d1         { background: var(--c-d1); color:#000; }
+.disc-btn.d1         { background: var(--c-d1); color:#fff; }
 
 /* =====================================================================================
    ESTRELAS DE PROGRESSO
@@ -783,17 +783,36 @@ button:hover { filter: brightness(1.2); }
   text-align: center;
   margin-bottom: 8px;
 }
+#examSummary table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-.exam-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 4px 0;
+.exam-summary-table th,
+.exam-summary-table td {
+  text-align: center;
+  padding: 4px;
 }
-.exam-label {
-  flex: 0 0 150px;
-  font-weight: bold;
+
+.exam-summary-table th:first-child,
+.exam-summary-table td:first-child {
+  text-align: left;
 }
+
+.exam-summary-exam {
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.exam-summary-exam.exam-enem       { background: var(--c-exam-enem); }
+.exam-summary-exam.exam-sas        { background: var(--c-exam-sas); }
+.exam-summary-exam.exam-bernoulli  { background: var(--c-exam-bernoulli); }
+.exam-summary-exam.exam-poliedro   { background: var(--c-exam-poliedro); }
+.exam-summary-exam.exam-somos      { background: var(--c-exam-somos); }
+.exam-summary-exam.exam-evolucional{ background: var(--c-exam-evolucional); }
 
 /* Items */
 .trail-item {
