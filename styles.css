@@ -804,7 +804,9 @@ button:hover { filter: brightness(1.2); }
   color: #fff;
   padding: 4px 8px;
   border-radius: 4px;
-  cursor: pointer;
+  cursor: default;
+  font-weight: bold;
+  display: inline-block;
 }
 
 .exam-summary-exam.exam-enem       { background: var(--c-exam-enem); }
@@ -817,6 +819,7 @@ button:hover { filter: brightness(1.2); }
 .exam-summary-total {
   margin-top: 8px;
   text-align: center;
+  font-size: 0.9em;
 }
 
 /* Items */

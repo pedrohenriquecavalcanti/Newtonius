@@ -1334,7 +1334,12 @@ function renderExamSummary(){
   });
   table.appendChild(header);
   const tbody=document.createElement('tbody');
-  let totalC=0,totalA=0;
+  const totals={
+    Lin:{c:0,a:0},
+    Hum:{c:0,a:0},
+    Nat:{c:0,a:0},
+    Mat:{c:0,a:0}
+  };
   const order=[...new Set([
     ...examOrderLin,
     ...examOrderHum,
@@ -1346,13 +1351,12 @@ function renderExamSummary(){
     if(!data) return;
     const tr=document.createElement('tr');
     const tdLabel=document.createElement('td');
-    const btn=document.createElement('button');
-    btn.textContent=exam;
-    btn.className='exam-summary-exam';
+    const label=document.createElement('span');
+    label.textContent=exam;
+    label.className='exam-summary-exam';
     const m=exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
-    if(m) btn.classList.add(`exam-${m[0].toLowerCase()}`);
-    btn.onclick=()=>showExam(exam);
-    tdLabel.appendChild(btn);
+    if(m) label.classList.add(`exam-${m[0].toLowerCase()}`);
+    tdLabel.appendChild(label);
     tr.appendChild(tdLabel);
     const cats=[
       ['Lin','Linguagens'],
@@ -1364,22 +1368,30 @@ function renderExamSummary(){
       const td=document.createElement('td');
       const d=data[key];
       td.textContent=d && d.t ? `${d.c}/${d.a} de ${d.t}` : '-';
-      if(d){ totalC+=d.c; totalA+=d.a; }
+      if(d){
+        totals[key].c += d.c;
+        totals[key].a += d.a;
+      }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   container.appendChild(table);
-  const pct = totalA ? (totalC/totalA*100) : 0;
-  const perfColor = totalA===0 ? 'var(--c-neutral)'
-    : pct>=90 ? 'var(--c-blue)'
-    : pct>=80 ? 'var(--c-green)'
-    : pct>=60 ? 'var(--c-orange)'
-    : 'var(--c-red)';
+  const areaNames={Lin:'Linguagens',Hum:'Humanas',Nat:'Natureza',Mat:'Matemática'};
+  const parts=[];
+  Object.entries(totals).forEach(([key,{c,a}])=>{
+    const pct=a?(c/a*100):0;
+    const color = a===0 ? 'var(--c-neutral)'
+      : pct>=90 ? 'var(--c-blue)'
+      : pct>=80 ? 'var(--c-green)'
+      : pct>=60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    parts.push(`${areaNames[key]}: ${c}/${a} (<span style="color:${color}">${pct.toFixed(1)}%</span>)`);
+  });
   const totalDiv=document.createElement('div');
   totalDiv.className='exam-summary-total';
-  totalDiv.innerHTML=`${totalC}/${totalA} (<span style="color:${perfColor}">${pct.toFixed(1)}%</span>)`;
+  totalDiv.innerHTML=parts.join(' | ');
   container.appendChild(totalDiv);
   app.appendChild(container);
 }
