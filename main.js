@@ -1345,13 +1345,23 @@ function showExam(exam){
   const statDiv=document.getElementById('headerStats');
   function refresh(){
     let c=0,a=0;
+    let bioErr=0,quiErr=0,fisErr=0;
     questions.forEach(({disc,sub,q})=>{
       const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
       if(st===1) c++;
       if(st===1||st===2) a++;
+      if(st===2){
+        if(disc==='Biologia') bioErr++;
+        else if(disc==='Química') quiErr++;
+        else if(disc==='Física') fisErr++;
+      }
     });
     const pct=a?(c/a*100):0;
-    statDiv.textContent=`Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${questions.length}`;
+    let text=`Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${questions.length}`;
+    if(currentExamMode==='nat'){
+      text += ` | 🧬 Biologia: ${bioErr} | 🧪 Química: ${quiErr} | ⚛️ Física: ${fisErr}`;
+    }
+    statDiv.textContent=text;
     statDiv.className=a===0?'stat neutral'
       : pct>=90?'stat blue'
       : pct>=80?'stat green'
