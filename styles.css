@@ -30,7 +30,7 @@
   --c-qui:  #0093D6;
   --c-fis:  #904992;
   --c-mat:  #F5821F;
-  --c-d1:   var(--c-bg-panel);
+  --c-d1:   #F5C500;
 }
 
 /* =====================================================================================
@@ -227,7 +227,7 @@ button:hover { filter: brightness(1.2); }
 .disc-btn.quimica    { background: var(--c-qui); }
 .disc-btn.fisica     { background: var(--c-fis); }
 .disc-btn.matematica { background: var(--c-mat); }
-.disc-btn.d1         { background: var(--c-d1); }
+.disc-btn.d1         { background: var(--c-d1); color:#000; }
 
 /* =====================================================================================
    ESTRELAS DE PROGRESSO
@@ -775,10 +775,18 @@ button:hover { filter: brightness(1.2); }
 
 #examSummary {
   margin-top: 20px;
+  padding: 10px;
+  background: var(--c-bg-panel);
+  border-radius: 8px;
+}
+#examSummary h3 {
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .exam-row {
   display: flex;
+  justify-content: space-between;
   gap: 12px;
   padding: 4px 0;
 }
@@ -848,7 +856,7 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.quimica    { background: var(--c-qui); }
 .trail-subject.fisica     { background: var(--c-fis); }
 .trail-subject.matematica { background: var(--c-mat); }
-.trail-subject.d1         { background: #F5C500; }
+.trail-subject.d1         { background: var(--c-d1); }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
