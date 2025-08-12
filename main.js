@@ -607,6 +607,7 @@ function calcStarState(disc, sub) {
     if (st === 1 || st === 2) answered++;
   });
   const total = qs.length;
+  if (total === 0) return 0; // nenhuma questão cadastrada
   if (answered < 10 && answered / total < 0.75) return 0; // ainda sem dados suficientes
   const pct = answered ? correct / answered : 0;
   return pct >= 0.9 ? 4
@@ -824,17 +825,19 @@ function showMenu () {
     if(disc === 'Geografia e Sociologia') btn.style.padding='0 4px';
     line.appendChild(btn);
 
-    const stars = line.appendChild(Object.assign(
-      document.createElement("div"), { className: "stars-container" }));
-    for (const sub of Object.keys(questoesData[disc]).sort()) {
-      const star = stars.appendChild(Object.assign(
-        document.createElement("span"), { className: "star" }));
-      star.innerHTML = `<span class="star-index">${sub}</span>`;
-      let st = calcStarState(disc, sub);
-      updateStar(star, st);
-      star.onclick = () => {
-        showQuestions(disc, sub, true, false); // se veio da estrela, volta para Home
-      };
+    if (disc !== 'Redação') {
+      const stars = line.appendChild(Object.assign(
+        document.createElement("div"), { className: "stars-container" }));
+      for (const sub of Object.keys(questoesData[disc]).sort()) {
+        const star = stars.appendChild(Object.assign(
+          document.createElement("span"), { className: "star" }));
+        star.innerHTML = `<span class="star-index">${sub}</span>`;
+        let st = calcStarState(disc, sub);
+        updateStar(star, st);
+        star.onclick = () => {
+          showQuestions(disc, sub, true, false); // se veio da estrela, volta para Home
+        };
+      }
     }
   }
   toggleSettingsVisibility(true);   // mostra engrenagem
@@ -1320,7 +1323,17 @@ function renderExamSummary(){
   const exams=computeExamStats();
   const container=document.createElement('div');
   container.id='examSummary';
-  container.innerHTML='<h3>Resumo por Simulado</h3>';
+  container.innerHTML='<h3>Desempenho por Simulado</h3>';
+  const table=document.createElement('table');
+  table.className='exam-summary-table';
+  const header=document.createElement('tr');
+  ['Banca','Linguagens','Humanas','Natureza','Matemática'].forEach(t=>{
+    const th=document.createElement('th');
+    th.textContent=t;
+    header.appendChild(th);
+  });
+  table.appendChild(header);
+  const tbody=document.createElement('tbody');
   const order=[...new Set([
     ...examOrderLin,
     ...examOrderHum,
@@ -1330,28 +1343,32 @@ function renderExamSummary(){
   order.forEach(exam=>{
     const data=exams[exam];
     if(!data) return;
-    const row=document.createElement('div');
-    row.className='exam-row';
-    const label=document.createElement('span');
-    label.className='exam-label';
-    label.textContent=exam;
-    row.appendChild(label);
+    const tr=document.createElement('tr');
+    const tdLabel=document.createElement('td');
+    const btn=document.createElement('button');
+    btn.textContent=exam;
+    btn.className='exam-summary-exam';
+    const m=exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
+    if(m) btn.classList.add(`exam-${m[0].toLowerCase()}`);
+    btn.onclick=()=>showExam(exam);
+    tdLabel.appendChild(btn);
+    tr.appendChild(tdLabel);
     const cats=[
-      ['Lin','Lin'],
-      ['Hum','Hum'],
-      ['Nat','Nat'],
-      ['Mat','Mat']
+      ['Lin','Linguagens'],
+      ['Hum','Humanas'],
+      ['Nat','Natureza'],
+      ['Mat','Matemática']
     ];
-    cats.forEach(([key, title])=>{
+    cats.forEach(([key])=>{
+      const td=document.createElement('td');
       const d=data[key];
-      if(d && d.t){
-        const s=document.createElement('span');
-        s.textContent=`${title}: ${d.c}/${d.a} de ${d.t}`;
-        row.appendChild(s);
-      }
+      td.textContent=d && d.t ? `${d.c}/${d.a} de ${d.t}` : '-';
+      tr.appendChild(td);
     });
-    container.appendChild(row);
+    tbody.appendChild(tr);
   });
+  table.appendChild(tbody);
+  container.appendChild(table);
   app.appendChild(container);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
@@ -1398,7 +1415,8 @@ function showExamList(mode='nat'){
   currentExamMode=mode;
   leaveHome();
   toggleSettingsVisibility(false);
-  updateHeader(true,'Provas e Simulados');
+  const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+  updateHeader(true,`Provas e Simulados - ${areaTitles[mode] || ''}`);
   const stats=document.getElementById('headerStats');
   stats.style.visibility='hidden';
   clear();
