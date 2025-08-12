@@ -1357,16 +1357,20 @@ function showExam(exam){
       }
     });
     const pct=a?(c/a*100):0;
-    let text=`Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${questions.length}`;
+    const perfColor = a===0 ? 'var(--c-neutral)'
+      : pct>=90 ? 'var(--c-blue)'
+      : pct>=80 ? 'var(--c-green)'
+      : pct>=60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    let html = `<span style="color:var(--c-text-primary)">Desempenho:</span> ` +
+               `<span style="color:${perfColor}">${c}/${a} (${pct.toFixed(1)}%)</span>`;
     if(currentExamMode==='nat'){
-      text += ` | 🧬 Biologia: ${bioErr} | 🧪 Química: ${quiErr} | ⚛️ Física: ${fisErr}`;
+      html += `<span style="color:var(--c-text-primary)"> | Total: ${questions.length} | 🧬 Biologia: <span style="color:var(--c-red)">${bioErr}</span> | 🧪 Química: <span style="color:var(--c-red)">${quiErr}</span> | ⚛️ Física: <span style="color:var(--c-red)">${fisErr}</span></span>`;
+    } else {
+      html += `<span style="color:var(--c-text-primary)"> | Total: ${questions.length}</span>`;
     }
-    statDiv.textContent=text;
-    statDiv.className=a===0?'stat neutral'
-      : pct>=90?'stat blue'
-      : pct>=80?'stat green'
-      : pct>=60?'stat orange'
-      :'stat red';
+    statDiv.innerHTML = html;
+    statDiv.className='stat';
   }
   refresh();
   questions.forEach(({disc,sub,q})=>{
