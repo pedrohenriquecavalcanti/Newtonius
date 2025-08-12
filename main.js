@@ -1323,17 +1323,18 @@ function renderExamSummary(){
   const exams=computeExamStats();
   const container=document.createElement('div');
   container.id='examSummary';
-  container.innerHTML='<h3>Desempenho por Simulado</h3>';
+  container.innerHTML='';
   const table=document.createElement('table');
   table.className='exam-summary-table';
   const header=document.createElement('tr');
-  ['Banca','Linguagens','Humanas','Natureza','Matemática'].forEach(t=>{
+  ['','Linguagens','Humanas','Natureza','Matemática'].forEach(t=>{
     const th=document.createElement('th');
     th.textContent=t;
     header.appendChild(th);
   });
   table.appendChild(header);
   const tbody=document.createElement('tbody');
+  let totalC=0,totalA=0;
   const order=[...new Set([
     ...examOrderLin,
     ...examOrderHum,
@@ -1363,12 +1364,23 @@ function renderExamSummary(){
       const td=document.createElement('td');
       const d=data[key];
       td.textContent=d && d.t ? `${d.c}/${d.a} de ${d.t}` : '-';
+      if(d){ totalC+=d.c; totalA+=d.a; }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   container.appendChild(table);
+  const pct = totalA ? (totalC/totalA*100) : 0;
+  const perfColor = totalA===0 ? 'var(--c-neutral)'
+    : pct>=90 ? 'var(--c-blue)'
+    : pct>=80 ? 'var(--c-green)'
+    : pct>=60 ? 'var(--c-orange)'
+    : 'var(--c-red)';
+  const totalDiv=document.createElement('div');
+  totalDiv.className='exam-summary-total';
+  totalDiv.innerHTML=`${totalC}/${totalA} (<span style="color:${perfColor}">${pct.toFixed(1)}%</span>)`;
+  container.appendChild(totalDiv);
   app.appendChild(container);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
