@@ -804,7 +804,8 @@ button:hover { filter: brightness(1.2); }
   color: #fff;
   padding: 4px 8px;
   border-radius: 4px;
-  cursor: pointer;
+  cursor: default;
+  font-weight: bold;
 }
 
 .exam-summary-exam.exam-enem       { background: var(--c-exam-enem); }
@@ -813,11 +814,6 @@ button:hover { filter: brightness(1.2); }
 .exam-summary-exam.exam-poliedro   { background: var(--c-exam-poliedro); }
 .exam-summary-exam.exam-somos      { background: var(--c-exam-somos); }
 .exam-summary-exam.exam-evolucional{ background: var(--c-exam-evolucional); }
-
-.exam-summary-total {
-  margin-top: 8px;
-  text-align: center;
-}
 
 /* Items */
 .trail-item {

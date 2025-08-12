@@ -1334,7 +1334,7 @@ function renderExamSummary(){
   });
   table.appendChild(header);
   const tbody=document.createElement('tbody');
-  let totalC=0,totalA=0;
+  const totals={Lin:{c:0,a:0},Hum:{c:0,a:0},Nat:{c:0,a:0},Mat:{c:0,a:0}};
   const order=[...new Set([
     ...examOrderLin,
     ...examOrderHum,
@@ -1351,7 +1351,9 @@ function renderExamSummary(){
     btn.className='exam-summary-exam';
     const m=exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if(m) btn.classList.add(`exam-${m[0].toLowerCase()}`);
-    btn.onclick=()=>showExam(exam);
+    // Botões do resumo não abrem mais o simulado
+    // para que os cliques não façam nada
+    // btn.onclick = () => showExam(exam);
     tdLabel.appendChild(btn);
     tr.appendChild(tdLabel);
     const cats=[
@@ -1364,23 +1366,30 @@ function renderExamSummary(){
       const td=document.createElement('td');
       const d=data[key];
       td.textContent=d && d.t ? `${d.c}/${d.a} de ${d.t}` : '-';
-      if(d){ totalC+=d.c; totalA+=d.a; }
+      if(d){ totals[key].c+=d.c; totals[key].a+=d.a; }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+  const tfoot=document.createElement('tfoot');
+  const trTotal=document.createElement('tr');
+  trTotal.appendChild(document.createElement('td'));
+  ['Lin','Hum','Nat','Mat'].forEach(key=>{
+    const td=document.createElement('td');
+    const t=totals[key];
+    const pct=t.a ? (t.c/t.a*100) : 0;
+    const perfColor = t.a===0 ? 'var(--c-neutral)'
+      : pct>=90 ? 'var(--c-blue)'
+      : pct>=80 ? 'var(--c-green)'
+      : pct>=60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    td.innerHTML=`${t.c}/${t.a} (<span style="color:${perfColor}">${pct.toFixed(1)}%</span>)`;
+    trTotal.appendChild(td);
+  });
+  tfoot.appendChild(trTotal);
+  table.appendChild(tfoot);
   container.appendChild(table);
-  const pct = totalA ? (totalC/totalA*100) : 0;
-  const perfColor = totalA===0 ? 'var(--c-neutral)'
-    : pct>=90 ? 'var(--c-blue)'
-    : pct>=80 ? 'var(--c-green)'
-    : pct>=60 ? 'var(--c-orange)'
-    : 'var(--c-red)';
-  const totalDiv=document.createElement('div');
-  totalDiv.className='exam-summary-total';
-  totalDiv.innerHTML=`${totalC}/${totalA} (<span style="color:${perfColor}">${pct.toFixed(1)}%</span>)`;
-  container.appendChild(totalDiv);
   app.appendChild(container);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
