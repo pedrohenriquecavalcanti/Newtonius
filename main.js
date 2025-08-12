@@ -393,6 +393,32 @@ function buildExamMap(list, mode='nat'){
       return na-nb;
     });
   }
+  if(mode === 'lin' || mode === 'hum'){
+    const typePriority = { REG:1, PPL:2, DIG:3 };
+    order.sort((a,b)=>{
+      const pa=a.split('-');
+      const pb=b.split('-');
+      const bancaA=pa[0].toLowerCase();
+      const bancaB=pb[0].toLowerCase();
+      if(bancaA!==bancaB) return bancaA.localeCompare(bancaB);
+      const yearA=parseInt(pa[1],10);
+      const yearB=parseInt(pb[1],10);
+      if(yearA!==yearB) return yearA-yearB;
+      if(bancaA==='enem'){
+        const ta=pa[2]||'';
+        const tb=pb[2]||'';
+        const va=typePriority[ta]||99;
+        const vb=typePriority[tb]||99;
+        if(va!==vb) return va-vb;
+      }
+      const restA=pa.slice(2).join('-');
+      const restB=pb.slice(2).join('-');
+      const na=parseInt(restA,10);
+      const nb=parseInt(restB,10);
+      if(!isNaN(na) && !isNaN(nb)) return na-nb;
+      return restA.localeCompare(restB);
+    });
+  }
   return { map: exams, order };
 }
 
@@ -798,19 +824,17 @@ function showMenu () {
     if(disc === 'Geografia e Sociologia') btn.style.padding='0 4px';
     line.appendChild(btn);
 
-    if (!D1_DISCIPLINES.includes(disc)) {
-      const stars = line.appendChild(Object.assign(
-        document.createElement("div"), { className: "stars-container" }));
-      for (const sub of Object.keys(questoesData[disc]).sort()) {
-        const star = stars.appendChild(Object.assign(
-          document.createElement("span"), { className: "star" }));
-        star.innerHTML = `<span class="star-index">${sub}</span>`;
-        let st = calcStarState(disc, sub);
-        updateStar(star, st);
-        star.onclick = () => {
-          showQuestions(disc, sub, true, false); // se veio da estrela, volta para Home
-        };
-      }
+    const stars = line.appendChild(Object.assign(
+      document.createElement("div"), { className: "stars-container" }));
+    for (const sub of Object.keys(questoesData[disc]).sort()) {
+      const star = stars.appendChild(Object.assign(
+        document.createElement("span"), { className: "star" }));
+      star.innerHTML = `<span class="star-index">${sub}</span>`;
+      let st = calcStarState(disc, sub);
+      updateStar(star, st);
+      star.onclick = () => {
+        showQuestions(disc, sub, true, false); // se veio da estrela, volta para Home
+      };
     }
   }
   toggleSettingsVisibility(true);   // mostra engrenagem
@@ -961,7 +985,6 @@ function openPicker(callback){
   pickerExamMode.style.display='none';
   pickerExam.style.display='none';
   for(const d of Object.keys(SUBJECT_NAMES)){
-    if(!d1Enabled && D1_DISCIPLINES.includes(d)) continue;
     const opt = document.createElement('option');
     opt.value = d;
     opt.textContent = d;
@@ -1265,7 +1288,6 @@ function showTrail(expandDay, preserveScroll=false){
     const open=openTrailDays.has(dStr);
     renderTrailDay(new Date(d), open);
   }
-  renderExamSummary();
   if(preserveScroll) window.scrollTo(0,prevY);
 }
 
@@ -1366,6 +1388,7 @@ function showExamMenu(){
   app.appendChild(btnHum);
   app.appendChild(btnNat);
   app.appendChild(btnMat);
+  renderExamSummary();
 }
 
 function showExamList(mode='nat'){
