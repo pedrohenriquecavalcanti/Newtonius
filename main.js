@@ -1345,18 +1345,32 @@ function showExam(exam){
   const statDiv=document.getElementById('headerStats');
   function refresh(){
     let c=0,a=0;
+    let bioErr=0,quiErr=0,fisErr=0;
     questions.forEach(({disc,sub,q})=>{
       const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
       if(st===1) c++;
       if(st===1||st===2) a++;
+      if(st===2){
+        if(disc==='Biologia') bioErr++;
+        else if(disc==='Química') quiErr++;
+        else if(disc==='Física') fisErr++;
+      }
     });
     const pct=a?(c/a*100):0;
-    statDiv.textContent=`Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${questions.length}`;
-    statDiv.className=a===0?'stat neutral'
-      : pct>=90?'stat blue'
-      : pct>=80?'stat green'
-      : pct>=60?'stat orange'
-      :'stat red';
+    const perfColor = a===0 ? 'var(--c-neutral)'
+      : pct>=90 ? 'var(--c-blue)'
+      : pct>=80 ? 'var(--c-green)'
+      : pct>=60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    let html = `<span style="color:var(--c-text-primary)">Desempenho:</span> ` +
+               `<span style="color:${perfColor}">${c}/${a} (${pct.toFixed(1)}%)</span>`;
+    if(currentExamMode==='nat'){
+      html += `<span style="color:var(--c-text-primary)"> | Total: ${questions.length} | 🧬 Biologia: <span style="color:var(--c-red)">${bioErr}</span> | 🧪 Química: <span style="color:var(--c-red)">${quiErr}</span> | ⚛️ Física: <span style="color:var(--c-red)">${fisErr}</span></span>`;
+    } else {
+      html += `<span style="color:var(--c-text-primary)"> | Total: ${questions.length}</span>`;
+    }
+    statDiv.innerHTML = html;
+    statDiv.className='stat';
   }
   refresh();
   questions.forEach(({disc,sub,q})=>{
