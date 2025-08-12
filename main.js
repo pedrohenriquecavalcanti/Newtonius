@@ -884,7 +884,7 @@ examsBtn.onclick = () => {
 };
 
 function updateD1Btn(){
-  toggleD1Btn.textContent = d1Enabled ? 'Desativar D1' : 'Ativar D1';
+  toggleD1Btn.textContent = d1Enabled ? 'Esconder - D1' : 'Exibir - D1';
 }
 
 toggleD1Btn.onclick = () => {
