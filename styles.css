@@ -814,6 +814,11 @@ button:hover { filter: brightness(1.2); }
 .exam-summary-exam.exam-somos      { background: var(--c-exam-somos); }
 .exam-summary-exam.exam-evolucional{ background: var(--c-exam-evolucional); }
 
+.exam-summary-total {
+  margin-top: 8px;
+  text-align: center;
+}
+
 /* Items */
 .trail-item {
   display: flex;
