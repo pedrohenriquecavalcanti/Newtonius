@@ -229,6 +229,13 @@ const ALL_SUB = '__all__';
 
 const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação'];
 
+const DISCIPLINES_BY_MODE = {
+  lin: ['Linguagens', 'Redação'],
+  hum: ['Geografia e Sociologia', 'História e Filosofia'],
+  nat: ['Biologia', 'Química', 'Física'],
+  mat: ['Matemática']
+};
+
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
@@ -283,7 +290,7 @@ let starReturn   = false; // flag para voltar à Home ao sair de um assunto aber
 let trailReturnSub = false; // flag para voltar direto à Trilha se abriu sub específico
 let examListOpen = false; // menu Provas e Simulados aberto
 let currentExam  = null; // nome do exame em exibicao
-let currentExamMode = 'nat'; // 'nat' ou 'mat'
+let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
 
@@ -292,6 +299,14 @@ const questoesData = buildBancoQuestoes([
   ...(window.listaQuestoes || []),
   ...(window.listaQuestoesD1 || [])
 ]);
+const { map: examsDataLin, order: examOrderLin } = buildExamMap([
+  ...(window.listaQuestoes || []),
+  ...(window.listaQuestoesD1 || [])
+], 'lin');
+const { map: examsDataHum, order: examOrderHum } = buildExamMap([
+  ...(window.listaQuestoes || []),
+  ...(window.listaQuestoesD1 || [])
+], 'hum');
 const { map: examsDataNat, order: examOrderNat } = buildExamMap([
   ...(window.listaQuestoes || []),
   ...(window.listaQuestoesD1 || [])
@@ -300,6 +315,20 @@ const { map: examsDataMat, order: examOrderMat } = buildExamMap([
   ...(window.listaQuestoes || []),
   ...(window.listaQuestoesD1 || [])
 ], 'mat');
+
+const examsDataByMode = {
+  lin: examsDataLin,
+  hum: examsDataHum,
+  nat: examsDataNat,
+  mat: examsDataMat
+};
+
+const examOrderByMode = {
+  lin: examOrderLin,
+  hum: examOrderHum,
+  nat: examOrderNat,
+  mat: examOrderMat
+};
 
 /* ================================================================
    4. FUNÇÕES UTILITÁRIAS (não tocam no DOM)
@@ -335,11 +364,10 @@ function buildBancoQuestoes(listaFlat) {
 function buildExamMap(list, mode='nat'){
   const exams = {};
   const order = [];
+  const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
   list.forEach(item => {
-    if(mode==='nat' && item.Disciplina==='Matemática') return;
-    if(mode==='mat' && item.Disciplina!=='Matemática') return;
     const m = item.label.match(/^(.*)-Q-(\d+)/);
-    if (!m) return;
+    if (!m || (allowed.size && !allowed.has(item.Disciplina))) return;
     const exam = m[1];
     if (!exams[exam]) {
       exams[exam] = [];
@@ -366,6 +394,14 @@ function buildExamMap(list, mode='nat'){
     });
   }
   return { map: exams, order };
+}
+
+function getExamCategory(disc){
+  if (DISCIPLINES_BY_MODE.lin.includes(disc)) return 'Lin';
+  if (DISCIPLINES_BY_MODE.hum.includes(disc)) return 'Hum';
+  if (DISCIPLINES_BY_MODE.nat.includes(disc)) return 'Nat';
+  if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'Mat';
+  return null;
 }
 async function doExport() {
   /* 1 ▸ lê tudo do localStorage e joga num array  [key,value] */
@@ -952,9 +988,13 @@ function openPicker(callback){
       pickerMicro.style.display='none';
       pickerExamMode.style.display='';
       pickerExam.style.display='';
-      pickerExamMode.innerHTML='<option value="nat">Natureza</option><option value="mat">Matemática</option>';
+      pickerExamMode.innerHTML=
+        '<option value="lin">Linguagens</option>'+
+        '<option value="hum">Humanas</option>'+
+        '<option value="nat">Natureza</option>'+
+        '<option value="mat">Matemática</option>';
       const populateExam=()=>{
-        const order=pickerExamMode.value==='mat'? examOrderMat : examOrderNat;
+        const order=examOrderByMode[pickerExamMode.value]||[];
         pickerExam.innerHTML='';
         order.forEach(ex=>{
           const o=document.createElement('option');
@@ -1232,15 +1272,19 @@ function showTrail(expandDay, preserveScroll=false){
 function computeExamStats(){
   const exams={};
   for(const disc in questoesData){
+    const cat=getExamCategory(disc);
+    if(!cat) continue;
     for(const sub in questoesData[disc]){
       questoesData[disc][sub].forEach(q=>{
         const m=q.label.match(/^(.*)-Q-(\d+)/);
         if(!m) return;
         const exam=m[1];
-        const num=parseInt(m[2],10);
-        const cat=num>=91&&num<=135?'Nat':num>=136&&num<=180?'Mat':null;
-        if(!cat) return;
-        exams[exam] ||= {Nat:{c:0,a:0,t:0}, Mat:{c:0,a:0,t:0}};
+        exams[exam] ||= {
+          Lin:{c:0,a:0,t:0},
+          Hum:{c:0,a:0,t:0},
+          Nat:{c:0,a:0,t:0},
+          Mat:{c:0,a:0,t:0}
+        };
         const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
         const e=exams[exam][cat];
         e.t++; if(st===1) e.c++; if(st===1||st===2) e.a++;
@@ -1255,28 +1299,35 @@ function renderExamSummary(){
   const container=document.createElement('div');
   container.id='examSummary';
   container.innerHTML='<h3>Resumo por Simulado</h3>';
-
-  const order=[...new Set([...examOrderNat, ...examOrderMat])];
+  const order=[...new Set([
+    ...examOrderLin,
+    ...examOrderHum,
+    ...examOrderNat,
+    ...examOrderMat
+  ])];
   order.forEach(exam=>{
     const data=exams[exam];
     if(!data) return;
-    const nat=data.Nat; const mat=data.Mat;
     const row=document.createElement('div');
     row.className='exam-row';
     const label=document.createElement('span');
     label.className='exam-label';
     label.textContent=exam;
     row.appendChild(label);
-    if(nat.t){
-      const s=document.createElement('span');
-      s.textContent=`Nat: ${nat.c}/${nat.a} de ${nat.t}`;
-      row.appendChild(s);
-    }
-    if(mat.t){
-      const s=document.createElement('span');
-      s.textContent=`Mat: ${mat.c}/${mat.a} de ${mat.t}`;
-      row.appendChild(s);
-    }
+    const cats=[
+      ['Lin','Lin'],
+      ['Hum','Hum'],
+      ['Nat','Nat'],
+      ['Mat','Mat']
+    ];
+    cats.forEach(([key, title])=>{
+      const d=data[key];
+      if(d && d.t){
+        const s=document.createElement('span');
+        s.textContent=`${title}: ${d.c}/${d.a} de ${d.t}`;
+        row.appendChild(s);
+      }
+    });
     container.appendChild(row);
   });
   app.appendChild(container);
@@ -1295,6 +1346,14 @@ function showExamMenu(){
   stats.style.visibility='hidden';
   clear();
   window.scrollTo(0,0);
+  const btnLin=document.createElement('button');
+  btnLin.textContent='Linguagens';
+  btnLin.className='btn exam-btn';
+  btnLin.onclick=()=>showExamList('lin');
+  const btnHum=document.createElement('button');
+  btnHum.textContent='Humanas';
+  btnHum.className='btn exam-btn';
+  btnHum.onclick=()=>showExamList('hum');
   const btnNat=document.createElement('button');
   btnNat.textContent='Natureza';
   btnNat.className='btn exam-btn';
@@ -1303,6 +1362,8 @@ function showExamMenu(){
   btnMat.textContent='Matemática';
   btnMat.className='btn exam-btn';
   btnMat.onclick=()=>showExamList('mat');
+  app.appendChild(btnLin);
+  app.appendChild(btnHum);
   app.appendChild(btnNat);
   app.appendChild(btnMat);
 }
@@ -1319,7 +1380,7 @@ function showExamList(mode='nat'){
   stats.style.visibility='hidden';
   clear();
   window.scrollTo(0,0);
-  const order = mode==='mat'? examOrderMat : examOrderNat;
+  const order = examOrderByMode[mode] || [];
   order.forEach(ex=>{
     const btn=document.createElement('button');
     btn.textContent=ex;
@@ -1340,7 +1401,7 @@ function showExam(exam){
   document.getElementById('headerStats').style.visibility='visible';
   clear();
   window.scrollTo(0,0);
-  const data = currentExamMode==='mat'? examsDataMat : examsDataNat;
+  const data = examsDataByMode[currentExamMode] || {};
   const questions=data[exam]||[];
   const statDiv=document.getElementById('headerStats');
   function refresh(){
