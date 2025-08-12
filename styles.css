@@ -504,6 +504,7 @@ button:hover { filter: brightness(1.2); }
   --c-exam-bernoulli:  #00A98F;
   --c-exam-poliedro:   #F7A407;
   --c-exam-somos:      #E31C79;
+  --c-exam-evolucional:#060181;
 }
 
 /* cada exame injeta a cor da faixa */
@@ -512,6 +513,7 @@ button:hover { filter: brightness(1.2); }
 .exam-bernoulli  { --stripe-color: var(--c-exam-bernoulli); }
 .exam-poliedro   { --stripe-color: var(--c-exam-poliedro); }
 .exam-somos      { --stripe-color: var(--c-exam-somos); }
+.exam-evolucional{ --stripe-color: var(--c-exam-evolucional); }
 
 /* === Botão Pomodoro === */
 #pomodoroBtn {
