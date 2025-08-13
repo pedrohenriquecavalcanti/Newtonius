@@ -1357,15 +1357,19 @@ function renderExamSummary(){
     tdLabel.appendChild(btn);
     tr.appendChild(tdLabel);
     const cats=[
-      ['Lin','Linguagens'],
-      ['Hum','Humanas'],
-      ['Nat','Natureza'],
-      ['Mat','Matemática']
+      ['Lin','Linguagens','lin'],
+      ['Hum','Humanas','hum'],
+      ['Nat','Natureza','nat'],
+      ['Mat','Matemática','mat']
     ];
-    cats.forEach(([key])=>{
+    cats.forEach(([key,_,mode])=>{
       const td=document.createElement('td');
       const d=data[key];
       td.textContent=d && d.t ? `${d.c}/${d.a} de ${d.t}` : '-';
+      if(d && d.t){
+        td.classList.add('exam-summary-cell');
+        td.onclick=()=>{ currentExamMode=mode; showExam(exam); };
+      }
       if(d){ totals[key].c+=d.c; totals[key].a+=d.a; }
       tr.appendChild(td);
     });
@@ -1406,26 +1410,6 @@ function showExamMenu(){
   stats.style.visibility='hidden';
   clear();
   window.scrollTo(0,0);
-  const btnLin=document.createElement('button');
-  btnLin.textContent='Linguagens';
-  btnLin.className='btn exam-btn';
-  btnLin.onclick=()=>showExamList('lin');
-  const btnHum=document.createElement('button');
-  btnHum.textContent='Humanas';
-  btnHum.className='btn exam-btn';
-  btnHum.onclick=()=>showExamList('hum');
-  const btnNat=document.createElement('button');
-  btnNat.textContent='Natureza';
-  btnNat.className='btn exam-btn';
-  btnNat.onclick=()=>showExamList('nat');
-  const btnMat=document.createElement('button');
-  btnMat.textContent='Matemática';
-  btnMat.className='btn exam-btn';
-  btnMat.onclick=()=>showExamList('mat');
-  app.appendChild(btnLin);
-  app.appendChild(btnHum);
-  app.appendChild(btnNat);
-  app.appendChild(btnMat);
   renderExamSummary();
 }
 
@@ -2316,7 +2300,7 @@ backBtn.onclick = () => {
       showTrail(d);
     }else{
       currentExam=null;
-      showExamList(currentExamMode);
+      showExamMenu();
     }
     return;
   }
