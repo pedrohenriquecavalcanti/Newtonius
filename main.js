@@ -1470,7 +1470,7 @@ function showExam(exam){
       : pct>=60 ? 'var(--c-orange)'
       : 'var(--c-red)';
     let html = `<span style="color:var(--c-text-primary)">Desempenho:</span> ` +
-               `<span style="color:${perfColor}">${c}/${a} (${pct.toFixed(1)}%)</span>`;
+               `${c}/${a} (<span style="color:${perfColor}">${pct.toFixed(1)}%</span>)`;
     if(currentExamMode==='nat'){
       html += `<span style="color:var(--c-text-primary)"> | Total: ${questions.length} | 🧬 Biologia: <span style="color:var(--c-red)">${bioErr}</span> | 🧪 Química: <span style="color:var(--c-red)">${quiErr}</span> | ⚛️ Física: <span style="color:var(--c-red)">${fisErr}</span></span>`;
     } else {
@@ -1592,13 +1592,13 @@ function showSubjects(disc) {
       });
     }
     const pct = answered ? (correct/answered*100) : 0;
-    statDiv.textContent = `Desempenho: ${correct}/${answered} (${pct.toFixed(1)}%) | Total: ${total}`;
-    statDiv.className = answered === 0
-      ? "stat neutral"
-      : pct >= 90 ? "stat blue"
-      : pct >= 80 ? "stat green"
-      : pct >= 60 ? "stat orange"
-      : "stat red";
+    const color = answered === 0 ? 'var(--c-neutral)'
+      : pct >= 90 ? 'var(--c-blue)'
+      : pct >= 80 ? 'var(--c-green)'
+      : pct >= 60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    statDiv.innerHTML = `Desempenho: ${correct}/${answered} (<span style="color:${color}">${pct.toFixed(1)}%</span>) | Total: ${total}`;
+    statDiv.className = 'stat';
   }
   statDiv.style.visibility = 'visible';
   refreshDiscStats();
@@ -1686,16 +1686,13 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
       if (st === 1 || st === 2) a++;
     });
     const pct = a ? (c / a * 100) : 0;
-    statDiv.textContent = `Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${qs.length}`;
-    statDiv.className   = a === 0
-                         ? "stat neutral"
-                         : pct >= 90
-                           ? "stat blue"
-                           : pct >= 80
-                             ? "stat green"
-                             : pct >= 60
-                               ? "stat orange"
-                               : "stat red";
+    const color = a === 0 ? 'var(--c-neutral)'
+                 : pct >= 90 ? 'var(--c-blue)'
+                 : pct >= 80 ? 'var(--c-green)'
+                 : pct >= 60 ? 'var(--c-orange)'
+                 : 'var(--c-red)';
+    statDiv.innerHTML = `Desempenho: ${c}/${a} (<span style="color:${color}">${pct.toFixed(1)}%</span>) | Total: ${qs.length}`;
+    statDiv.className = 'stat';
   }
 
   refreshStats();
@@ -2020,13 +2017,14 @@ function showMicroSim(entry) {
       if(st===1) c++;
       if(st===1||st===2) a++;
     });
-    const pct = a? (c/a*100):0;
-    statDiv.textContent=`Desempenho: ${c}/${a} (${pct.toFixed(1)}%) | Total: ${questions.length}`;
-    statDiv.className = a===0 ? 'stat neutral'
-      : pct>=90? 'stat blue'
-      : pct>=80? 'stat green'
-      : pct>=60? 'stat orange'
-      : 'stat red';
+    const pct = a ? (c/a*100) : 0;
+    const color = a === 0 ? 'var(--c-neutral)'
+      : pct >= 90 ? 'var(--c-blue)'
+      : pct >= 80 ? 'var(--c-green)'
+      : pct >= 60 ? 'var(--c-orange)'
+      : 'var(--c-red)';
+    statDiv.innerHTML = `Desempenho: ${c}/${a} (<span style="color:${color}">${pct.toFixed(1)}%</span>) | Total: ${questions.length}`;
+    statDiv.className = 'stat';
   }
   refreshStats();
 
