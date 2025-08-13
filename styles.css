@@ -799,6 +799,10 @@ button:hover { filter: brightness(1.2); }
   text-align: left;
 }
 
+.exam-summary-cell {
+  cursor: pointer;
+}
+
 .exam-summary-exam {
   border: none;
   color: #fff;
