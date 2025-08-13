@@ -1443,7 +1443,9 @@ function showExam(exam){
   currentExam=exam;
   leaveHome();
   toggleSettingsVisibility(false);
-  updateHeader(true, exam);
+  const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+  const area=areaTitles[currentExamMode]||'';
+  updateHeader(true, area ? `${exam} - ${area}` : exam);
   document.getElementById('headerStats').style.visibility='visible';
   clear();
   window.scrollTo(0,0);
