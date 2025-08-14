@@ -3703,7 +3703,7 @@ window.listaQuestoes = [
 {"Disciplina": "Física", "Assunto": "04", "label": "SOMOS-2025-4-Q-99", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [5], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [4]},
 {"Disciplina": "Biologia", "Assunto": "19", "label": "SOMOS-2025-4-Q-100", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [5], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [4, 5]},
 {"Disciplina": "Química", "Assunto": "20", "label": "SOMOS-2025-4-Q-101", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [5], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [5]},
-{"Disciplina": "Física", "Assunto": "15", "label": "SOMOS-2025-4-Q-102", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [6], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [5, 6]},
+{"Disciplina": "Física", "Assunto": "15", "label": "SOMOS-2025-4-Q-102", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [6], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [5, 6, 7]},
 {"Disciplina": "Biologia", "Assunto": "25", "label": "SOMOS-2025-4-Q-103", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [6], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [7]},
 {"Disciplina": "Biologia", "Assunto": "19", "label": "SOMOS-2025-4-Q-104", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [6], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [7, 8]},
 {"Disciplina": "Física", "Assunto": "09", "label": "SOMOS-2025-4-Q-105", "QPDFName": "SOMOS_2025_4_Nat.pdf", "page": [7], "GPDFName": "SOMOS_2025_4_Nat_Gabarito.pdf", "gabaritoPage": [9]},
@@ -3788,6 +3788,7 @@ window.listaQuestoes = [
 {"Disciplina": "Química", "Assunto": "05", "label": "Evolucional-2025-6-Q-134", "QPDFName": "Evolucional_2025_6_Nat.pdf", "page": [44], "GPDFName": "Evolucional_2025_6_Nat_Gabarito.pdf", "gabaritoPage": [44]},
 {"Disciplina": "Física", "Assunto": "10", "label": "Evolucional-2025-6-Q-135", "QPDFName": "Evolucional_2025_6_Nat.pdf", "page": [45], "GPDFName": "Evolucional_2025_6_Nat_Gabarito.pdf", "gabaritoPage": [45]},
 ];
+
 
 
 
