@@ -361,6 +361,31 @@ function buildBancoQuestoes(listaFlat) {
   return banco;
 }
 
+function compareExamNames(a,b){
+  const typePriority = { REG:1, PPL:2, DIG:3 };
+  const pa=a.split('-');
+  const pb=b.split('-');
+  const bancaA=pa[0].toLowerCase();
+  const bancaB=pb[0].toLowerCase();
+  if(bancaA!==bancaB) return bancaA.localeCompare(bancaB);
+  const yearA=parseInt(pa[1],10);
+  const yearB=parseInt(pb[1],10);
+  if(yearA!==yearB) return yearA-yearB;
+  if(bancaA==='enem'){
+    const ta=pa[2]||'';
+    const tb=pb[2]||'';
+    const va=typePriority[ta]||99;
+    const vb=typePriority[tb]||99;
+    if(va!==vb) return va-vb;
+  }
+  const restA=pa.slice(2).join('-');
+  const restB=pb.slice(2).join('-');
+  const na=parseInt(restA,10);
+  const nb=parseInt(restB,10);
+  if(!isNaN(na) && !isNaN(nb)) return na-nb;
+  return restA.localeCompare(restB);
+}
+
 function buildExamMap(list, mode='nat'){
   const exams = {};
   const order = [];
@@ -393,32 +418,7 @@ function buildExamMap(list, mode='nat'){
       return na-nb;
     });
   }
-  if(mode === 'lin' || mode === 'hum'){
-    const typePriority = { REG:1, PPL:2, DIG:3 };
-    order.sort((a,b)=>{
-      const pa=a.split('-');
-      const pb=b.split('-');
-      const bancaA=pa[0].toLowerCase();
-      const bancaB=pb[0].toLowerCase();
-      if(bancaA!==bancaB) return bancaA.localeCompare(bancaB);
-      const yearA=parseInt(pa[1],10);
-      const yearB=parseInt(pb[1],10);
-      if(yearA!==yearB) return yearA-yearB;
-      if(bancaA==='enem'){
-        const ta=pa[2]||'';
-        const tb=pb[2]||'';
-        const va=typePriority[ta]||99;
-        const vb=typePriority[tb]||99;
-        if(va!==vb) return va-vb;
-      }
-      const restA=pa.slice(2).join('-');
-      const restB=pb.slice(2).join('-');
-      const na=parseInt(restA,10);
-      const nb=parseInt(restB,10);
-      if(!isNaN(na) && !isNaN(nb)) return na-nb;
-      return restA.localeCompare(restB);
-    });
-  }
+  order.sort(compareExamNames);
   return { map: exams, order };
 }
 
@@ -1340,7 +1340,7 @@ function renderExamSummary(){
     ...examOrderHum,
     ...examOrderNat,
     ...examOrderMat
-  ])];
+  ])].sort(compareExamNames);
   order.forEach(exam=>{
     const data=exams[exam];
     if(!data) return;
