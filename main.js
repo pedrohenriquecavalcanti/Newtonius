@@ -1505,13 +1505,7 @@ function showExam(exam){
     row.appendChild(Object.assign(document.createElement('button'),{
       textContent:'Gabarito',
       className:'small-btn',
-      onclick:()=>{
-        if(q.gabaritoAnswer){
-          openAnswer(q.gabaritoAnswer);
-        }else{
-          openPdf(q.GPDFName,q.gabaritoPage);
-        }
-      }}));
+      onclick:()=>openGabarito(q)}));
     const key=qKey(disc,sub,q.label);
     let st=+localStorage.getItem(key)||0;
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
@@ -1728,13 +1722,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
       document.createElement("button"), {
         textContent:"Gabarito",
         className:"small-btn",
-        onclick: () => {
-          if(q.gabaritoAnswer){
-            openAnswer(q.gabaritoAnswer);
-          } else {
-            openPdf(q.GPDFName, q.gabaritoPage);
-          }
-        }
+        onclick: () => openGabarito(q)
       }));
 
     /* Caixa ✓ / ✗ */
@@ -1949,6 +1937,16 @@ function openAnswer(answer){
   div.style.cssText = 'font-size:48px;color:#fff;margin:40px;text-align:center;';
   pdfContainer.appendChild(div);
 }
+
+function openGabarito(q){
+  if(q?.gabaritoAnswer){
+    openAnswer(q.gabaritoAnswer);
+  }else if(q?.GPDFName && q?.gabaritoPage){
+    openPdf(q.GPDFName, q.gabaritoPage);
+  }else{
+    alert('Gabarito indisponível.');
+  }
+}
 closeBtn.onclick = () => {
   pdfContainer.style.display = "none";
   pdfContainer.querySelectorAll("canvas, .answer-letter").forEach(el=>el.remove());
@@ -2053,13 +2051,7 @@ function showMicroSim(entry) {
       document.createElement('button'),{
         textContent:'Gabarito',
         className:'small-btn',
-        onclick:()=>{
-          if(q.gabaritoAnswer){
-            openAnswer(q.gabaritoAnswer);
-          }else{
-            openPdf(q.GPDFName,q.gabaritoPage);
-          }
-        }}));
+        onclick:()=>openGabarito(q)}));
 
     const key = qKey(disc,sub,q.label);
     let st = +localStorage.getItem(key)||0;
