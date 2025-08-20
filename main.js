@@ -419,6 +419,26 @@ function buildExamMap(list, mode='nat'){
       return restA.localeCompare(restB);
     });
   }
+  // Reordenar simulados do ENEM: mais antigos primeiro e, no mesmo ano,
+  // na ordem REG → PPL → DIG. Os demais simulados mantêm a ordem original.
+  const enemPriority = { REG:1, PPL:2, DIG:3 };
+  const enemExams = order.filter(name => name.startsWith('ENEM-'));
+  enemExams.sort((a,b) => {
+    const pa = a.split('-');
+    const pb = b.split('-');
+    const yearA = parseInt(pa[1], 10);
+    const yearB = parseInt(pb[1], 10);
+    if (yearA !== yearB) return yearA - yearB;
+    const ta = pa[2] || '';
+    const tb = pb[2] || '';
+    const va = enemPriority[ta] || 99;
+    const vb = enemPriority[tb] || 99;
+    if (va !== vb) return va - vb;
+    return 0;
+  });
+  const otherExams = order.filter(name => !name.startsWith('ENEM-'));
+  order.length = 0;
+  order.push(...enemExams, ...otherExams);
   return { map: exams, order };
 }
 
