@@ -1310,9 +1310,9 @@ function renderExamSummary(){
   const tbody=document.createElement('tbody');
   const totals={Lin:{c:0,a:0},Hum:{c:0,a:0},Nat:{c:0,a:0},Mat:{c:0,a:0}};
   const order=[...new Set([
+    ...examOrderNat,
     ...examOrderLin,
     ...examOrderHum,
-    ...examOrderNat,
     ...examOrderMat
   ])];
   order.forEach(exam=>{
