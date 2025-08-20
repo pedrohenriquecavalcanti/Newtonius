@@ -208,20 +208,20 @@ const discClasses = {
   Química:    "quimica",
   Física:     "fisica",
   Matemática: "matematica",
-  'Linguagens': "d1",
-  'Geografia e Sociologia': "d1",
-  'História e Filosofia': "d1",
-  'Redação': "d1",
+  'Linguagens': "linguagens",
+  'Geografia e Sociologia': "geografia-sociologia",
+  'História e Filosofia': "historia-filosofia",
+  'Redação': "redacao",
 };
 const discColors = {
   Biologia: "var(--c-bio)",
   Química:  "var(--c-qui)",
   Física:   "var(--c-fis)",
   Matemática: "var(--c-mat)",
-  'Linguagens': "var(--c-d1)",
-  'Geografia e Sociologia': "var(--c-d1)",
-  'História e Filosofia': "var(--c-d1)",
-  'Redação': "var(--c-d1)"
+  'Linguagens': "var(--c-lin)",
+  'Geografia e Sociologia': "var(--c-geo-soc)",
+  'História e Filosofia': "var(--c-his-fil)",
+  'Redação': "var(--c-reda)",
 };
 
 // Valor especial usado para representar a disciplina inteira
@@ -1697,7 +1697,22 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   refreshStats();
 
   /* Renderiza cada questão */
-  questoesData[disc][sub].forEach((q, idx) => {
+  const qs = questoesData[disc][sub];
+  if (['Linguagens', 'História e Filosofia', 'Geografia e Sociologia'].includes(disc)) {
+    qs.sort((a, b) => {
+      const parse = q => {
+        const m = q.label.match(/^ENEM-(\d{4})-(REG|PPL|DIG)/);
+        if (!m) return [Infinity, Infinity];
+        return [parseInt(m[1], 10), {REG:0, PPL:1, DIG:2}[m[2]]];
+      };
+      const [yearA, modeA] = parse(a);
+      const [yearB, modeB] = parse(b);
+      if (yearA !== yearB) return yearA - yearB;
+      if (modeA !== modeB) return modeA - modeB;
+      return a.label.localeCompare(b.label);
+    });
+  }
+  qs.forEach((q, idx) => {
     const row = app.appendChild(Object.assign(
       document.createElement("div"), { className:"question-row" }));
 

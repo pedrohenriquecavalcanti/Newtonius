@@ -30,7 +30,10 @@
   --c-qui:  #0093D6;
   --c-fis:  #904992;
   --c-mat:  #F5821F;
-  --c-d1:   #CCA400;
+  --c-lin:  #0053B3;
+  --c-geo-soc: #007A00;
+  --c-his-fil: #FFD700;
+  --c-reda:  #00B7EB;
 }
 
 /* =====================================================================================
@@ -223,11 +226,14 @@ button:hover { filter: brightness(1.2); }
   justify-content: center;     /* já centraliza horizontalmente também */
   white-space: nowrap;
 }
-.disc-btn.biologia   { background: var(--c-bio); }
-.disc-btn.quimica    { background: var(--c-qui); }
-.disc-btn.fisica     { background: var(--c-fis); }
-.disc-btn.matematica { background: var(--c-mat); }
-.disc-btn.d1         { background: var(--c-d1); color:#fff; }
+.disc-btn.biologia             { background: var(--c-bio); }
+.disc-btn.quimica              { background: var(--c-qui); }
+.disc-btn.fisica               { background: var(--c-fis); }
+.disc-btn.matematica           { background: var(--c-mat); }
+.disc-btn.linguagens           { background: var(--c-lin); }
+.disc-btn.geografia-sociologia { background: var(--c-geo-soc); }
+.disc-btn.historia-filosofia   { background: var(--c-his-fil); }
+.disc-btn.redacao              { background: var(--c-reda); }
 
 /* =====================================================================================
    ESTRELAS DE PROGRESSO
@@ -876,11 +882,14 @@ button:hover { filter: brightness(1.2); }
 }
 
 /* Subject variants */
-.trail-subject.biologia   { background: var(--c-bio); }
-.trail-subject.quimica    { background: var(--c-qui); }
-.trail-subject.fisica     { background: var(--c-fis); }
-.trail-subject.matematica { background: var(--c-mat); }
-.trail-subject.d1         { background: var(--c-d1); }
+.trail-subject.biologia             { background: var(--c-bio); }
+.trail-subject.quimica              { background: var(--c-qui); }
+.trail-subject.fisica               { background: var(--c-fis); }
+.trail-subject.matematica           { background: var(--c-mat); }
+.trail-subject.linguagens           { background: var(--c-lin); }
+.trail-subject.geografia-sociologia { background: var(--c-geo-soc); }
+.trail-subject.historia-filosofia   { background: var(--c-his-fil); }
+.trail-subject.redacao              { background: var(--c-reda); }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
