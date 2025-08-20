@@ -363,11 +363,22 @@ function buildBancoQuestoes(listaFlat) {
 
 function compareExamNames(a,b){
   const typePriority = { REG:1, PPL:2, DIG:3 };
+  const bankPriority = {
+    enem:1,
+    sas:2,
+    bernoulli:3,
+    poliedro:4,
+    somos:5,
+    evolucional:6
+  };
   const pa=a.split('-');
   const pb=b.split('-');
   const bancaA=pa[0].toLowerCase();
   const bancaB=pb[0].toLowerCase();
-  if(bancaA!==bancaB) return bancaA.localeCompare(bancaB);
+  const bankOrderA=bankPriority[bancaA] || 999;
+  const bankOrderB=bankPriority[bancaB] || 999;
+  if(bankOrderA !== bankOrderB) return bankOrderA - bankOrderB;
+  if(bankOrderA === 999 && bancaA !== bancaB) return bancaA.localeCompare(bancaB);
   const yearA=parseInt(pa[1],10);
   const yearB=parseInt(pb[1],10);
   if(yearA!==yearB) return yearA-yearB;
