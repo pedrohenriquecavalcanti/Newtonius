@@ -1796,6 +1796,8 @@ editDiv.addEventListener('click', function(e) {
       range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
+      // dispara um evento de input para garantir o salvamento
+      editDiv.dispatchEvent(new Event('input'));
     });
 
     // 2) “input”: ao digitar, reajusta altura se estiver expandido
@@ -1819,6 +1821,9 @@ editDiv.addEventListener('click', function(e) {
       if (editDiv.textContent.trim() === '') {
         editDiv.innerHTML = '';
         localStorage.removeItem(cKey);
+      } else {
+        // garante que o comentário seja salvo mesmo sem evento de input
+        localStorage.setItem(cKey, editDiv.innerHTML);
       }
       // recolhe para uma linha com reticências
       editDiv.classList.remove('expanded');
