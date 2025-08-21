@@ -1167,7 +1167,7 @@ function renderTrailDay(day,expand){
           subj.className='trail-subject';
           const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
           const area=areaTitles[s.mode]||'';
-          subj.textContent=area?`${s.exam}-${area}`:s.exam;
+          subj.textContent=area?`${s.exam}: ${area}`:s.exam;
           const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
           if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
           subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
