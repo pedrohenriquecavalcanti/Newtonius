@@ -1165,23 +1165,25 @@ function renderTrailDay(day,expand){
         if(s.exam){
           const subj=document.createElement('button');
           subj.className='trail-subject';
-          subj.textContent=s.exam;
+          const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+          const area=areaTitles[s.mode]||'';
+          subj.textContent=area?`${s.exam}-${area}`:s.exam;
           const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
           if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
-        subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
-        const rm=document.createElement('button');
-        rm.className='trail-remove';
-        rm.textContent='\u00D7';
-        rm.onclick=()=>{
-          data[key].splice(idx,1);
-          saveTrail(dayStr,data);
-          showTrail(dayStr, true);
-        };
-        item.appendChild(subj);
-        item.appendChild(rm);
-        sec.appendChild(item);
-        return;
-      }
+          subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
+          const rm=document.createElement('button');
+          rm.className='trail-remove';
+          rm.textContent='\u00D7';
+          rm.onclick=()=>{
+            data[key].splice(idx,1);
+            saveTrail(dayStr,data);
+            showTrail(dayStr, true);
+          };
+          item.appendChild(subj);
+          item.appendChild(rm);
+          sec.appendChild(item);
+          return;
+        }
 
       const isMicro = s.sub==='micro';
       const isDisc  = s.sub===ALL_SUB;
