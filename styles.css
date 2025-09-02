@@ -896,6 +896,7 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.exam-bernoulli { background: var(--c-exam-bernoulli); }
 .trail-subject.exam-poliedro  { background: var(--c-exam-poliedro); }
 .trail-subject.exam-somos     { background: var(--c-exam-somos); }
+.trail-subject.exam-evolucional{ background: var(--c-exam-evolucional); }
 
 .trail-comment {
   flex: 1 1 auto;
