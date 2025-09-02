@@ -528,6 +528,39 @@ function isImageUrl(url) {
           /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/.+\?alt=media.*$/i.test(url));
 }
 
+// Substitui a notação "-->" por "→" mantendo o cursor no lugar.
+// Quando `global` é true, faz varredura completa (usado ao carregar/pastar texto).
+function replaceArrows(div, global = false){
+  if(global){
+    const walker=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,null);
+    let node;
+    while((node=walker.nextNode())){
+      if(node.textContent.includes('-->')){
+        node.textContent=node.textContent.replace(/-->/g,'→');
+      }
+    }
+    return;
+  }
+
+  const sel=window.getSelection();
+  if(!sel.rangeCount || !div.contains(sel.anchorNode)) return;
+  const range=sel.getRangeAt(0);
+  const node=range.startContainer;
+  if(node.nodeType!==Node.TEXT_NODE) return;
+
+  const text=node.textContent;
+  const pos=range.startOffset;
+  const before=text.slice(0,pos);
+  if(before.endsWith('-->')){
+    node.textContent = before.slice(0,-3)+'→'+text.slice(pos);
+    const newPos=pos-2; // remove 3 chars, add 1
+    range.setStart(node,newPos);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
 /* ================================================================
    5. FUNÇÕES DE RENDERIZAÇÃO / LAYOUT (manipulam DOM)
    ============================================================== */
@@ -1028,7 +1061,7 @@ function openPicker(callback){
   pickerDisc.onchange();
   pickerAdd.onclick = () => {
     if(pickerDisc.value==='__comment__'){
-      const txt=pickerComment.value.trim();
+      const txt=pickerComment.value.trim().replace(/-->/g,'→');
       if(txt) callback({comment:txt});
       pickerComment.value='';
     }else if(pickerDisc.value==='__exams__'){
@@ -1138,7 +1171,7 @@ function renderTrailDay(day,expand){
         subj.onclick=()=>{
           const txt=prompt('Editar comentário:', s.comment);
           if(txt!==null){
-            const val=txt.trim();
+            const val=txt.trim().replace(/-->/g,'→');
             if(val){
               data[key][idx].comment=val;
             }else{
@@ -1495,13 +1528,14 @@ function showExam(exam){
     editDiv.dataset.ph='';
     editDiv.addEventListener('click',function(e){if(e.button!==0)return;const anchor=e.target.closest('a');if(anchor){e.preventDefault();if(isImageUrl(anchor.href))openImage(anchor.href);else window.open(anchor.href,'_blank','noopener');return;}if(!editDiv.classList.contains('expanded')){editDiv.focus();}});
     editDiv.innerHTML=localStorage.getItem(cKey)||'';
-    editDiv.addEventListener('paste',e=>{e.preventDefault();const plain=e.clipboardData.getData('text/plain');const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(document.createTextNode(plain));range.collapse(false);sel.removeAllRanges();sel.addRange(range);});
+    replaceArrows(editDiv,true);
+    editDiv.addEventListener('paste',e=>{e.preventDefault();const plain=e.clipboardData.getData('text/plain');const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(document.createTextNode(plain));range.collapse(false);sel.removeAllRanges();sel.addRange(range);replaceArrows(editDiv,true);});
     editDiv.addEventListener('input',()=>{if(editDiv.classList.contains('expanded')){fitHeight(editDiv);}});
     editDiv.addEventListener('focus',()=>{editDiv.classList.add('expanded');editDiv.style.whiteSpace='pre-wrap';editDiv.style.overflowY='auto';fitHeight(editDiv);});
     editDiv.addEventListener('blur',()=>{if(editDiv.textContent.trim()===''){editDiv.innerHTML='';localStorage.removeItem(cKey);}editDiv.classList.remove('expanded');editDiv.style.maxHeight='38px';editDiv.style.whiteSpace='nowrap';editDiv.style.textOverflow='ellipsis';editDiv.style.overflow='hidden';editDiv.scrollTop=0;atualizaIndicadorOverflow(editDiv);});
     editDiv.addEventListener('contextmenu',e=>{e.preventDefault();openLinkMenu(e,editDiv);});
     editDiv.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;if(editDiv.matches(':focus')){openLinkMenu(e,editDiv);}else{e.preventDefault();if(isImageUrl(a.href)){openImage(a.href);}else{window.open(a.href,'_blank','noopener');}}});
-    editDiv.addEventListener('input',()=>{localStorage.setItem(cKey,editDiv.innerHTML);});
+    editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
     row.appendChild(editDiv);
   });
 }
@@ -1860,6 +1894,7 @@ editDiv.addEventListener('click', function(e) {
 
     // 7) “input”: salva no localStorage a cada mudança
     const save = () => {
+      replaceArrows(editDiv);
       localStorage.setItem(cKey, editDiv.innerHTML);
     };
     editDiv.addEventListener('input', save);
@@ -2096,6 +2131,7 @@ function showMicroSim(entry) {
       }
     });
     editDiv.innerHTML=localStorage.getItem(cKey)||'';
+    replaceArrows(editDiv,true);
     editDiv.addEventListener('paste',e=>{
       e.preventDefault();
       const plain=e.clipboardData.getData('text/plain');
@@ -2105,13 +2141,14 @@ function showMicroSim(entry) {
       range.deleteContents();
       range.insertNode(document.createTextNode(plain));
       range.collapse(false); sel.removeAllRanges(); sel.addRange(range);
+      replaceArrows(editDiv,true);
     });
     editDiv.addEventListener('input',()=>{ if(editDiv.classList.contains('expanded')) fitHeight(editDiv); });
     editDiv.addEventListener('focus',()=>{ editDiv.classList.add('expanded'); editDiv.style.whiteSpace='pre-wrap'; editDiv.style.overflowY='auto'; fitHeight(editDiv); });
     editDiv.addEventListener('blur',()=>{ if(editDiv.textContent.trim()===''){ editDiv.innerHTML=''; localStorage.removeItem(cKey); } editDiv.classList.remove('expanded'); editDiv.style.maxHeight='38px'; editDiv.style.whiteSpace='nowrap'; editDiv.style.textOverflow='ellipsis'; editDiv.style.overflow='hidden'; editDiv.scrollTop=0; atualizaIndicadorOverflow(editDiv); });
     editDiv.addEventListener('contextmenu',e=>{ e.preventDefault(); openLinkMenu(e,editDiv); });
     editDiv.addEventListener('click',e=>{ const a=e.target.closest('a'); if(!a) return; if(editDiv.matches(':focus')){ openLinkMenu(e,editDiv); }else{ e.preventDefault(); if(isImageUrl(a.href)) openImage(a.href); else window.open(a.href,'_blank','noopener'); } });
-    const save=()=>{ localStorage.setItem(cKey,editDiv.innerHTML); };
+    const save=()=>{ replaceArrows(editDiv); localStorage.setItem(cKey,editDiv.innerHTML); };
     editDiv.addEventListener('input',save);
     row.appendChild(editDiv);
     atualizaIndicadorOverflow(editDiv);
