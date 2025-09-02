@@ -528,6 +528,17 @@ function isImageUrl(url) {
           /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/.+\?alt=media.*$/i.test(url));
 }
 
+// Substitui qualquer ocorrência de "-->" por uma seta "→" dentro de um elemento
+function replaceArrows(div){
+  const walker=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,null);
+  let node;
+  while((node=walker.nextNode())){
+    if(node.textContent.includes('-->')){
+      node.textContent=node.textContent.replace(/-->/g,'→');
+    }
+  }
+}
+
 /* ================================================================
    5. FUNÇÕES DE RENDERIZAÇÃO / LAYOUT (manipulam DOM)
    ============================================================== */
@@ -1028,7 +1039,7 @@ function openPicker(callback){
   pickerDisc.onchange();
   pickerAdd.onclick = () => {
     if(pickerDisc.value==='__comment__'){
-      const txt=pickerComment.value.trim();
+      const txt=pickerComment.value.trim().replace(/-->/g,'→');
       if(txt) callback({comment:txt});
       pickerComment.value='';
     }else if(pickerDisc.value==='__exams__'){
@@ -1138,7 +1149,7 @@ function renderTrailDay(day,expand){
         subj.onclick=()=>{
           const txt=prompt('Editar comentário:', s.comment);
           if(txt!==null){
-            const val=txt.trim();
+            const val=txt.trim().replace(/-->/g,'→');
             if(val){
               data[key][idx].comment=val;
             }else{
@@ -1501,7 +1512,7 @@ function showExam(exam){
     editDiv.addEventListener('blur',()=>{if(editDiv.textContent.trim()===''){editDiv.innerHTML='';localStorage.removeItem(cKey);}editDiv.classList.remove('expanded');editDiv.style.maxHeight='38px';editDiv.style.whiteSpace='nowrap';editDiv.style.textOverflow='ellipsis';editDiv.style.overflow='hidden';editDiv.scrollTop=0;atualizaIndicadorOverflow(editDiv);});
     editDiv.addEventListener('contextmenu',e=>{e.preventDefault();openLinkMenu(e,editDiv);});
     editDiv.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;if(editDiv.matches(':focus')){openLinkMenu(e,editDiv);}else{e.preventDefault();if(isImageUrl(a.href)){openImage(a.href);}else{window.open(a.href,'_blank','noopener');}}});
-    editDiv.addEventListener('input',()=>{localStorage.setItem(cKey,editDiv.innerHTML);});
+    editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
     row.appendChild(editDiv);
   });
 }
@@ -1860,6 +1871,7 @@ editDiv.addEventListener('click', function(e) {
 
     // 7) “input”: salva no localStorage a cada mudança
     const save = () => {
+      replaceArrows(editDiv);
       localStorage.setItem(cKey, editDiv.innerHTML);
     };
     editDiv.addEventListener('input', save);
@@ -2111,7 +2123,7 @@ function showMicroSim(entry) {
     editDiv.addEventListener('blur',()=>{ if(editDiv.textContent.trim()===''){ editDiv.innerHTML=''; localStorage.removeItem(cKey); } editDiv.classList.remove('expanded'); editDiv.style.maxHeight='38px'; editDiv.style.whiteSpace='nowrap'; editDiv.style.textOverflow='ellipsis'; editDiv.style.overflow='hidden'; editDiv.scrollTop=0; atualizaIndicadorOverflow(editDiv); });
     editDiv.addEventListener('contextmenu',e=>{ e.preventDefault(); openLinkMenu(e,editDiv); });
     editDiv.addEventListener('click',e=>{ const a=e.target.closest('a'); if(!a) return; if(editDiv.matches(':focus')){ openLinkMenu(e,editDiv); }else{ e.preventDefault(); if(isImageUrl(a.href)) openImage(a.href); else window.open(a.href,'_blank','noopener'); } });
-    const save=()=>{ localStorage.setItem(cKey,editDiv.innerHTML); };
+    const save=()=>{ replaceArrows(editDiv); localStorage.setItem(cKey,editDiv.innerHTML); };
     editDiv.addEventListener('input',save);
     row.appendChild(editDiv);
     atualizaIndicadorOverflow(editDiv);
