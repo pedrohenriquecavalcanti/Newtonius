@@ -564,6 +564,7 @@ editor.addEventListener('paste',e=>{
       r.onload=ev=>insertImg(ev.target.result);r.readAsDataURL(f);e.preventDefault();
     }
   }
+  setTimeout(()=>replaceArrows(editor,true),0);
 });
 editor.addEventListener('drop',e=>{
   for(const f of e.dataTransfer.files){
@@ -726,6 +727,37 @@ function makeResizable(img){
   img._resizable=true;
 }
 
+// Substitui a notação "-->" por "→" mantendo o cursor no lugar.
+// Quando `global` é true, faz varredura completa (usado ao carregar/pastar texto).
+function replaceArrows(div, global=false){
+  if(global){
+    const walker=document.createTreeWalker(div,NodeFilter.SHOW_TEXT,null);
+    let node;
+    while((node=walker.nextNode())){
+      if(node.textContent.includes('-->')){
+        node.textContent=node.textContent.replace(/-->/g,'→');
+      }
+    }
+    return;
+  }
+  const sel=window.getSelection();
+  if(!sel.rangeCount||!div.contains(sel.anchorNode))return;
+  const range=sel.getRangeAt(0);
+  const node=range.startContainer;
+  if(node.nodeType!==Node.TEXT_NODE)return;
+  const text=node.textContent;
+  const pos=range.startOffset;
+  const before=text.slice(0,pos);
+  if(before.endsWith('-->')){
+    node.textContent=before.slice(0,-3)+'→'+text.slice(pos);
+    const newPos=pos-2; // remove 3 chars, adiciona 1
+    range.setStart(node,newPos);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
 /* ---------- LINKS → IMAGEM + SALVAMENTO ---------- */
 function isImageUrl(url){
   return /\.(jpe?g|png|gif|bmp|webp)$/i.test(url)||
@@ -749,6 +781,7 @@ function convertTextLinksToImages(){
 function saveNow(){storage.setItem(storageKey,editor.innerHTML);}
 
 editor.addEventListener('input',()=>{
+  replaceArrows(editor);
   saveNow();
   setTimeout(convertTextLinksToImages,100);
 });
@@ -758,6 +791,7 @@ window.addEventListener('beforeunload',saveNow);
 window.addEventListener('DOMContentLoaded',()=>{
   const saved=storage.getItem(storageKey);
   if(saved)editor.innerHTML=saved;
+  replaceArrows(editor,true);
   document.querySelectorAll('.hidden-text').forEach(span=>{
     span.classList.remove('revealed');
     span.onclick=()=>span.classList.toggle('revealed');
