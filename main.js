@@ -1938,10 +1938,14 @@ async function handlePdfKeydown(event) {
 
   event.preventDefault();
   const allPages = Array.from({ length: lastPdfTotalPages }, (_, i) => i + 1);
+  const viewportState = capturePdfViewportState();
   isFullPdfLoading = true;
   let success = false;
   try {
     success = await openPdf(lastPdfName, allPages);
+    if (success && viewportState) {
+      restorePdfViewportState(viewportState);
+    }
   } catch (err) {
     console.error(err);
   } finally {
@@ -1950,6 +1954,27 @@ async function handlePdfKeydown(event) {
       isFullPdfLoaded = false;
     }
   }
+}
+
+function capturePdfViewportState() {
+  if (!pdfContainer) return null;
+  const canvases = Array.from(pdfContainer.querySelectorAll('canvas[data-page-number]'));
+  if (!canvases.length) return null;
+  const scrollTop = pdfContainer.scrollTop;
+  const firstVisible = canvases.find(canvas => scrollTop < canvas.offsetTop + canvas.offsetHeight);
+  if (!firstVisible) return null;
+  const pageNumber = Number(firstVisible.dataset.pageNumber);
+  if (!Number.isFinite(pageNumber)) return null;
+  const offsetWithinPage = Math.max(0, scrollTop - firstVisible.offsetTop);
+  return { pageNumber, offsetWithinPage };
+}
+
+function restorePdfViewportState(state) {
+  if (!state || !pdfContainer) return;
+  const canvas = pdfContainer.querySelector(`canvas[data-page-number="${state.pageNumber}"]`);
+  if (!canvas) return;
+  const targetScroll = canvas.offsetTop + (state.offsetWithinPage || 0);
+  pdfContainer.scrollTop = Math.max(0, targetScroll);
 }
 
 /** Abre/Renderiza um PDF no modal. */
@@ -1996,6 +2021,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
               height:${viewport.height/(quality*dpr)}px;
               margin:16px 0;max-width:100%`
     });
+    canvas.dataset.pageNumber = String(num);
     pdfContainer.appendChild(canvas);
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
   }
