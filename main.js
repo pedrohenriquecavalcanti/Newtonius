@@ -294,6 +294,13 @@ let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
 
+// Metadados do PDF aberto no modal
+let lastPdfName = null;
+let lastPdfTotalPages = 0;
+let isFullPdfLoaded = false;
+let isFullPdfLoading = false;
+let pdfKeyListenerAttached = false;
+
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
   ...(window.listaQuestoes || []),
@@ -1920,15 +1927,45 @@ editDiv.addEventListener('click', function(e) {
 /* ================================================================
    6. VISUALIZAÇÃO DE PDF (PDF.js)
    ============================================================== */
+/** Listener do atalho que carrega todas as páginas do PDF. */
+async function handlePdfKeydown(event) {
+  if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
+  const key = event.key;
+  const isPlus = key === '+' || key === 'Add' || key === 'NumpadAdd' || (key === '=' && event.shiftKey);
+  if (!isPlus) return;
+  if (!lastPdfName || !lastPdfTotalPages) return;
+  if (isFullPdfLoaded || isFullPdfLoading) return;
+
+  event.preventDefault();
+  const allPages = Array.from({ length: lastPdfTotalPages }, (_, i) => i + 1);
+  isFullPdfLoading = true;
+  let success = false;
+  try {
+    success = await openPdf(lastPdfName, allPages);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isFullPdfLoading = false;
+    if (!success) {
+      isFullPdfLoaded = false;
+    }
+  }
+}
+
 /** Abre/Renderiza um PDF no modal. */
 async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const pageList = Array.isArray(pages) ? pages : [pages];
   pdfContainer.style.display = "flex";
   pdfContainer.querySelectorAll("canvas, .answer-letter").forEach(el=>el.remove());
 
+  if (!pdfKeyListenerAttached) {
+    document.addEventListener('keydown', handlePdfKeydown);
+    pdfKeyListenerAttached = true;
+  }
+
   if (!window.pdfjsLib) {
     alert('Visualização de PDF indisponível.');
-    return;
+    return false;
   }
   let pdf;
   try {
@@ -1938,9 +1975,15 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
       pdf = await pdfjsLib.getDocument(`PDFsD1/${pdfName}`).promise;
     } catch (err2) {
       alert('PDF não encontrado.');
-      return;
+      return false;
     }
   }
+
+  lastPdfName = pdfName;
+  lastPdfTotalPages = pdf?.numPages || 0;
+  const uniquePages = new Set(pageList);
+  isFullPdfLoaded = lastPdfTotalPages > 0 && uniquePages.size === lastPdfTotalPages;
+
   const dpr   = window.devicePixelRatio || 1;
   const scale = quality * dpr * zoom;
 
@@ -1956,11 +1999,16 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     pdfContainer.appendChild(canvas);
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
   }
+  return true;
 }
 
 function openAnswer(answer){
   pdfContainer.style.display = 'flex';
   pdfContainer.querySelectorAll('canvas, .answer-letter').forEach(el=>el.remove());
+  lastPdfName = null;
+  lastPdfTotalPages = 0;
+  isFullPdfLoaded = false;
+  isFullPdfLoading = false;
   const div = Object.assign(document.createElement('div'),{
     className:'answer-letter',
     textContent: `Gabarito: ${answer}`
@@ -1981,6 +2029,14 @@ function openGabarito(q){
 closeBtn.onclick = () => {
   pdfContainer.style.display = "none";
   pdfContainer.querySelectorAll("canvas, .answer-letter").forEach(el=>el.remove());
+  if (pdfKeyListenerAttached) {
+    document.removeEventListener('keydown', handlePdfKeydown);
+    pdfKeyListenerAttached = false;
+  }
+  lastPdfName = null;
+  lastPdfTotalPages = 0;
+  isFullPdfLoaded = false;
+  isFullPdfLoading = false;
 };
 
 function openImage(url) {
