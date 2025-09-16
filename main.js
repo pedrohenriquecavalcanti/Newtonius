@@ -266,6 +266,7 @@ const exportBtn     = document.getElementById("exportBtn");
 const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn     = document.getElementById("examsBtn");
+const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
 const pickerSub     = document.getElementById("pickerSub");
@@ -885,6 +886,55 @@ importBtn.onclick = () => {
   settingsMenu.style.display = "none";
   importFile.click();
 };
+
+if (clearCacheBtn) {
+  clearCacheBtn.onclick = async () => {
+    settingsMenu.style.display = "none";
+    const confirmed = confirm(
+      "Deseja limpar o cache?\nIsso faz o navegador baixar a versão mais recente sem apagar seu progresso."
+    );
+    if (!confirmed) return;
+
+    clearCacheBtn.disabled = true;
+    clearCacheBtn.textContent = "Limpando...";
+
+    try {
+      if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
+      }
+
+      const resources = new Set();
+      const addLocalResource = url => {
+        if (!url) return;
+        const absolute = new URL(url, window.location.href);
+        if (absolute.origin === window.location.origin) {
+          resources.add(absolute.href);
+        }
+      };
+
+      addLocalResource(window.location.href);
+      document
+        .querySelectorAll('link[rel="stylesheet"]')
+        .forEach(link => addLocalResource(link.getAttribute('href')));
+      document
+        .querySelectorAll('script[src]')
+        .forEach(script => addLocalResource(script.getAttribute('src')));
+
+      await Promise.all(
+        [...resources].map(url =>
+          fetch(url, { cache: 'reload' }).catch(err =>
+            console.warn('Falha ao atualizar recurso', url, err)
+          )
+        )
+      );
+    } catch (err) {
+      console.error('Erro ao limpar cache', err);
+    }
+
+    window.location.reload();
+  };
+}
 
 /* ---------------- TRILHA ESTRATÉGICA ---------------- */
 trilhaBtn.onclick = () => {
