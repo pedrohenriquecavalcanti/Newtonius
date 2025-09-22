@@ -240,6 +240,9 @@ let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
 const EXAM_DATE = new Date('2025-11-09T00:00:00-03:00');
+// Segunda aplicação do ENEM (D2) e data final exibida na trilha
+const SECOND_EXAM_DATE = new Date('2025-11-16T00:00:00-03:00');
+const TRAIL_END_DATE = SECOND_EXAM_DATE;
 
 /* ================================================================
    2. REFERÊNCIAS FIXAS DA INTERFACE (cache de seletores)
@@ -1157,11 +1160,22 @@ function renderTrailDay(day,expand){
     btn.innerHTML=`<span class="day-label">Agenda, Planejamento e Metodologia</span>`+
       `<i class="day-arrow fas fa-chevron-down"></i>`;
   }else{
-    const diffDays = Math.ceil((EXAM_DATE - day)/(86400000));
     const weekDay = day.toLocaleDateString('pt-BR',{weekday:'long'});
     const dateFmt = day.toLocaleDateString('pt-BR');
-    btn.innerHTML=`<span class="day-label">${weekDay} - ${dateFmt} - ${diffDays} dias</span>`+
-      `<i class="day-arrow fas fa-chevron-down"></i>`;
+    const isD1 = day.getTime() === EXAM_DATE.getTime();
+    const isD2 = day.getTime() === SECOND_EXAM_DATE.getTime();
+    if(isD1){
+      btn.innerHTML=`<span class="day-label">ENEM - D1 (${weekDay} - ${dateFmt})</span>`+
+        `<i class="day-arrow fas fa-chevron-down"></i>`;
+    }else if(isD2){
+      btn.innerHTML=`<span class="day-label">ENEM - D2 (${weekDay} - ${dateFmt})</span>`+
+        `<i class="day-arrow fas fa-chevron-down"></i>`;
+    }else{
+      const targetDate = day > EXAM_DATE ? SECOND_EXAM_DATE : EXAM_DATE;
+      const diffDays = Math.ceil((targetDate - day)/(86400000));
+      btn.innerHTML=`<span class="day-label">${weekDay} - ${dateFmt} - ${diffDays} dias</span>`+
+        `<i class="day-arrow fas fa-chevron-down"></i>`;
+    }
   }
 
   const content=document.createElement('div');
@@ -1352,7 +1366,7 @@ function showTrail(expandDay, preserveScroll=false){
   const agendaOpen = openTrailDays.has(AGENDA_DAY);
   renderTrailDay(AGENDA_DAY, agendaOpen);
   const start=getTodayDateBR();
-  for(let d=new Date(start);d<=EXAM_DATE;d.setDate(d.getDate()+1)){
+  for(let d=new Date(start);d<=TRAIL_END_DATE;d.setDate(d.getDate()+1)){
     const dStr=d.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
     const open=openTrailDays.has(dStr);
     renderTrailDay(new Date(d), open);
