@@ -236,6 +236,24 @@ const DISCIPLINES_BY_MODE = {
   mat: ['Matemática']
 };
 
+/* Configuração padrão para o backup em nuvem via Google Drive.
+   → Substitua clientId e apiKey pelos valores do seu projeto Google. */
+const DRIVE_CONFIG = {
+  clientId: 'INSIRA_SEU_CLIENT_ID.apps.googleusercontent.com',
+  apiKey: 'INSIRA_SUA_API_KEY',
+  folderName: 'Newtonius Backups',
+  scopes: [
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive.metadata.readonly'
+  ],
+  maxFiles: 3
+};
+
+let driveTokenClient = null;
+let driveAccessToken = null;
+let driveFolderId = null;
+let gapiInitPromise = null;
+
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
@@ -267,6 +285,8 @@ const settingsBtn   = document.getElementById("settingsBtn");
 const settingsMenu  = document.getElementById("settingsMenu");
 const exportBtn     = document.getElementById("exportBtn");
 const importBtn     = document.getElementById("importBtn");
+const driveSaveBtn  = document.getElementById("driveSaveBtn");
+const driveRestoreBtn = document.getElementById("driveRestoreBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn     = document.getElementById("examsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
@@ -414,7 +434,8 @@ function getExamCategory(disc){
   if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'Mat';
   return null;
 }
-async function doExport() {
+
+function buildExportPayload() {
   /* 1 ▸ lê tudo do localStorage e joga num array  [key,value] */
   const pares = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -458,6 +479,12 @@ async function doExport() {
                 `_${dateMap.hour}_${dateMap.minute}`;
   const filename = `Newtonius_${stamp}.json`;
 
+  return { data, filename };
+}
+
+async function doExport() {
+  const { data, filename } = buildExportPayload();
+
   /* 6 ▸ tenta usar File System Access. Se falhar, baixa direto */
   let saved = false;
   if (window.showSaveFilePicker) {
@@ -488,6 +515,317 @@ async function doExport() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+  }
+}
+
+/* ================================================================
+   Backup em nuvem (Google Drive)
+   ============================================================== */
+function isDriveConfigured() {
+  return Boolean(
+    DRIVE_CONFIG.clientId && !/INSIRA/i.test(DRIVE_CONFIG.clientId) &&
+    DRIVE_CONFIG.apiKey && !/INSIRA/i.test(DRIVE_CONFIG.apiKey)
+  );
+}
+
+function alertMissingDriveConfig() {
+  alert(
+    'Configure o clientId e o apiKey em DRIVE_CONFIG (main.js) para usar o backup em nuvem.'
+  );
+}
+
+function driveErrorMessage(err) {
+  if (!err) return 'erro desconhecido.';
+  if (typeof err === 'string') return err;
+  if (err.result && err.result.error && err.result.error.message) {
+    return err.result.error.message;
+  }
+  if (err.error && typeof err.error === 'string') return err.error;
+  if (err.message) return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch (_) {
+    return 'erro inesperado.';
+  }
+}
+
+function isUnauthorizedError(err) {
+  const code = err && (err.status || err.code || (err.result && err.result.error && err.result.error.code));
+  return Number(code) === 401;
+}
+
+async function loadGapiClient() {
+  if (!window.gapi) {
+    throw new Error('Biblioteca gapi não carregada.');
+  }
+  if (gapiInitPromise) return gapiInitPromise;
+  gapiInitPromise = new Promise((resolve, reject) => {
+    gapi.load('client', () => {
+      gapi.client.init({
+        apiKey: DRIVE_CONFIG.apiKey,
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+      }).then(resolve).catch(err => {
+        gapiInitPromise = null;
+        reject(err);
+      });
+    });
+  });
+  return gapiInitPromise;
+}
+
+async function ensureDriveAuthenticated(forcePrompt = false) {
+  if (!isDriveConfigured()) {
+    throw new Error('Configuração do Google Drive ausente.');
+  }
+  if (!window.google || !google.accounts || !google.accounts.oauth2) {
+    throw new Error('Biblioteca de identidade do Google não carregada.');
+  }
+
+  await loadGapiClient();
+
+  if (driveAccessToken && !forcePrompt) {
+    gapi.client.setToken({ access_token: driveAccessToken });
+    return driveAccessToken;
+  }
+
+  if (!driveTokenClient) {
+    driveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CONFIG.clientId,
+      scope: DRIVE_CONFIG.scopes.join(' '),
+      callback: () => {}
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    driveTokenClient.callback = (resp) => {
+      if (resp.error) {
+        reject(resp);
+        return;
+      }
+      driveAccessToken = resp.access_token;
+      gapi.client.setToken({ access_token: driveAccessToken });
+      resolve(driveAccessToken);
+    };
+    driveTokenClient.requestAccessToken({
+      prompt: driveAccessToken && !forcePrompt ? '' : 'consent'
+    });
+  });
+}
+
+async function ensureDriveFolder(retry = true) {
+  if (driveFolderId) return driveFolderId;
+  await ensureDriveAuthenticated();
+  try {
+    const resp = await gapi.client.drive.files.list({
+      q: `name='${DRIVE_CONFIG.folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id,name)',
+      spaces: 'drive',
+      pageSize: 10
+    });
+    const files = (resp.result && resp.result.files) || [];
+    if (files.length) {
+      driveFolderId = files[0].id;
+      return driveFolderId;
+    }
+  } catch (err) {
+    if (retry && isUnauthorizedError(err)) {
+      driveAccessToken = null;
+      await ensureDriveAuthenticated(true);
+      return ensureDriveFolder(false);
+    }
+    throw err;
+  }
+
+  try {
+    const created = await gapi.client.drive.files.create({
+      resource: {
+        name: DRIVE_CONFIG.folderName,
+        mimeType: 'application/vnd.google-apps.folder'
+      },
+      fields: 'id'
+    });
+    driveFolderId = created.result.id;
+    return driveFolderId;
+  } catch (err) {
+    if (retry && isUnauthorizedError(err)) {
+      driveAccessToken = null;
+      await ensureDriveAuthenticated(true);
+      return ensureDriveFolder(false);
+    }
+    throw err;
+  }
+}
+
+async function driveFetch(url, options = {}, retry = true) {
+  await ensureDriveAuthenticated();
+  const headers = new Headers(options.headers || {});
+  headers.set('Authorization', `Bearer ${driveAccessToken}`);
+  const response = await fetch(url, { ...options, headers });
+  if (response.status === 401 && retry) {
+    driveAccessToken = null;
+    await ensureDriveAuthenticated(true);
+    return driveFetch(url, options, false);
+  }
+  return response;
+}
+
+async function uploadBackupToDrive(data, filename) {
+  const folderId = await ensureDriveFolder();
+  const boundary = `boundary_${Math.random().toString(36).slice(2)}`;
+  const metadata = {
+    name: filename,
+    mimeType: 'application/json',
+    parents: [folderId]
+  };
+  const body = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify(metadata),
+    `--${boundary}`,
+    'Content-Type: application/json',
+    '',
+    data,
+    `--${boundary}--`,
+    ''
+  ].join('\r\n');
+
+  const response = await driveFetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/related; boundary=${boundary}`
+      },
+      body
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Falha ao enviar backup: ${text}`);
+  }
+
+  return response.json();
+}
+
+async function listDriveBackups(limit = DRIVE_CONFIG.maxFiles) {
+  const folderId = await ensureDriveFolder();
+  await ensureDriveAuthenticated();
+  const pageSize = Math.max(limit, DRIVE_CONFIG.maxFiles) + 5;
+  try {
+    const resp = await gapi.client.drive.files.list({
+      q: `'${folderId}' in parents and trashed=false`,
+      orderBy: 'createdTime desc',
+      fields: 'files(id,name,createdTime,modifiedTime)',
+      pageSize
+    });
+    return (resp.result && resp.result.files) || [];
+  } catch (err) {
+    if (isUnauthorizedError(err)) {
+      driveAccessToken = null;
+      await ensureDriveAuthenticated(true);
+      return listDriveBackups(limit);
+    }
+    throw err;
+  }
+}
+
+async function deleteDriveFile(fileId) {
+  const response = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok && response.status !== 204) {
+    const text = await response.text();
+    throw new Error(`Não foi possível remover o backup antigo (${text}).`);
+  }
+}
+
+async function enforceDriveBackupLimit() {
+  const files = await listDriveBackups(DRIVE_CONFIG.maxFiles + 5);
+  const extras = files.slice(DRIVE_CONFIG.maxFiles);
+  for (const file of extras) {
+    try {
+      await deleteDriveFile(file.id);
+    } catch (err) {
+      console.warn('Falha ao remover backup antigo do Drive', err);
+    }
+  }
+}
+
+function formatDriveDate(isoString) {
+  if (!isoString) return '--';
+  const date = new Date(isoString);
+  try {
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'America/Sao_Paulo'
+    }).format(date);
+  } catch (_) {
+    return date.toLocaleString();
+  }
+}
+
+async function saveBackupToDrive() {
+  if (!isDriveConfigured()) {
+    alertMissingDriveConfig();
+    return;
+  }
+  try {
+    const { data, filename } = buildExportPayload();
+    await uploadBackupToDrive(data, filename);
+    await enforceDriveBackupLimit();
+    alert('Backup salvo no Google Drive com sucesso!');
+  } catch (err) {
+    console.error('Falha ao salvar backup no Drive', err);
+    alert(`Falha ao salvar no Google Drive: ${driveErrorMessage(err)}`);
+  }
+}
+
+async function restoreBackupFromDrive() {
+  if (!isDriveConfigured()) {
+    alertMissingDriveConfig();
+    return;
+  }
+  try {
+    const backups = await listDriveBackups(DRIVE_CONFIG.maxFiles);
+    if (!backups.length) {
+      alert('Nenhum backup foi encontrado no Google Drive.');
+      return;
+    }
+
+    let message = 'Escolha um backup para restaurar:\n\n';
+    backups.slice(0, DRIVE_CONFIG.maxFiles).forEach((file, index) => {
+      const dateStr = formatDriveDate(file.modifiedTime || file.createdTime);
+      message += `${index + 1}. ${file.name} — ${dateStr}\n`;
+    });
+    message += '\nDigite o número desejado (ou Cancelar).';
+
+    const choiceRaw = prompt(message, '1');
+    if (choiceRaw === null) return; // usuário cancelou
+    const choice = parseInt(choiceRaw.trim(), 10);
+    if (!Number.isFinite(choice) || choice < 1 || choice > Math.min(DRIVE_CONFIG.maxFiles, backups.length)) {
+      alert('Opção inválida. Nenhum dado foi modificado.');
+      return;
+    }
+
+    const selected = backups[choice - 1];
+    const response = await driveFetch(`https://www.googleapis.com/drive/v3/files/${selected.id}?alt=media`);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Falha ao baixar backup (${text}).`);
+    }
+    const content = await response.text();
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem("__pendingImport__", content);
+    }
+    localStorage.clear();
+    alert('Backup baixado! A página será recarregada para aplicar os dados.');
+    location.reload();
+  } catch (err) {
+    console.error('Falha ao restaurar backup do Drive', err);
+    alert(`Não foi possível restaurar do Google Drive: ${driveErrorMessage(err)}`);
   }
 }
 
@@ -889,6 +1227,18 @@ importBtn.onclick = () => {
   settingsMenu.style.display = "none";
   importFile.click();
 };
+if (driveSaveBtn) {
+  driveSaveBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    saveBackupToDrive();
+  };
+}
+if (driveRestoreBtn) {
+  driveRestoreBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    restoreBackupFromDrive();
+  };
+}
 
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {

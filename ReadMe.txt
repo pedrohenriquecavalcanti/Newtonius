@@ -29,6 +29,7 @@ Essa estrutura torna o processo de revisão muito mais eficaz, permitindo que o 
 💾 Backup Inteligente
 Exporte e importe seus dados de progresso, comentários e marcações com facilidade. Ideal para trocar de dispositivo ou manter seus dados sempre seguros.
 * Os arquivos de backup agora são nomeados como `Newtonius_AAAA_MM_DD_HH_mm.json`. Se o navegador não permitir a escolha da pasta, o download é feito normalmente.
+* Também é possível conectar sua conta Google e salvar/restaurar os últimos três backups diretamente em uma pasta "Newtonius Backups" no Google Drive (configure o `clientId` e a `apiKey` no arquivo `main.js`).
 
 🛠️ Atualizações Futuras
 ...
