@@ -1696,8 +1696,15 @@ function showNatReview(){
 
   combined.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
+    const keepKey = `natKeep_${key}`;
     let st = +localStorage.getItem(key) || 0;
-    const qualifies = ()=> item.type === 'wrong' ? st === 2 : st === 0;
+    if(st!==1 && localStorage.getItem(keepKey)==='1'){
+      localStorage.removeItem(keepKey);
+    }
+    const qualifies = ()=>{
+      if(localStorage.getItem(keepKey)==='1') return true;
+      return item.type === 'wrong' ? st === 2 : st === 0;
+    };
     if(!qualifies()) return;
 
     const row = document.createElement('div');
@@ -1747,8 +1754,13 @@ function showNatReview(){
           localStorage.removeItem(logKey);
         }
       }
+      if(st===1){
+        localStorage.setItem(keepKey,'1');
+      }else{
+        localStorage.removeItem(keepKey);
+      }
       paintState();
-      if(!qualifies()){
+      if(localStorage.getItem(keepKey)!=='1' && !qualifies()){
         row.remove();
         ensureEmptyState();
       }

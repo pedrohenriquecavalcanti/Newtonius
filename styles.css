@@ -271,7 +271,7 @@ button:hover { filter: brightness(1.2); }
    =====================================================================================*/
 .question-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   margin-bottom: 8px;
   width: 100%;
