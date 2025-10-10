@@ -1641,161 +1641,169 @@ function showNatReview(){
 
   const natDiscs = new Set(['Biologia','Química','Física']);
   const natData = examsDataByMode.nat || {};
-  const orderIndex = new Map((examOrderNat || []).map((ex,idx)=>[ex,idx]));
-  const wrong = [];
-  const pending = [];
-
-  for(const [exam, questions] of Object.entries(natData)){
+  const combined = [];
+  const examOrder = examOrderNat || [];
+  const visited = new Set();
+  const pushQuestionsFromExam = exam => {
+    const questions = natData[exam] || [];
     const upper = exam.toUpperCase();
     const isEnem = upper.includes('ENEM');
     const isSas  = upper.includes('SAS');
-    if(!isEnem && !isSas) continue;
+    if(!isEnem && !isSas) return;
     questions.forEach(({disc,sub,q})=>{
       if(!natDiscs.has(disc)) return;
-      const st = +localStorage.getItem(qKey(disc,sub,q.label))||0;
-      if((isEnem || isSas) && st===2){
-        wrong.push({exam,disc,sub,q});
+      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      if((isEnem || isSas) && state === 2){
+        combined.push({exam,disc,sub,q,type:'wrong'});
       }
-      if(isEnem && st===0){
-        pending.push({exam,disc,sub,q});
+      if(isEnem && state === 0){
+        combined.push({exam,disc,sub,q,type:'pending'});
       }
     });
-  }
+    visited.add(exam);
+  };
+  examOrder.forEach(exam => pushQuestionsFromExam(exam));
+  Object.keys(natData).forEach(exam => {
+    if(!visited.has(exam)) pushQuestionsFromExam(exam);
+  });
 
-  const getQuestionNumber = label => {
-    const m = label.match(/Q-(\d+)/);
-    return m ? parseInt(m[1],10) : 0;
+  const emptyMsg = document.createElement('p');
+  emptyMsg.className = 'review-empty';
+  emptyMsg.textContent = 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
+
+  const ensureEmptyState = ()=>{
+    const hasRow = !!app.querySelector('.question-row');
+    if(hasRow){
+      if(emptyMsg.isConnected) emptyMsg.remove();
+    }else if(!emptyMsg.isConnected){
+      app.appendChild(emptyMsg);
+    }
   };
-  const sortFn = (a,b)=>{
-    const idxA = orderIndex.has(a.exam) ? orderIndex.get(a.exam) : Number.MAX_SAFE_INTEGER;
-    const idxB = orderIndex.has(b.exam) ? orderIndex.get(b.exam) : Number.MAX_SAFE_INTEGER;
-    if(idxA !== idxB) return idxA-idxB;
-    const nA = getQuestionNumber(a.q.label);
-    const nB = getQuestionNumber(b.q.label);
-    if(nA !== nB) return nA-nB;
-    return a.exam.localeCompare(b.exam);
-  };
-  wrong.sort(sortFn);
-  pending.sort(sortFn);
 
   const refreshStats = ()=>{
-    const wrongCount = wrong.reduce((acc,item)=>{
-      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label))||0;
-      return acc + (st===2 ? 1 : 0);
-    },0);
-    const pendingCount = pending.reduce((acc,item)=>{
-      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label))||0;
-      return acc + (st===0 ? 1 : 0);
-    },0);
+    let wrongCount = 0;
+    let pendingCount = 0;
+    combined.forEach(item=>{
+      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
+      if(item.type === 'wrong' && st === 2) wrongCount++;
+      if(item.type === 'pending' && st === 0) pendingCount++;
+    });
     stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount}`;
     stats.className = 'stat';
   };
 
-  const makeSection = (title, items, type, emptyText)=>{
-    const section = document.createElement('section');
-    section.className = 'review-section';
-    const heading = document.createElement('h2');
-    heading.className = 'review-section-title';
-    heading.textContent = title;
-    section.appendChild(heading);
+  const fragment = document.createDocumentFragment();
 
-    const emptyMsg = document.createElement('p');
-    emptyMsg.className = 'review-empty';
-    emptyMsg.textContent = emptyText;
-    section.appendChild(emptyMsg);
+  combined.forEach(item=>{
+    const key = qKey(item.disc,item.sub,item.q.label);
+    let st = +localStorage.getItem(key) || 0;
+    const qualifies = ()=> item.type === 'wrong' ? st === 2 : st === 0;
+    if(!qualifies()) return;
 
-    const updateEmptyState = ()=>{
-      const hasRow = section.querySelector('.question-row');
-      emptyMsg.style.display = hasRow ? 'none' : 'block';
-    };
+    const row = document.createElement('div');
+    row.className = 'question-row';
 
-    items.forEach(item=>{
-      const row = document.createElement('div');
-      row.className = 'question-row';
-      const qBtn = document.createElement('button');
-      qBtn.classList.add('btn','question-btn','two-line-btn');
-      qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
-        `<span class="ms-label">${item.exam} • ${item.q.label}</span>`;
-      const topicSpan = qBtn.querySelector('.ms-topic');
-      topicSpan.style.color = discColors[item.disc];
-      const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
-      if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
-      qBtn.addEventListener('click',e=>{
-        if(e.target.closest('.ms-topic')){
-          currentDisc = item.disc;
-          currentSub = item.sub;
-          openSummary();
-          e.stopPropagation();
-        }else{
-          openPdf(item.q.QPDFName,item.q.page);
-        }
-      });
-      row.appendChild(qBtn);
-      row.appendChild(Object.assign(document.createElement('button'),{
-        textContent:'Gabarito',
-        className:'small-btn',
-        onclick:()=>openGabarito(item.q)
-      }));
-      const key = qKey(item.disc,item.sub,item.q.label);
-      let st = +localStorage.getItem(key)||0;
-      const box = Object.assign(document.createElement('span'),{className:'state-box'});
-      const paint = ()=>{
-        box.textContent = st===1?'\u2713':st===2?'\u2717':'';
-        box.style.color = st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
-      };
-      paint();
-      box.onclick = ()=>{
-        st = (st+1)%3;
-        localStorage.setItem(key,st);
-        const today=getTodayStr();
-        const logKey=`log_${today}_${key}`;
-        if(!D1_DISCIPLINES.includes(item.disc)){
-          if(st===1||st===2){
-            localStorage.setItem(logKey,'1');
-          }else{
-            localStorage.removeItem(logKey);
-          }
-        }
-        paint();
-        if(type==='wrong' && st!==2){
-          row.remove();
-          updateEmptyState();
-        }
-        if(type==='pending' && st!==0){
-          row.remove();
-          updateEmptyState();
-        }
-        refreshStats();
-      };
-      row.appendChild(box);
-
-      const cKey = `comment_${key}`;
-      const editDiv=document.createElement('div');
-      editDiv.className='comment-edit';
-      editDiv.contentEditable='true';
-      editDiv.dataset.ph='';
-      editDiv.addEventListener('click',function(e){if(e.button!==0)return;const anchor=e.target.closest('a');if(anchor){e.preventDefault();if(isImageUrl(anchor.href))openImage(anchor.href);else window.open(anchor.href,'_blank','noopener');return;}if(!editDiv.classList.contains('expanded')){editDiv.focus();}});
-      editDiv.innerHTML=localStorage.getItem(cKey)||'';
-      replaceArrows(editDiv,true);
-      editDiv.addEventListener('paste',e=>{e.preventDefault();const plain=e.clipboardData.getData('text/plain');const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(document.createTextNode(plain));range.collapse(false);sel.removeAllRanges();sel.addRange(range);replaceArrows(editDiv,true);});
-      editDiv.addEventListener('input',()=>{if(editDiv.classList.contains('expanded')){fitHeight(editDiv);}});
-      editDiv.addEventListener('focus',()=>{editDiv.classList.add('expanded');editDiv.style.whiteSpace='pre-wrap';editDiv.style.overflowY='auto';fitHeight(editDiv);});
-      editDiv.addEventListener('blur',()=>{if(editDiv.textContent.trim()===''){editDiv.innerHTML='';localStorage.removeItem(cKey);}editDiv.classList.remove('expanded');editDiv.style.maxHeight='38px';editDiv.style.whiteSpace='nowrap';editDiv.style.textOverflow='ellipsis';editDiv.style.overflow='hidden';editDiv.scrollTop=0;atualizaIndicadorOverflow(editDiv);});
-      editDiv.addEventListener('contextmenu',e=>{e.preventDefault();openLinkMenu(e,editDiv);});
-      editDiv.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;if(editDiv.matches(':focus')){openLinkMenu(e,editDiv);}else{e.preventDefault();if(isImageUrl(a.href)){openImage(a.href);}else{window.open(a.href,'_blank','noopener');}}});
-      editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
-      row.appendChild(editDiv);
-
-      section.appendChild(row);
+    const qBtn = document.createElement('button');
+    qBtn.classList.add('btn','question-btn','two-line-btn');
+    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
+      `<span class="ms-label">${item.exam} • ${item.q.label}</span>`;
+    const topicSpan = qBtn.querySelector('.ms-topic');
+    topicSpan.style.color = discColors[item.disc];
+    const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
+    if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
+    qBtn.addEventListener('click',e=>{
+      if(e.target.closest('.ms-topic')){
+        currentDisc = item.disc;
+        currentSub = item.sub;
+        openSummary();
+        e.stopPropagation();
+      }else{
+        openPdf(item.q.QPDFName,item.q.page);
+      }
     });
+    row.appendChild(qBtn);
 
-    updateEmptyState();
-    app.appendChild(section);
-  };
+    row.appendChild(Object.assign(document.createElement('button'),{
+      textContent:'Gabarito',
+      className:'small-btn',
+      onclick:()=>openGabarito(item.q)
+    }));
 
-  makeSection('Questões Erradas (ENEM e SAS)', wrong, 'wrong', 'Nenhuma questão errada encontrada nos simulados ENEM ou SAS.');
-  makeSection('Questões Não Feitas (ENEM)', pending, 'pending', 'Nenhuma questão pendente dos simulados ENEM.');
+    const box = Object.assign(document.createElement('span'),{className:'state-box'});
+    const paintState = ()=>{
+      box.textContent = st===1?'\u2713':st===2?'\u2717':'';
+      box.style.color = st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+    };
+    paintState();
+    box.onclick = ()=>{
+      st = (st+1)%3;
+      localStorage.setItem(key,st);
+      const today = getTodayStr();
+      const logKey = `log_${today}_${key}`;
+      if(!D1_DISCIPLINES.includes(item.disc)){
+        if(st===1||st===2){
+          localStorage.setItem(logKey,'1');
+        }else{
+          localStorage.removeItem(logKey);
+        }
+      }
+      paintState();
+      if(!qualifies()){
+        row.remove();
+        ensureEmptyState();
+      }
+      refreshStats();
+    };
+    row.appendChild(box);
 
+    if(item.type === 'wrong'){
+      const reviewKey = `natReview_${key}`;
+      let reviewState = +localStorage.getItem(reviewKey) || 0;
+      const reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
+      const paintReview = ()=>{
+        reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
+        reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
+        reviewBox.title = reviewState===0
+          ? 'Marcar revisão'
+          : reviewState===1
+            ? 'Revisado – certo'
+            : 'Revisado – errado';
+      };
+      paintReview();
+      reviewBox.onclick = ()=>{
+        reviewState = (reviewState+1)%3;
+        if(reviewState===0){
+          localStorage.removeItem(reviewKey);
+        }else{
+          localStorage.setItem(reviewKey,reviewState);
+        }
+        paintReview();
+      };
+      row.appendChild(reviewBox);
+    }
+
+    const cKey = `comment_${key}`;
+    const editDiv=document.createElement('div');
+    editDiv.className='comment-edit';
+    editDiv.contentEditable='true';
+    editDiv.dataset.ph='';
+    editDiv.addEventListener('click',function(e){if(e.button!==0)return;const anchor=e.target.closest('a');if(anchor){e.preventDefault();if(isImageUrl(anchor.href))openImage(anchor.href);else window.open(anchor.href,'_blank','noopener');return;}if(!editDiv.classList.contains('expanded')){editDiv.focus();}});
+    editDiv.innerHTML=localStorage.getItem(cKey)||'';
+    replaceArrows(editDiv,true);
+    editDiv.addEventListener('paste',e=>{e.preventDefault();const plain=e.clipboardData.getData('text/plain');const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(document.createTextNode(plain));range.collapse(false);sel.removeAllRanges();sel.addRange(range);replaceArrows(editDiv,true);});
+    editDiv.addEventListener('input',()=>{if(editDiv.classList.contains('expanded')){fitHeight(editDiv);}});
+    editDiv.addEventListener('focus',()=>{editDiv.classList.add('expanded');editDiv.style.whiteSpace='pre-wrap';editDiv.style.overflowY='auto';fitHeight(editDiv);});
+    editDiv.addEventListener('blur',()=>{if(editDiv.textContent.trim()===''){editDiv.innerHTML='';localStorage.removeItem(cKey);}editDiv.classList.remove('expanded');editDiv.style.maxHeight='38px';editDiv.style.whiteSpace='nowrap';editDiv.style.textOverflow='ellipsis';editDiv.style.overflow='hidden';editDiv.scrollTop=0;atualizaIndicadorOverflow(editDiv);ensureEmptyState();});
+    editDiv.addEventListener('contextmenu',e=>{e.preventDefault();openLinkMenu(e,editDiv);});
+    editDiv.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;if(editDiv.matches(':focus')){openLinkMenu(e,editDiv);}else{e.preventDefault();if(isImageUrl(a.href)){openImage(a.href);}else{window.open(a.href,'_blank','noopener');}}});
+    editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
+    row.appendChild(editDiv);
+
+    fragment.appendChild(row);
+  });
+
+  app.appendChild(fragment);
+  ensureEmptyState();
   refreshStats();
 }
 function showSubjects(disc) {
