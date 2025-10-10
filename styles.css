@@ -271,7 +271,7 @@ button:hover { filter: brightness(1.2); }
    =====================================================================================*/
 .question-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   margin-bottom: 8px;
   width: 100%;
@@ -792,6 +792,18 @@ button:hover { filter: brightness(1.2); }
 #examSummary table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.review-empty {
+  margin: 32px 0;
+  font-size: 15px;
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+.review-box {
+  margin-left: 6px;
+  border-color: var(--c-border-muted);
 }
 
 .exam-summary-table th,

@@ -268,7 +268,8 @@ const settingsMenu  = document.getElementById("settingsMenu");
 const exportBtn     = document.getElementById("exportBtn");
 const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
-const examsBtn     = document.getElementById("examsBtn");
+const examsBtn      = document.getElementById("examsBtn");
+const natReviewBtn  = document.getElementById("natReviewBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
@@ -786,6 +787,7 @@ function showMenu () {
   currentDisc = currentSub = null;
   trailReturnSub = false;
   summaryBtn.style.display = 'none';
+  summaryBtn.onclick = null;
   orderHint.style.display = 'none';
   headerTitle.onmouseenter = null;
   headerTitle.onmouseleave = null;
@@ -948,6 +950,11 @@ trilhaBtn.onclick = () => {
 examsBtn.onclick = () => {
   settingsMenu.style.display = "none";
   showExamMenu();
+};
+
+natReviewBtn.onclick = () => {
+  settingsMenu.style.display = 'none';
+  showNatReview();
 };
 
 function updateD1Btn(){
@@ -1609,6 +1616,207 @@ function showExam(exam){
     editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
     row.appendChild(editDiv);
   });
+}
+
+function showNatReview(){
+  currentDisc = null;
+  currentSub = null;
+  currentExam = null;
+  examListOpen = false;
+  currentExamMode = 'nat';
+  leaveHome();
+  toggleSettingsVisibility(false);
+  updateHeader(true, 'Revisão Natureza');
+  summaryBtn.style.display = 'none';
+  summaryBtn.onclick = null;
+  orderHint.style.display = 'none';
+  headerTitle.style.cursor = 'default';
+  headerTitle.onclick = null;
+  headerTitle.onmouseenter = null;
+  headerTitle.onmouseleave = null;
+  const stats = document.getElementById('headerStats');
+  stats.style.visibility = 'visible';
+  clear();
+  window.scrollTo(0,0);
+
+  const natDiscs = new Set(['Biologia','Química','Física']);
+  const natData = examsDataByMode.nat || {};
+  const combined = [];
+  const examOrder = examOrderNat || [];
+  const visited = new Set();
+  const pushQuestionsFromExam = exam => {
+    const questions = natData[exam] || [];
+    const upper = exam.toUpperCase();
+    const isEnem = upper.includes('ENEM');
+    const isSas  = upper.includes('SAS');
+    if(!isEnem && !isSas) return;
+    questions.forEach(({disc,sub,q})=>{
+      if(!natDiscs.has(disc)) return;
+      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      if((isEnem || isSas) && state === 2){
+        combined.push({exam,disc,sub,q,type:'wrong'});
+      }
+      if(isEnem && state === 0){
+        combined.push({exam,disc,sub,q,type:'pending'});
+      }
+    });
+    visited.add(exam);
+  };
+  examOrder.forEach(exam => pushQuestionsFromExam(exam));
+  Object.keys(natData).forEach(exam => {
+    if(!visited.has(exam)) pushQuestionsFromExam(exam);
+  });
+
+  const emptyMsg = document.createElement('p');
+  emptyMsg.className = 'review-empty';
+  emptyMsg.textContent = 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
+
+  const ensureEmptyState = ()=>{
+    const hasRow = !!app.querySelector('.question-row');
+    if(hasRow){
+      if(emptyMsg.isConnected) emptyMsg.remove();
+    }else if(!emptyMsg.isConnected){
+      app.appendChild(emptyMsg);
+    }
+  };
+
+  const refreshStats = ()=>{
+    let wrongCount = 0;
+    let pendingCount = 0;
+    combined.forEach(item=>{
+      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
+      if(item.type === 'wrong' && st === 2) wrongCount++;
+      if(item.type === 'pending' && st === 0) pendingCount++;
+    });
+    stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount}`;
+    stats.className = 'stat';
+  };
+
+  const fragment = document.createDocumentFragment();
+
+  combined.forEach(item=>{
+    const key = qKey(item.disc,item.sub,item.q.label);
+    const keepKey = `natKeep_${key}`;
+    let st = +localStorage.getItem(key) || 0;
+    if(st!==1 && localStorage.getItem(keepKey)==='1'){
+      localStorage.removeItem(keepKey);
+    }
+    const qualifies = ()=>{
+      if(localStorage.getItem(keepKey)==='1') return true;
+      return item.type === 'wrong' ? st === 2 : st === 0;
+    };
+    if(!qualifies()) return;
+
+    const row = document.createElement('div');
+    row.className = 'question-row';
+
+    const qBtn = document.createElement('button');
+    qBtn.classList.add('btn','question-btn','two-line-btn');
+    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
+      `<span class="ms-label">${item.exam} • ${item.q.label}</span>`;
+    const topicSpan = qBtn.querySelector('.ms-topic');
+    topicSpan.style.color = discColors[item.disc];
+    const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
+    if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
+    qBtn.addEventListener('click',e=>{
+      if(e.target.closest('.ms-topic')){
+        currentDisc = item.disc;
+        currentSub = item.sub;
+        openSummary();
+        e.stopPropagation();
+      }else{
+        openPdf(item.q.QPDFName,item.q.page);
+      }
+    });
+    row.appendChild(qBtn);
+
+    row.appendChild(Object.assign(document.createElement('button'),{
+      textContent:'Gabarito',
+      className:'small-btn',
+      onclick:()=>openGabarito(item.q)
+    }));
+
+    const box = Object.assign(document.createElement('span'),{className:'state-box'});
+    const paintState = ()=>{
+      box.textContent = st===1?'\u2713':st===2?'\u2717':'';
+      box.style.color = st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+    };
+    paintState();
+    box.onclick = ()=>{
+      st = (st+1)%3;
+      localStorage.setItem(key,st);
+      const today = getTodayStr();
+      const logKey = `log_${today}_${key}`;
+      if(!D1_DISCIPLINES.includes(item.disc)){
+        if(st===1||st===2){
+          localStorage.setItem(logKey,'1');
+        }else{
+          localStorage.removeItem(logKey);
+        }
+      }
+      if(st===1){
+        localStorage.setItem(keepKey,'1');
+      }else{
+        localStorage.removeItem(keepKey);
+      }
+      paintState();
+      if(localStorage.getItem(keepKey)!=='1' && !qualifies()){
+        row.remove();
+        ensureEmptyState();
+      }
+      refreshStats();
+    };
+    row.appendChild(box);
+
+    if(item.type === 'wrong'){
+      const reviewKey = `natReview_${key}`;
+      let reviewState = +localStorage.getItem(reviewKey) || 0;
+      const reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
+      const paintReview = ()=>{
+        reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
+        reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
+        reviewBox.title = reviewState===0
+          ? 'Marcar revisão'
+          : reviewState===1
+            ? 'Revisado – certo'
+            : 'Revisado – errado';
+      };
+      paintReview();
+      reviewBox.onclick = ()=>{
+        reviewState = (reviewState+1)%3;
+        if(reviewState===0){
+          localStorage.removeItem(reviewKey);
+        }else{
+          localStorage.setItem(reviewKey,reviewState);
+        }
+        paintReview();
+      };
+      row.appendChild(reviewBox);
+    }
+
+    const cKey = `comment_${key}`;
+    const editDiv=document.createElement('div');
+    editDiv.className='comment-edit';
+    editDiv.contentEditable='true';
+    editDiv.dataset.ph='';
+    editDiv.addEventListener('click',function(e){if(e.button!==0)return;const anchor=e.target.closest('a');if(anchor){e.preventDefault();if(isImageUrl(anchor.href))openImage(anchor.href);else window.open(anchor.href,'_blank','noopener');return;}if(!editDiv.classList.contains('expanded')){editDiv.focus();}});
+    editDiv.innerHTML=localStorage.getItem(cKey)||'';
+    replaceArrows(editDiv,true);
+    editDiv.addEventListener('paste',e=>{e.preventDefault();const plain=e.clipboardData.getData('text/plain');const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(document.createTextNode(plain));range.collapse(false);sel.removeAllRanges();sel.addRange(range);replaceArrows(editDiv,true);});
+    editDiv.addEventListener('input',()=>{if(editDiv.classList.contains('expanded')){fitHeight(editDiv);}});
+    editDiv.addEventListener('focus',()=>{editDiv.classList.add('expanded');editDiv.style.whiteSpace='pre-wrap';editDiv.style.overflowY='auto';fitHeight(editDiv);});
+    editDiv.addEventListener('blur',()=>{if(editDiv.textContent.trim()===''){editDiv.innerHTML='';localStorage.removeItem(cKey);}editDiv.classList.remove('expanded');editDiv.style.maxHeight='38px';editDiv.style.whiteSpace='nowrap';editDiv.style.textOverflow='ellipsis';editDiv.style.overflow='hidden';editDiv.scrollTop=0;atualizaIndicadorOverflow(editDiv);ensureEmptyState();});
+    editDiv.addEventListener('contextmenu',e=>{e.preventDefault();openLinkMenu(e,editDiv);});
+    editDiv.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;if(editDiv.matches(':focus')){openLinkMenu(e,editDiv);}else{e.preventDefault();if(isImageUrl(a.href)){openImage(a.href);}else{window.open(a.href,'_blank','noopener');}}});
+    editDiv.addEventListener('input',()=>{replaceArrows(editDiv);localStorage.setItem(cKey,editDiv.innerHTML);});
+    row.appendChild(editDiv);
+
+    fragment.appendChild(row);
+  });
+
+  app.appendChild(fragment);
+  ensureEmptyState();
+  refreshStats();
 }
 function showSubjects(disc) {
   currentDisc = disc;
