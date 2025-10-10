@@ -1626,7 +1626,7 @@ function showNatReview(){
   currentExamMode = 'nat';
   leaveHome();
   toggleSettingsVisibility(false);
-  updateHeader(true, 'Revisão Natureza');
+  updateHeader(true, 'Revisão');
   summaryBtn.style.display = 'none';
   summaryBtn.onclick = null;
   orderHint.style.display = 'none';
