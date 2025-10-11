@@ -1712,8 +1712,12 @@ function showNatReview(){
 
     const qBtn = document.createElement('button');
     qBtn.classList.add('btn','question-btn','two-line-btn');
+    const examPrefix = `${item.exam}-`;
+    const labelText = item.q.label.toUpperCase().startsWith(examPrefix.toUpperCase())
+      ? item.q.label
+      : `${item.exam} • ${item.q.label}`;
     qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
-      `<span class="ms-label">${item.exam} • ${item.q.label}</span>`;
+      `<span class="ms-label">${labelText}</span>`;
     const topicSpan = qBtn.querySelector('.ms-topic');
     topicSpan.style.color = discColors[item.disc];
     const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
