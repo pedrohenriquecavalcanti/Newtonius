@@ -257,6 +257,7 @@ const headerTitle  = document.getElementById("headerTitle");
 const summaryBtn   = document.getElementById("summaryBtn");
 const pdfContainer = document.getElementById("pdfViewerContainer");
 const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
+const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
 const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
@@ -309,9 +310,9 @@ let lastPdfTotalPages = 0;
 let isFullPdfLoaded = false;
 let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
-let pdfDrawingTool = 'pen';
-const PDF_PEN_COLOR = '#ff4d4d';
-const PDF_PEN_WIDTH = 3;
+let pdfDrawingTool = 'hand';
+const PDF_PEN_COLOR = '#000000';
+const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
@@ -2226,13 +2227,37 @@ function updateLoadAllButtonState() {
   loadAllPagesBtn.setAttribute('aria-disabled', String(disable));
 }
 
+function getPdfDrawingLayers() {
+  const scope = pdfPagesWrapper || pdfContainer;
+  if (!scope) return [];
+  return Array.from(scope.querySelectorAll('.pdf-draw-layer'));
+}
+
+function applyPdfToolToLayer(layer) {
+  if (!layer) return;
+  if (pdfDrawingTool === 'hand') {
+    layer.style.pointerEvents = 'none';
+    layer.style.touchAction = 'auto';
+  } else {
+    layer.style.pointerEvents = 'auto';
+    layer.style.touchAction = 'none';
+  }
+}
+
 function setPdfDrawingTool(tool) {
   pdfDrawingTool = tool;
+  if (pdfHandBtn) {
+    pdfHandBtn.classList.toggle('active', tool === 'hand');
+  }
   if (pdfPenBtn) {
     pdfPenBtn.classList.toggle('active', tool === 'pen');
   }
   if (pdfEraserBtn) {
     pdfEraserBtn.classList.toggle('active', tool === 'eraser');
+  }
+  getPdfDrawingLayers().forEach(applyPdfToolToLayer);
+  if (pdfContainer) {
+    pdfContainer.classList.toggle('hand-mode', tool === 'hand');
   }
 }
 
@@ -2307,6 +2332,7 @@ function createDrawingLayer(baseCanvas) {
   drawingCanvas.style.width = '100%';
   drawingCanvas.style.height = '100%';
   attachDrawingEvents(drawingCanvas);
+  applyPdfToolToLayer(drawingCanvas);
   return drawingCanvas;
 }
 
@@ -2373,7 +2399,12 @@ function restorePdfViewportState(state) {
 /** Abre/Renderiza um PDF no modal. */
 async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const pageList = Array.isArray(pages) ? pages : [pages];
+  const wasHidden = pdfContainer.style.display !== "flex";
   pdfContainer.style.display = "flex";
+  if (wasHidden) {
+    setPdfDrawingTool('hand');
+    pdfContainer.scrollTop = 0;
+  }
   clearPdfViewerContent();
 
   if (!pdfKeyListenerAttached) {
@@ -2461,9 +2492,11 @@ function openGabarito(q){
     alert('Gabarito indisponível.');
   }
 }
-closeBtn.onclick = () => {
+
+function closePdfViewer() {
   pdfContainer.style.display = "none";
   clearPdfViewerContent();
+  pdfContainer.scrollTop = 0;
   if (pdfKeyListenerAttached) {
     document.removeEventListener('keydown', handlePdfKeydown);
     pdfKeyListenerAttached = false;
@@ -2472,9 +2505,17 @@ closeBtn.onclick = () => {
   lastPdfTotalPages = 0;
   isFullPdfLoaded = false;
   isFullPdfLoading = false;
+  setPdfDrawingTool('hand');
   updateLoadAllButtonState();
-};
+}
 
+if (closeBtn) {
+  closeBtn.onclick = closePdfViewer;
+}
+
+if (pdfHandBtn) {
+  pdfHandBtn.addEventListener('click', () => setPdfDrawingTool('hand'));
+}
 if (pdfPenBtn) {
   pdfPenBtn.addEventListener('click', () => setPdfDrawingTool('pen'));
 }
