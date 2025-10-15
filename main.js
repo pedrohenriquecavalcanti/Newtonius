@@ -2399,6 +2399,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   let strokeDirty = false;
   let activePointerId = null;
   let lastPoint = null;
+  let forcedPenTouchAction = false;
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2450,6 +2451,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     lastPoint = null;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
+    if (forcedPenTouchAction) {
+      applyPdfToolToLayer(canvas);
+      forcedPenTouchAction = false;
+    }
     if (strokeDirty) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
@@ -2476,6 +2481,12 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
       ctx.lineWidth = PDF_ERASER_WIDTH;
+    }
+    if (pdfTabletMode && event.pointerType === 'pen') {
+      forcedPenTouchAction = true;
+      canvas.style.touchAction = 'none';
+    } else {
+      forcedPenTouchAction = false;
     }
     event.preventDefault();
   });
