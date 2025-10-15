@@ -323,6 +323,7 @@ const PDF_STYLUS_DOUBLE_TAP_DISTANCE_PX = 36;
 const PDF_APPLE_DOUBLE_TAP_EVENT = 'applepencildoubletap';
 const pdfDirtyLayers = new Set();
 let lastPdfStylusTap = null;
+let pdfStylusScrollLockCount = 0;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2354,6 +2355,24 @@ function getPdfDrawingLayers() {
   return Array.from(scope.querySelectorAll('.pdf-draw-layer'));
 }
 
+function lockPdfScrollForStylus() {
+  if (!pdfContainer) return;
+  pdfStylusScrollLockCount += 1;
+  pdfContainer.classList.add('stylus-lock-scroll');
+}
+
+function releasePdfScrollForStylus({ force = false } = {}) {
+  if (!pdfContainer) return;
+  if (force) {
+    pdfStylusScrollLockCount = 0;
+  } else {
+    pdfStylusScrollLockCount = Math.max(0, pdfStylusScrollLockCount - 1);
+  }
+  if (pdfStylusScrollLockCount === 0) {
+    pdfContainer.classList.remove('stylus-lock-scroll');
+  }
+}
+
 function applyPdfToolToLayer(layer) {
   if (!layer) return;
   if (pdfDrawingTool === 'hand') {
@@ -2380,6 +2399,9 @@ function setPdfDrawingTool(tool) {
   if (pdfContainer) {
     pdfContainer.classList.toggle('hand-mode', tool === 'hand');
   }
+  if (tool === 'hand') {
+    releasePdfScrollForStylus({ force: true });
+  }
 }
 
 function setPdfIpadMode(enabled) {
@@ -2392,6 +2414,7 @@ function setPdfIpadMode(enabled) {
   }
   if (!pdfIpadMode) {
     lastPdfStylusTap = null;
+    releasePdfScrollForStylus({ force: true });
   }
   getPdfDrawingLayers().forEach(applyPdfToolToLayer);
 }
@@ -2444,6 +2467,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   let drawing = false;
   let strokeDirty = false;
   let previousPoint = null;
+  let activePointerType = null;
 
   const isPointerAllowed = (event) => {
     if (!pdfIpadMode) return true;
@@ -2463,7 +2487,13 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   };
 
   const stopDrawing = () => {
-    if (!drawing) return;
+    if (activePointerType === 'pen') {
+      releasePdfScrollForStylus();
+    }
+    if (!drawing) {
+      activePointerType = null;
+      return;
+    }
     drawing = false;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
@@ -2472,6 +2502,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    activePointerType = null;
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -2484,6 +2515,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     }
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
+    }
+    activePointerType = event.pointerType || null;
+    if (activePointerType === 'pen') {
+      lockPdfScrollForStylus();
     }
     const { x, y } = getPoint(event);
     drawing = true;
@@ -2722,6 +2757,7 @@ function closePdfViewer() {
   pdfContainer.style.display = "none";
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;
+  releasePdfScrollForStylus({ force: true });
   if (pdfKeyListenerAttached) {
     document.removeEventListener('keydown', handlePdfKeydown);
     pdfKeyListenerAttached = false;
