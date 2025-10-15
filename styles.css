@@ -404,6 +404,7 @@ button:hover { filter: brightness(1.2); }
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y pinch-zoom;
 }
 #pdfPagesWrapper {
   width: 100%;
@@ -422,7 +423,7 @@ button:hover { filter: brightness(1.2); }
 }
 .pdf-page-wrapper canvas {
   display: block;
-  touch-action: none;
+  touch-action: pinch-zoom;
   -webkit-tap-highlight-color: transparent;
 }
 .pdf-draw-layer {
@@ -431,16 +432,17 @@ button:hover { filter: brightness(1.2); }
   width: 100%;
   height: 100%;
   pointer-events: auto;
-  touch-action: none;
+  touch-action: pinch-zoom;
 }
 #pdfToolbar {
   position: sticky;
-  top: 0;
+  top: 12px;
+  left: 50%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
-  margin: 8px auto 24px;
+  margin: 0 auto 24px;
   width: fit-content;
   max-width: calc(100% - 32px);
   background: rgba(20, 20, 20, 0.88);
@@ -455,6 +457,7 @@ button:hover { filter: brightness(1.2); }
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transform: translateX(-50%);
 }
 .pdf-tool-btn {
   width: 40px;
@@ -499,7 +502,7 @@ button:hover { filter: brightness(1.2); }
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas {
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas:active {
   cursor: grabbing;
