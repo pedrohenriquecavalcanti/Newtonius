@@ -260,6 +260,7 @@ const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
+const pdfIpadBtn   = document.getElementById("pdfIpadBtn");
 const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
 const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
@@ -314,6 +315,13 @@ let pdfDrawingTool = 'hand';
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
+const PDF_ERASER_CLEAR_HOLD_MS = 3000;
+const PDF_LONG_PRESS_MOVE_CANCEL_PX = 12;
+const PEN_DOUBLE_TAP_MAX_DELAY = 350;
+const PEN_DOUBLE_TAP_MAX_DISTANCE = 60;
+
+let pdfPalmRejectionEnabled = false;
+let lastPenTapInfo = { time: 0, x: 0, y: 0 };
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
@@ -2355,7 +2363,31 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = 'none';
+    layer.style.touchAction = 'pinch-zoom';
+  }
+}
+
+function handlePenDoubleTap(point) {
+  const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const elapsed = now - (lastPenTapInfo.time || 0);
+  if (lastPenTapInfo.time && elapsed <= PEN_DOUBLE_TAP_MAX_DELAY) {
+    const distance = Math.hypot(point.x - lastPenTapInfo.x, point.y - lastPenTapInfo.y);
+    if (distance <= PEN_DOUBLE_TAP_MAX_DISTANCE) {
+      const nextTool = pdfDrawingTool === 'eraser' ? 'pen' : 'eraser';
+      setPdfDrawingTool(nextTool);
+      lastPenTapInfo = { time: 0, x: 0, y: 0 };
+      return true;
+    }
+  }
+  lastPenTapInfo = { time: now, x: point.x, y: point.y };
+  return false;
+}
+
+function setPdfPalmRejection(enabled) {
+  pdfPalmRejectionEnabled = Boolean(enabled);
+  if (pdfIpadBtn) {
+    pdfIpadBtn.classList.toggle('active', pdfPalmRejectionEnabled);
+    pdfIpadBtn.setAttribute('aria-pressed', pdfPalmRejectionEnabled ? 'true' : 'false');
   }
 }
 
@@ -2383,6 +2415,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   ctx.lineJoin = 'round';
   let drawing = false;
   let strokeDirty = false;
+  let lastPoint = null;
+  let longPressTimer = null;
+  let longPressStartPoint = null;
+  const activeTouchIds = new Set();
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2394,7 +2430,34 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     };
   };
 
-  const stopDrawing = () => {
+  const cancelLongPress = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  };
+
+  const clearLayer = () => {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    markPdfLayerDirty(canvas);
+    strokeDirty = false;
+    cancelLongPress();
+    lastPoint = null;
+    longPressStartPoint = null;
+  };
+
+  const stopDrawing = (event) => {
+    cancelLongPress();
+    if (event && event.pointerType === 'touch') {
+      activeTouchIds.delete(event.pointerId);
+    }
+    if (event && canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
     if (!drawing) return;
     drawing = false;
     ctx.closePath();
@@ -2403,45 +2466,109 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    lastPoint = null;
+    longPressStartPoint = null;
   };
 
   canvas.addEventListener('pointerdown', (event) => {
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
-    if (canvas.setPointerCapture) {
+    const point = getPoint(event);
+
+    if (event.pointerType === 'pen' && handlePenDoubleTap(point)) {
+      event.preventDefault();
+      return;
+    }
+
+    if (pdfPalmRejectionEnabled && event.pointerType !== 'pen') {
+      return;
+    }
+
+    if (event.pointerType === 'touch') {
+      activeTouchIds.add(event.pointerId);
+      if (activeTouchIds.size > 1) {
+        stopDrawing(event);
+        activeTouchIds.clear();
+        return;
+      }
+    }
+
+    if (canvas.setPointerCapture && event.pointerType !== 'touch') {
       canvas.setPointerCapture(event.pointerId);
     }
-    const { x, y } = getPoint(event);
+
     drawing = true;
     strokeDirty = false;
+    lastPoint = point;
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(point.x, point.y);
     if (pdfDrawingTool === 'pen') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = PDF_PEN_COLOR;
       ctx.lineWidth = PDF_PEN_WIDTH;
+      longPressStartPoint = null;
+      cancelLongPress();
     } else {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
       ctx.lineWidth = PDF_ERASER_WIDTH;
+      longPressStartPoint = point;
+      cancelLongPress();
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        drawing = false;
+        clearLayer();
+      }, PDF_ERASER_CLEAR_HOLD_MS);
     }
     event.preventDefault();
   });
 
   canvas.addEventListener('pointermove', (event) => {
-    if (!drawing) return;
-    const { x, y } = getPoint(event);
-    ctx.lineTo(x, y);
+    if (!drawing) {
+      if (event.pointerType === 'touch') {
+        activeTouchIds.delete(event.pointerId);
+      }
+      return;
+    }
+    if (pdfPalmRejectionEnabled && event.pointerType !== 'pen') {
+      return;
+    }
+    if (event.pointerType === 'touch') {
+      activeTouchIds.add(event.pointerId);
+      if (activeTouchIds.size > 1) {
+        stopDrawing(event);
+        activeTouchIds.clear();
+        return;
+      }
+    }
+    const point = getPoint(event);
+    if (longPressTimer && longPressStartPoint) {
+      const dx = point.x - longPressStartPoint.x;
+      const dy = point.y - longPressStartPoint.y;
+      if (Math.hypot(dx, dy) > PDF_LONG_PRESS_MOVE_CANCEL_PX) {
+        cancelLongPress();
+      }
+    }
+    if (!lastPoint) {
+      lastPoint = point;
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+    }
+    const midPoint = {
+      x: (lastPoint.x + point.x) / 2,
+      y: (lastPoint.y + point.y) / 2
+    };
+    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(midPoint.x, midPoint.y);
+    lastPoint = point;
     strokeDirty = true;
     event.preventDefault();
   });
 
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
     canvas.addEventListener(type, (event) => {
-      if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-      stopDrawing();
+      stopDrawing(event);
     });
   });
 }
@@ -2651,12 +2778,18 @@ if (pdfPenBtn) {
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
 }
+if (pdfIpadBtn) {
+  pdfIpadBtn.addEventListener('click', () => {
+    setPdfPalmRejection(!pdfPalmRejectionEnabled);
+  });
+}
 if (loadAllPagesBtn) {
   loadAllPagesBtn.addEventListener('click', (event) => {
     event.preventDefault();
     loadFullPdf();
   });
 }
+setPdfPalmRejection(pdfPalmRejectionEnabled);
 setPdfDrawingTool(pdfDrawingTool);
 updateLoadAllButtonState();
 
