@@ -91,12 +91,24 @@
        - Exibe questões e gabaritos renderizados pelo PDF.js
        ===================================================================== -->
   <div id="pdfViewerContainer">
-    <!-- Botão para fechar o modal -->
-    <button id="closePdfBtn" aria-label="Fechar PDF">
-      <i class="fas fa-times"></i>
-    </button>
-    <!-- Canvas criado pelo PDF.js para renderizar páginas -->
-    <canvas id="pdfCanvas"></canvas>
+    <div id="pdfToolbar" aria-label="Ferramentas do PDF">
+      <button id="pdfHandBtn" class="pdf-tool-btn" title="Mover página">
+        <i class="fas fa-hand"></i>
+      </button>
+      <button id="pdfPenBtn" class="pdf-tool-btn" title="Caneta">
+        <i class="fas fa-pen"></i>
+      </button>
+      <button id="pdfEraserBtn" class="pdf-tool-btn" title="Borracha">
+        <i class="fas fa-eraser"></i>
+      </button>
+      <button id="loadAllPagesBtn" class="pdf-tool-btn" title="Carregar todas as páginas">
+        <i class="fas fa-plus"></i>
+      </button>
+      <button id="closePdfBtn" class="pdf-tool-btn pdf-tool-btn--close" title="Fechar PDF" aria-label="Fechar PDF">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="pdfPagesWrapper"></div>
   </div>
   <!-- =====================================================================
        MODAL DE IMAGEM
