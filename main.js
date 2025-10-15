@@ -318,7 +318,11 @@ const PDF_ERASER_WIDTH = 20;
 let pdfIpadMode = false;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
+const PDF_STYLUS_DOUBLE_TAP_INTERVAL_MS = 350;
+const PDF_STYLUS_DOUBLE_TAP_DISTANCE_PX = 36;
+const PDF_APPLE_DOUBLE_TAP_EVENT = 'applepencildoubletap';
 const pdfDirtyLayers = new Set();
+let lastPdfStylusTap = null;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2386,7 +2390,50 @@ function setPdfIpadMode(enabled) {
   if (pdfContainer) {
     pdfContainer.classList.toggle('ipad-mode', pdfIpadMode);
   }
+  if (!pdfIpadMode) {
+    lastPdfStylusTap = null;
+  }
   getPdfDrawingLayers().forEach(applyPdfToolToLayer);
+}
+
+function isPdfViewerOpen() {
+  return Boolean(pdfContainer && pdfContainer.style.display === 'flex');
+}
+
+function handlePdfStylusDoubleTap(event) {
+  if (!pdfIpadMode || !isPdfViewerOpen()) {
+    return false;
+  }
+  const current = pdfDrawingTool;
+  const nextTool = current === 'eraser' ? 'pen' : 'eraser';
+  const targetTool = current === 'pen' || current === 'eraser' ? nextTool : 'pen';
+  setPdfDrawingTool(targetTool);
+  if (event && typeof event.preventDefault === 'function') {
+    event.preventDefault();
+  }
+  return true;
+}
+
+function maybeHandleStylusDoubleTap(event) {
+  if (!event || event.pointerType !== 'pen' || !pdfIpadMode || !isPdfViewerOpen()) {
+    return false;
+  }
+  const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const point = { x: event.clientX, y: event.clientY };
+  if (lastPdfStylusTap) {
+    const dt = now - lastPdfStylusTap.time;
+    if (dt <= PDF_STYLUS_DOUBLE_TAP_INTERVAL_MS) {
+      const dx = point.x - lastPdfStylusTap.x;
+      const dy = point.y - lastPdfStylusTap.y;
+      const distanceSq = dx * dx + dy * dy;
+      if (distanceSq <= PDF_STYLUS_DOUBLE_TAP_DISTANCE_PX * PDF_STYLUS_DOUBLE_TAP_DISTANCE_PX) {
+        lastPdfStylusTap = null;
+        return handlePdfStylusDoubleTap(event);
+      }
+    }
+  }
+  lastPdfStylusTap = { time: now, x: point.x, y: point.y };
+  return false;
 }
 
 function attachDrawingEvents(canvas, pdfName, pageNumber) {
@@ -2428,6 +2475,9 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   };
 
   canvas.addEventListener('pointerdown', (event) => {
+    if (maybeHandleStylusDoubleTap(event)) {
+      return;
+    }
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
     if (!isPointerAllowed(event)) {
       return;
@@ -2482,6 +2532,14 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       stopDrawing();
     });
   });
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener(PDF_APPLE_DOUBLE_TAP_EVENT, (event) => {
+    if (handlePdfStylusDoubleTap(event)) {
+      lastPdfStylusTap = null;
+    }
+  }, { passive: false });
 }
 
 function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
