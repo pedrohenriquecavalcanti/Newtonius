@@ -2354,10 +2354,14 @@ function applyPdfToolToLayer(layer) {
   if (!layer) return;
   if (pdfDrawingTool === 'hand') {
     layer.style.pointerEvents = 'none';
-    layer.style.touchAction = 'auto';
+    layer.dataset.defaultTouchAction = 'auto';
+    layer.style.touchAction = layer.dataset.defaultTouchAction;
+    layer.dataset.lockedTouchAction = 'false';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = pdfTabletMode ? 'manipulation' : 'none';
+    layer.dataset.defaultTouchAction = pdfTabletMode ? 'manipulation' : 'none';
+    if (layer.dataset.lockedTouchAction === 'true') return;
+    layer.style.touchAction = layer.dataset.defaultTouchAction;
   }
 }
 
@@ -2432,10 +2436,20 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    if (canvas.dataset.lockedTouchAction === 'true') {
+      canvas.dataset.lockedTouchAction = 'false';
+      const nextAction = canvas.dataset.defaultTouchAction || '';
+      canvas.style.touchAction = nextAction;
+    }
   };
 
   canvas.addEventListener('pointerdown', (event) => {
     if (!canDrawWithPointer(event)) return;
+    const pointerType = event.pointerType || '';
+    if (pdfTabletMode && pointerType === 'pen') {
+      canvas.dataset.lockedTouchAction = 'true';
+      canvas.style.touchAction = 'none';
+    }
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
