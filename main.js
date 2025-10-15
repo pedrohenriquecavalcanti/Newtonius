@@ -310,9 +310,9 @@ let lastPdfTotalPages = 0;
 let isFullPdfLoaded = false;
 let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
-let pdfDrawingTool = 'hand';
+let pdfDrawingTool = 'pen';
 const PDF_PEN_COLOR = '#000000';
-const PDF_PEN_WIDTH = 4;
+const PDF_PEN_WIDTH = 4.6;
 const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
@@ -2355,7 +2355,7 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = 'none';
+    layer.style.touchAction = 'manipulation';
   }
 }
 
@@ -2383,6 +2383,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   ctx.lineJoin = 'round';
   let drawing = false;
   let strokeDirty = false;
+  let activePenId = null;
+  let lastPoint = null;
+  let lastMidPoint = null;
+  let initialPoint = null;
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2394,25 +2398,66 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     };
   };
 
-  const stopDrawing = () => {
-    if (!drawing) return;
+  const isPenLikeInput = (event) => {
+    const type = event.pointerType;
+    if (!type) return true;
+    return type === 'pen' || type === 'mouse';
+  };
+
+  const stopDrawing = (event) => {
+    if (!drawing || (event && event.pointerId !== activePenId)) return;
     drawing = false;
+    const wasPen = pdfDrawingTool === 'pen';
+    const wasEraser = pdfDrawingTool === 'eraser';
+    const start = initialPoint;
+    activePenId = null;
+    lastPoint = null;
+    lastMidPoint = null;
+    initialPoint = null;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
     if (strokeDirty) {
+      markPdfLayerDirty(canvas);
+      strokeDirty = false;
+    } else if (start && wasPen) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = PDF_PEN_COLOR;
+      ctx.arc(start.x, start.y, PDF_PEN_WIDTH / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      markPdfLayerDirty(canvas);
+      strokeDirty = false;
+    } else if (start && wasEraser) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.arc(start.x, start.y, PDF_ERASER_WIDTH / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
   };
 
   canvas.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') {
+      return;
+    }
+    if (!isPenLikeInput(event)) return;
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
+    activePenId = event.pointerId;
     if (canvas.setPointerCapture) {
-      canvas.setPointerCapture(event.pointerId);
+      canvas.setPointerCapture(activePenId);
     }
     const { x, y } = getPoint(event);
     drawing = true;
     strokeDirty = false;
+    initialPoint = { x, y };
+    lastPoint = { x, y };
+    lastMidPoint = { x, y };
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
@@ -2428,20 +2473,32 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   });
 
   canvas.addEventListener('pointermove', (event) => {
-    if (!drawing) return;
+    if (!drawing || event.pointerId !== activePenId) return;
     const { x, y } = getPoint(event);
-    ctx.lineTo(x, y);
+    const midPoint = {
+      x: (lastPoint.x + x) / 2,
+      y: (lastPoint.y + y) / 2
+    };
+    ctx.beginPath();
+    ctx.moveTo(lastMidPoint.x, lastMidPoint.y);
+    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y);
     ctx.stroke();
     strokeDirty = true;
+    lastPoint = { x, y };
+    lastMidPoint = midPoint;
     event.preventDefault();
   });
 
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
     canvas.addEventListener(type, (event) => {
+      const isPenEvent = event.pointerId === activePenId || isPenLikeInput(event);
+      if (!isPenEvent) {
+        return;
+      }
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
-      stopDrawing();
+      stopDrawing(event);
     });
   });
 }
@@ -2527,9 +2584,9 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   if (wasHidden) {
-    setPdfDrawingTool('hand');
     pdfContainer.scrollTop = 0;
   }
+  setPdfDrawingTool('pen');
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
 
@@ -2634,7 +2691,7 @@ function closePdfViewer() {
   lastPdfTotalPages = 0;
   isFullPdfLoaded = false;
   isFullPdfLoading = false;
-  setPdfDrawingTool('hand');
+  setPdfDrawingTool('pen');
   updateLoadAllButtonState();
 }
 

@@ -390,15 +390,20 @@ button:hover { filter: brightness(1.2); }
    VISUALIZAÇÃO DE PDF (LIGHTBOX)
    =====================================================================================*/
 #pdfViewerContainer {
-  position: fixed;
-  inset: 0;                             /* top/right/bottom/left: 0 */
-  background: rgba(0, 0, 0, 0.9);
+  position: relative;
+  background: rgba(8, 8, 8, 0.92);
   display: none;                        /* visível apenas ao abrir */
   flex-direction: column;
   align-items: center;
-  overflow-y: auto;
-  z-index: 1000;
   padding: 16px 16px 32px;
+  gap: 24px;
+  width: min(100%, 1100px);
+  margin: 24px auto;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  box-sizing: border-box;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -ms-user-select: none;
@@ -410,11 +415,18 @@ button:hover { filter: brightness(1.2); }
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 24px;
 }
 .pdf-page-wrapper {
   position: relative;
-  margin: 16px 0;
-  box-shadow: 0 0 10px rgba(0, 0, 0, .5);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
@@ -422,7 +434,7 @@ button:hover { filter: brightness(1.2); }
 }
 .pdf-page-wrapper canvas {
   display: block;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
 }
 .pdf-draw-layer {
@@ -440,7 +452,7 @@ button:hover { filter: brightness(1.2); }
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
-  margin: 8px auto 24px;
+  margin: 0 auto;
   width: fit-content;
   max-width: calc(100% - 32px);
   background: rgba(20, 20, 20, 0.88);
@@ -491,15 +503,15 @@ button:hover { filter: brightness(1.2); }
   opacity: 0.35;
   cursor: not-allowed;
 }
-.answer-letter{
-  margin:40px;
-  font-size:48px;
-  color:#fff;
-  text-align:center;
+#pdfViewerContainer .answer-letter{
+  margin: 40px;
+  font-size: 48px;
+  color: #fff;
+  text-align: center;
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas {
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas:active {
   cursor: grabbing;
