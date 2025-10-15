@@ -403,6 +403,7 @@ button:hover { filter: brightness(1.2); }
   -webkit-touch-callout: none;
   -ms-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 #pdfPagesWrapper {
   width: 100%;
@@ -417,10 +418,12 @@ button:hover { filter: brightness(1.2); }
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .pdf-page-wrapper canvas {
   display: block;
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .pdf-draw-layer {
   position: absolute;
@@ -450,6 +453,7 @@ button:hover { filter: brightness(1.2); }
   -webkit-touch-callout: none;
   -ms-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .pdf-tool-btn {
   width: 40px;
@@ -463,6 +467,7 @@ button:hover { filter: brightness(1.2); }
   color: #fff;
   cursor: pointer;
   transition: background .2s, transform .2s, opacity .2s;
+  -webkit-tap-highlight-color: transparent;
 }
 .pdf-tool-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
@@ -473,7 +478,7 @@ button:hover { filter: brightness(1.2); }
   color: #111;
 }
 .pdf-tool-btn--close {
-  margin-left: auto;
+  margin-left: 8px;
   background: rgba(255, 80, 80, 0.25);
   color: #ffecec;
 }

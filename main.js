@@ -316,6 +316,7 @@ const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
+const pdfDirtyLayers = new Set();
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2215,6 +2216,7 @@ editDiv.addEventListener('click', function(e) {
    6. VISUALIZAÇÃO DE PDF (PDF.js)
    ============================================================== */
 function clearPdfViewerContent() {
+  pdfDirtyLayers.clear();
   if (pdfPagesWrapper) {
     pdfPagesWrapper.innerHTML = '';
   } else if (pdfContainer) {
@@ -2314,6 +2316,32 @@ function cleanupStalePdfDrawings() {
 
 cleanupStalePdfDrawings();
 
+function markPdfLayerDirty(canvas) {
+  if (!canvas) return;
+  canvas.dataset.dirty = 'true';
+  pdfDirtyLayers.add(canvas);
+}
+
+function persistCurrentPdfDrawings({ force = false } = {}) {
+  if (typeof localStorage === 'undefined') {
+    pdfDirtyLayers.clear();
+    return;
+  }
+  const layers = force ? getPdfDrawingLayers() : Array.from(pdfDirtyLayers);
+  layers.forEach((layer) => {
+    if (!(layer instanceof HTMLCanvasElement)) return;
+    const pdfName = layer.dataset.pdfName;
+    const pageNumber = Number(layer.dataset.pageNumber);
+    if (!force && layer.dataset.dirty !== 'true') return;
+    savePdfDrawingLayer(pdfName, pageNumber, layer);
+    layer.dataset.dirty = 'false';
+    pdfDirtyLayers.delete(layer);
+  });
+  if (force) {
+    pdfDirtyLayers.clear();
+  }
+}
+
 function getPdfDrawingLayers() {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!scope) return [];
@@ -2372,7 +2400,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
     if (strokeDirty) {
-      savePdfDrawingLayer(pdfName, pageNumber, canvas);
+      markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
   };
@@ -2426,6 +2454,7 @@ function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
   drawingCanvas.style.width = '100%';
   drawingCanvas.style.height = '100%';
   drawingCanvas.dataset.pageNumber = baseCanvas.dataset.pageNumber || String(pageNumber);
+  drawingCanvas.dataset.pdfName = pdfName;
   attachDrawingEvents(drawingCanvas, pdfName, pageNumber);
   applyPdfToolToLayer(drawingCanvas);
   return drawingCanvas;
@@ -2501,6 +2530,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     setPdfDrawingTool('hand');
     pdfContainer.scrollTop = 0;
   }
+  persistCurrentPdfDrawings();
   clearPdfViewerContent();
 
   if (!pdfKeyListenerAttached) {
@@ -2562,6 +2592,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
 function openAnswer(answer){
   pdfContainer.style.display = 'flex';
+  persistCurrentPdfDrawings();
   clearPdfViewerContent();
   lastPdfName = null;
   lastPdfTotalPages = 0;
@@ -2591,6 +2622,7 @@ function openGabarito(q){
 }
 
 function closePdfViewer() {
+  persistCurrentPdfDrawings();
   pdfContainer.style.display = "none";
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;
