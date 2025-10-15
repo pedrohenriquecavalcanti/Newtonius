@@ -260,6 +260,7 @@ const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
+const pdfTabletBtn = document.getElementById("pdfTabletBtn");
 const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
 const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
@@ -310,13 +311,14 @@ let lastPdfTotalPages = 0;
 let isFullPdfLoaded = false;
 let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
-let pdfDrawingTool = 'hand';
+let pdfDrawingTool = 'pen';
 const PDF_PEN_COLOR = '#000000';
-const PDF_PEN_WIDTH = 4;
+const PDF_PEN_WIDTH = 4.5;
 const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
+let pdfTabletMode = true;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2355,8 +2357,17 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = 'none';
+    layer.style.touchAction = pdfTabletMode ? 'manipulation' : 'none';
   }
+}
+
+function setPdfTabletMode(enabled) {
+  pdfTabletMode = Boolean(enabled);
+  if (pdfTabletBtn) {
+    pdfTabletBtn.classList.toggle('active', pdfTabletMode);
+    pdfTabletBtn.setAttribute('aria-pressed', pdfTabletMode ? 'true' : 'false');
+  }
+  getPdfDrawingLayers().forEach(applyPdfToolToLayer);
 }
 
 function setPdfDrawingTool(tool) {
@@ -2383,6 +2394,8 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   ctx.lineJoin = 'round';
   let drawing = false;
   let strokeDirty = false;
+  let lastPoint = null;
+  let drawingPointerId = null;
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2394,9 +2407,25 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     };
   };
 
+  const canDrawWithPointer = (event) => {
+    if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return false;
+    if (!pdfTabletMode) return true;
+    const pointerType = event.pointerType || '';
+    if (!pointerType) return true;
+    if (pointerType === 'touch') return false;
+    return pointerType === 'pen';
+  };
+
   const stopDrawing = () => {
     if (!drawing) return;
     drawing = false;
+    drawingPointerId = null;
+    if (pdfDrawingTool === 'pen' && lastPoint) {
+      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, lastPoint.x, lastPoint.y);
+      ctx.stroke();
+      strokeDirty = true;
+    }
+    lastPoint = null;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
     if (strokeDirty) {
@@ -2406,13 +2435,15 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   };
 
   canvas.addEventListener('pointerdown', (event) => {
-    if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
+    if (!canDrawWithPointer(event)) return;
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
     const { x, y } = getPoint(event);
     drawing = true;
+    drawingPointerId = event.pointerId;
     strokeDirty = false;
+    lastPoint = { x, y };
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
@@ -2428,9 +2459,19 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   });
 
   canvas.addEventListener('pointermove', (event) => {
-    if (!drawing) return;
-    const { x, y } = getPoint(event);
-    ctx.lineTo(x, y);
+    if (!drawing || drawingPointerId !== event.pointerId) return;
+    const point = getPoint(event);
+    if (pdfDrawingTool === 'pen' && lastPoint) {
+      const midPoint = {
+        x: (lastPoint.x + point.x) / 2,
+        y: (lastPoint.y + point.y) / 2
+      };
+      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y);
+      lastPoint = point;
+    } else {
+      ctx.lineTo(point.x, point.y);
+      lastPoint = point;
+    }
     ctx.stroke();
     strokeDirty = true;
     event.preventDefault();
@@ -2438,6 +2479,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
     canvas.addEventListener(type, (event) => {
+      if (drawingPointerId !== null && event.pointerId !== drawingPointerId) return;
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
@@ -2470,17 +2512,19 @@ async function loadFullPdf() {
   isFullPdfLoading = true;
   updateLoadAllButtonState();
   let success = false;
+  let shouldRestoreViewport = false;
   try {
     success = await openPdf(lastPdfName, allPages);
-    if (success && viewportState) {
-      restorePdfViewportState(viewportState);
-    }
+    shouldRestoreViewport = success && Boolean(viewportState);
   } catch (err) {
     console.error(err);
   } finally {
     isFullPdfLoading = false;
     if (!success) {
       isFullPdfLoaded = false;
+    }
+    if (shouldRestoreViewport) {
+      restorePdfViewportState(viewportState);
     }
     updateLoadAllButtonState();
   }
@@ -2527,7 +2571,8 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   if (wasHidden) {
-    setPdfDrawingTool('hand');
+    setPdfTabletMode(true);
+    setPdfDrawingTool('pen');
     pdfContainer.scrollTop = 0;
   }
   persistCurrentPdfDrawings();
@@ -2651,12 +2696,16 @@ if (pdfPenBtn) {
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
 }
+if (pdfTabletBtn) {
+  pdfTabletBtn.addEventListener('click', () => setPdfTabletMode(!pdfTabletMode));
+}
 if (loadAllPagesBtn) {
   loadAllPagesBtn.addEventListener('click', (event) => {
     event.preventDefault();
     loadFullPdf();
   });
 }
+setPdfTabletMode(pdfTabletMode);
 setPdfDrawingTool(pdfDrawingTool);
 updateLoadAllButtonState();
 
