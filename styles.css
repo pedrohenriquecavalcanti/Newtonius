@@ -509,7 +509,7 @@ button:hover { filter: brightness(1.2); }
   cursor: grabbing;
 }
 #pdfViewerContainer.ipad-mode .pdf-page-wrapper canvas {
-  touch-action: pan-x pan-y pinch-zoom;
+  touch-action: pinch-zoom;
 }
 #pdfViewerContainer.ipad-mode .pdf-draw-layer {
   touch-action: pinch-zoom;

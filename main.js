@@ -1710,13 +1710,8 @@ function showNatReview(){
 
   combined.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const keepKey = `natKeep_${key}`;
     let st = +localStorage.getItem(key) || 0;
-    if(st!==1 && localStorage.getItem(keepKey)==='1'){
-      localStorage.removeItem(keepKey);
-    }
     const qualifies = ()=>{
-      if(localStorage.getItem(keepKey)==='1') return true;
       if(st === 2) return true;
       return item.type !== 'wrong' && st === 0;
     };
@@ -1773,20 +1768,12 @@ function showNatReview(){
           localStorage.removeItem(logKey);
         }
       }
-      if(st===1){
-        localStorage.setItem(keepKey,'1');
-      }else{
-        localStorage.removeItem(keepKey);
-      }
       if(st===2 && item.type !== 'wrong'){
         item.type = 'wrong';
         ensureReviewBox();
       }
       paintState();
-      if(localStorage.getItem(keepKey)!=='1' && !qualifies()){
-        row.remove();
-        ensureEmptyState();
-      }
+      ensureEmptyState();
       refreshStats();
     };
     row.appendChild(box);
@@ -2368,8 +2355,33 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = pdfIpadMode ? 'manipulation' : 'none';
+    layer.style.touchAction = pdfIpadMode ? 'pinch-zoom' : 'none';
   }
+}
+
+let pdfTouchBlockerAttached = false;
+
+function detachPdfTouchBlocker() {
+  if (!pdfTouchBlockerAttached) return;
+  if (pdfContainer) {
+    pdfContainer.removeEventListener('touchstart', handlePdfTouchBlocker);
+    pdfContainer.removeEventListener('touchmove', handlePdfTouchBlocker);
+  }
+  pdfTouchBlockerAttached = false;
+}
+
+function handlePdfTouchBlocker(event) {
+  if (!pdfIpadMode) return;
+  if (event.touches && event.touches.length <= 1) {
+    event.preventDefault();
+  }
+}
+
+function ensurePdfTouchBlocker() {
+  if (!pdfIpadMode || !pdfContainer || pdfTouchBlockerAttached) return;
+  pdfContainer.addEventListener('touchstart', handlePdfTouchBlocker, { passive: false });
+  pdfContainer.addEventListener('touchmove', handlePdfTouchBlocker, { passive: false });
+  pdfTouchBlockerAttached = true;
 }
 
 function setPdfDrawingTool(tool) {
@@ -2400,6 +2412,11 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   }
   if (pdfContainer) {
     pdfContainer.classList.toggle('ipad-mode', pdfIpadMode);
+  }
+  if (pdfIpadMode) {
+    ensurePdfTouchBlocker();
+  } else {
+    detachPdfTouchBlocker();
   }
   if (forcePen) {
     setPdfDrawingTool('pen');
@@ -2514,6 +2531,7 @@ async function loadFullPdf() {
     success = await openPdf(lastPdfName, allPages);
     if (success && viewportState) {
       await waitNextFrame();
+      await waitNextFrame();
       restorePdfViewportState(viewportState);
     }
   } catch (err) {
@@ -2541,10 +2559,10 @@ async function handlePdfKeydown(event) {
 function capturePdfViewportState() {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!scope) return null;
-  const canvases = Array.from(scope.querySelectorAll('canvas[data-page-number]'));
-  if (!canvases.length) return null;
+  const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
+  if (!wrappers.length) return null;
   const scrollTop = pdfContainer.scrollTop;
-  const firstVisible = canvases.find(canvas => scrollTop < canvas.offsetTop + canvas.offsetHeight);
+  const firstVisible = wrappers.find(wrapper => scrollTop < wrapper.offsetTop + wrapper.offsetHeight);
   if (!firstVisible) return null;
   const pageNumber = Number(firstVisible.dataset.pageNumber);
   if (!Number.isFinite(pageNumber)) return null;
@@ -2555,9 +2573,9 @@ function capturePdfViewportState() {
 function restorePdfViewportState(state) {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!state || !scope) return;
-  const canvas = scope.querySelector(`canvas[data-page-number="${state.pageNumber}"]`);
-  if (!canvas) return;
-  const targetScroll = canvas.offsetTop + (state.offsetWithinPage || 0);
+  const wrapper = scope.querySelector(`.pdf-page-wrapper[data-page-number="${state.pageNumber}"]`);
+  if (!wrapper) return;
+  const targetScroll = wrapper.offsetTop + (state.offsetWithinPage || 0);
   pdfContainer.scrollTop = Math.max(0, targetScroll);
 }
 
@@ -2618,6 +2636,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     canvas.style.maxWidth = '100%';
     const wrapper = document.createElement('div');
     wrapper.className = 'pdf-page-wrapper';
+    wrapper.dataset.pageNumber = String(num);
     wrapper.style.width = canvas.style.width;
     wrapper.style.maxWidth = '100%';
     wrapper.appendChild(canvas);
