@@ -95,8 +95,18 @@
     <button id="closePdfBtn" aria-label="Fechar PDF">
       <i class="fas fa-times"></i>
     </button>
-    <!-- Canvas criado pelo PDF.js para renderizar páginas -->
-    <canvas id="pdfCanvas"></canvas>
+    <div id="pdfToolbar" aria-label="Ferramentas do PDF">
+      <button id="pdfPenBtn" class="pdf-tool-btn active" title="Caneta">
+        <i class="fas fa-pen"></i>
+      </button>
+      <button id="pdfEraserBtn" class="pdf-tool-btn" title="Borracha">
+        <i class="fas fa-eraser"></i>
+      </button>
+      <button id="loadAllPagesBtn" class="pdf-tool-btn" title="Carregar todas as páginas">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+    <div id="pdfPagesWrapper"></div>
   </div>
   <!-- =====================================================================
        MODAL DE IMAGEM
