@@ -314,6 +314,8 @@ let pdfDrawingTool = 'hand';
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
+const PDF_DRAW_PREFIX = 'pdfDraw::';
+const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2227,6 +2229,91 @@ function updateLoadAllButtonState() {
   loadAllPagesBtn.setAttribute('aria-disabled', String(disable));
 }
 
+function getPdfDrawingStorageKey(pdfName, pageNumber) {
+  if (typeof localStorage === 'undefined') return null;
+  if (!pdfName && pdfName !== '') return null;
+  const page = Number(pageNumber);
+  if (!Number.isFinite(page)) return null;
+  const safeName = encodeURIComponent(pdfName);
+  return `${PDF_DRAW_PREFIX}${getTodayStr()}::${safeName}::${page}`;
+}
+
+function isPdfCanvasBlank(canvas) {
+  const ctx = canvas?.getContext('2d');
+  if (!ctx) return true;
+  const { width, height } = canvas;
+  if (!width || !height) return true;
+  try {
+    const pixels = new Uint32Array(ctx.getImageData(0, 0, width, height).data.buffer);
+    for (const pixel of pixels) {
+      if (pixel !== 0) return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Falha ao inspecionar camada de desenho do PDF', err);
+    return false;
+  }
+}
+
+function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
+  if (typeof localStorage === 'undefined') return;
+  const key = getPdfDrawingStorageKey(pdfName, pageNumber);
+  if (!key) return;
+  try {
+    if (isPdfCanvasBlank(canvas)) {
+      localStorage.removeItem(key);
+      return;
+    }
+    const dataUrl = canvas.toDataURL('image/png');
+    localStorage.setItem(key, dataUrl);
+  } catch (err) {
+    console.error('Falha ao salvar anotação do PDF', err);
+  }
+}
+
+function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
+  if (typeof localStorage === 'undefined') return;
+  const key = getPdfDrawingStorageKey(pdfName, pageNumber);
+  if (!key) return;
+  const stored = localStorage.getItem(key);
+  if (!stored) return;
+  const image = new Image();
+  image.onload = () => {
+    const ctx = canvas?.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  };
+  image.onerror = () => {
+    console.warn('Não foi possível restaurar a anotação salva do PDF.');
+  };
+  image.src = stored;
+}
+
+function cleanupStalePdfDrawings() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const today = getTodayStr();
+    const lastClean = localStorage.getItem(PDF_DRAW_LAST_CLEAN_KEY);
+    if (lastClean === today) return;
+    const staleKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(PDF_DRAW_PREFIX) || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+      const [, storedDate] = key.split('::');
+      if (storedDate && storedDate !== today) {
+        staleKeys.push(key);
+      }
+    }
+    staleKeys.forEach(key => localStorage.removeItem(key));
+    localStorage.setItem(PDF_DRAW_LAST_CLEAN_KEY, today);
+  } catch (err) {
+    console.error('Falha ao limpar anotações antigas do PDF', err);
+  }
+}
+
+cleanupStalePdfDrawings();
+
 function getPdfDrawingLayers() {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!scope) return [];
@@ -2261,12 +2348,13 @@ function setPdfDrawingTool(tool) {
   }
 }
 
-function attachDrawingEvents(canvas) {
+function attachDrawingEvents(canvas, pdfName, pageNumber) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   let drawing = false;
+  let strokeDirty = false;
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2283,6 +2371,10 @@ function attachDrawingEvents(canvas) {
     drawing = false;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
+    if (strokeDirty) {
+      savePdfDrawingLayer(pdfName, pageNumber, canvas);
+      strokeDirty = false;
+    }
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -2292,6 +2384,7 @@ function attachDrawingEvents(canvas) {
     }
     const { x, y } = getPoint(event);
     drawing = true;
+    strokeDirty = false;
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
@@ -2311,6 +2404,7 @@ function attachDrawingEvents(canvas) {
     const { x, y } = getPoint(event);
     ctx.lineTo(x, y);
     ctx.stroke();
+    strokeDirty = true;
     event.preventDefault();
   });
 
@@ -2324,14 +2418,15 @@ function attachDrawingEvents(canvas) {
   });
 }
 
-function createDrawingLayer(baseCanvas) {
+function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
   const drawingCanvas = document.createElement('canvas');
   drawingCanvas.width = baseCanvas.width;
   drawingCanvas.height = baseCanvas.height;
   drawingCanvas.className = 'pdf-draw-layer';
   drawingCanvas.style.width = '100%';
   drawingCanvas.style.height = '100%';
-  attachDrawingEvents(drawingCanvas);
+  drawingCanvas.dataset.pageNumber = baseCanvas.dataset.pageNumber || String(pageNumber);
+  attachDrawingEvents(drawingCanvas, pdfName, pageNumber);
   applyPdfToolToLayer(drawingCanvas);
   return drawingCanvas;
 }
@@ -2400,6 +2495,7 @@ function restorePdfViewportState(state) {
 async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const pageList = Array.isArray(pages) ? pages : [pages];
   const wasHidden = pdfContainer.style.display !== "flex";
+  cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   if (wasHidden) {
     setPdfDrawingTool('hand');
@@ -2454,10 +2550,11 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     wrapper.style.width = canvas.style.width;
     wrapper.style.maxWidth = '100%';
     wrapper.appendChild(canvas);
-    const drawingLayer = createDrawingLayer(canvas);
+    const drawingLayer = createDrawingLayer(canvas, pdfName, num);
     wrapper.appendChild(drawingLayer);
     targetContainer.appendChild(wrapper);
     await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+    restorePdfDrawingLayer(pdfName, num, drawingLayer);
   }
   setPdfDrawingTool(pdfDrawingTool);
   return true;
