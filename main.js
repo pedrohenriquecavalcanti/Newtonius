@@ -319,6 +319,7 @@ const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
 let pdfTabletMode = true;
+let tabletTouchBlockerAttached = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2365,6 +2366,29 @@ function applyPdfToolToLayer(layer) {
   }
 }
 
+function handleTabletTouchGesture(event) {
+  if (!pdfTabletMode) return;
+  const touches = event.touches || event.targetTouches || [];
+  if (touches.length <= 1 && event.cancelable !== false) {
+    event.preventDefault();
+  }
+}
+
+function syncTabletTouchScrolling() {
+  if (!pdfPagesWrapper) return;
+  if (pdfTabletMode) {
+    if (!tabletTouchBlockerAttached) {
+      pdfPagesWrapper.addEventListener('touchstart', handleTabletTouchGesture, { passive: false });
+      pdfPagesWrapper.addEventListener('touchmove', handleTabletTouchGesture, { passive: false });
+      tabletTouchBlockerAttached = true;
+    }
+  } else if (tabletTouchBlockerAttached) {
+    pdfPagesWrapper.removeEventListener('touchstart', handleTabletTouchGesture);
+    pdfPagesWrapper.removeEventListener('touchmove', handleTabletTouchGesture);
+    tabletTouchBlockerAttached = false;
+  }
+}
+
 function setPdfTabletMode(enabled) {
   pdfTabletMode = Boolean(enabled);
   if (pdfTabletBtn) {
@@ -2372,6 +2396,7 @@ function setPdfTabletMode(enabled) {
     pdfTabletBtn.setAttribute('aria-pressed', pdfTabletMode ? 'true' : 'false');
   }
   getPdfDrawingLayers().forEach(applyPdfToolToLayer);
+  syncTabletTouchScrolling();
 }
 
 function setPdfDrawingTool(tool) {
