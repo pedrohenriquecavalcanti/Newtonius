@@ -441,7 +441,8 @@ button:hover { filter: brightness(1.2); }
   justify-content: flex-start;
   gap: 12px;
   margin: 8px auto 24px;
-  width: min(100%, 520px);
+  width: fit-content;
+  max-width: calc(100% - 32px);
   background: rgba(20, 20, 20, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
