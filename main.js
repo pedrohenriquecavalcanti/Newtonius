@@ -313,6 +313,8 @@ let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
 let pdfDrawingTool = 'pen';
 let pdfTabletMode = true;
+let pdfTouchHandlersAttached = false;
+let pdfSingleFingerTouchActive = false;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 5;
 const PDF_ERASER_WIDTH = 20;
@@ -2350,6 +2352,49 @@ function getPdfDrawingLayers() {
   return Array.from(scope.querySelectorAll('.pdf-draw-layer'));
 }
 
+function shouldDisablePdfSingleFingerScroll() {
+  if (!pdfTabletMode) return false;
+  return pdfDrawingTool !== 'hand';
+}
+
+function ensurePdfTouchGestureHandlers() {
+  if (!pdfContainer || pdfTouchHandlersAttached) return;
+  const handleTouchStart = (event) => {
+    if (!shouldDisablePdfSingleFingerScroll()) {
+      pdfSingleFingerTouchActive = false;
+      return;
+    }
+    pdfSingleFingerTouchActive = event.touches?.length === 1;
+  };
+  const handleTouchMove = (event) => {
+    if (!shouldDisablePdfSingleFingerScroll()) {
+      pdfSingleFingerTouchActive = false;
+      return;
+    }
+    if (event.touches?.length === 1 && pdfSingleFingerTouchActive) {
+      event.preventDefault();
+    }
+  };
+  const handleTouchEnd = (event) => {
+    if (!shouldDisablePdfSingleFingerScroll()) {
+      pdfSingleFingerTouchActive = false;
+      return;
+    }
+    pdfSingleFingerTouchActive = event.touches?.length === 1;
+  };
+  pdfContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+  pdfContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+  pdfContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+  pdfContainer.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+  pdfTouchHandlersAttached = true;
+}
+
+function updatePdfTouchGestureMode() {
+  if (!pdfContainer) return;
+  const disableSingleFinger = shouldDisablePdfSingleFingerScroll();
+  pdfContainer.classList.toggle('single-finger-scroll-disabled', disableSingleFinger);
+}
+
 function applyPdfToolToLayer(layer) {
   if (!layer) return;
   if (pdfDrawingTool === 'hand') {
@@ -2370,6 +2415,8 @@ function setPdfTabletMode(enabled) {
   if (pdfContainer) {
     pdfContainer.classList.toggle('tablet-mode', pdfTabletMode);
   }
+  ensurePdfTouchGestureHandlers();
+  updatePdfTouchGestureMode();
   getPdfDrawingLayers().forEach(applyPdfToolToLayer);
 }
 
@@ -2388,6 +2435,7 @@ function setPdfDrawingTool(tool) {
   if (pdfContainer) {
     pdfContainer.classList.toggle('hand-mode', tool === 'hand');
   }
+  updatePdfTouchGestureMode();
 }
 
 function attachDrawingEvents(canvas, pdfName, pageNumber) {
