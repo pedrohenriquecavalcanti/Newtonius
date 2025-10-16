@@ -319,6 +319,7 @@ const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
+let pdfPenDrawingActive = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2377,6 +2378,7 @@ function isPdfToolbarTarget(target) {
 function handlePdfTouchBlocker(event) {
   if (!pdfIpadMode) return;
   if (isPdfToolbarTarget(event.target)) return;
+  if (!pdfPenDrawingActive) return;
   if (event.touches && event.touches.length <= 1) {
     event.preventDefault();
   }
@@ -2406,6 +2408,9 @@ function setPdfDrawingTool(tool) {
   if (pdfContainer) {
     pdfContainer.classList.toggle('hand-mode', tool === 'hand');
   }
+  if (tool === 'hand') {
+    pdfPenDrawingActive = false;
+  }
 }
 
 function setPdfIpadMode(enabled, { forcePen = false } = {}) {
@@ -2421,6 +2426,7 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
     ensurePdfTouchBlocker();
   } else {
     detachPdfTouchBlocker();
+    pdfPenDrawingActive = false;
   }
   if (forcePen) {
     setPdfDrawingTool('pen');
@@ -2456,6 +2462,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    pdfPenDrawingActive = false;
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -2481,6 +2488,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       ctx.strokeStyle = 'rgba(0,0,0,1)';
       ctx.lineWidth = PDF_ERASER_WIDTH;
     }
+    pdfPenDrawingActive = pointerType === 'pen';
     event.preventDefault();
   });
 
@@ -2497,6 +2505,9 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     canvas.addEventListener(type, (event) => {
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
+      }
+      if (event.pointerType === 'pen') {
+        pdfPenDrawingActive = false;
       }
       stopDrawing();
     });
@@ -2700,6 +2711,7 @@ function closePdfViewer() {
   isFullPdfLoaded = false;
   isFullPdfLoading = false;
   setPdfDrawingTool('hand');
+  pdfPenDrawingActive = false;
   updateLoadAllButtonState();
 }
 
