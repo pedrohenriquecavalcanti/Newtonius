@@ -319,6 +319,23 @@ const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
+let modalLockCount = 0;
+
+function lockBodyForModal() {
+  modalLockCount += 1;
+  if (modalLockCount === 1) {
+    document.documentElement.classList.add('modal-locked');
+    document.body.classList.add('modal-locked');
+  }
+}
+
+function unlockBodyForModal() {
+  modalLockCount = Math.max(0, modalLockCount - 1);
+  if (modalLockCount === 0) {
+    document.documentElement.classList.remove('modal-locked');
+    document.body.classList.remove('modal-locked');
+  }
+}
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2590,6 +2607,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   if (wasHidden) {
+    lockBodyForModal();
     setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
   }
@@ -2603,6 +2621,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
   if (!window.pdfjsLib) {
     alert('Visualização de PDF indisponível.');
+    closePdfViewer();
     return false;
   }
   let pdf;
@@ -2613,6 +2632,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
       pdf = await pdfjsLib.getDocument(`PDFsD1/${pdfName}`).promise;
     } catch (err2) {
       alert('PDF não encontrado.');
+      closePdfViewer();
       return false;
     }
   }
@@ -2655,7 +2675,11 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 }
 
 function openAnswer(answer){
+  const wasHidden = pdfContainer.style.display !== 'flex';
   pdfContainer.style.display = 'flex';
+  if (wasHidden) {
+    lockBodyForModal();
+  }
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
   lastPdfName = null;
@@ -2686,6 +2710,7 @@ function openGabarito(q){
 }
 
 function closePdfViewer() {
+  const wasVisible = pdfContainer.style.display === "flex";
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
   pdfContainer.style.display = "none";
@@ -2701,6 +2726,9 @@ function closePdfViewer() {
   isFullPdfLoading = false;
   setPdfDrawingTool('hand');
   updateLoadAllButtonState();
+  if (wasVisible) {
+    unlockBodyForModal();
+  }
 }
 
 if (closeBtn) {
@@ -2738,11 +2766,19 @@ function openImage(url) {
     return;
   }
   previewImg.src = url;
+  const wasHidden = imgContainer.style.display !== 'flex';
   imgContainer.style.display = 'flex';
+  if (wasHidden) {
+    lockBodyForModal();
+  }
 }
 function closeImage(){
+  const wasVisible = imgContainer.style.display === 'flex';
   imgContainer.style.display = 'none';
   if (previewImg) previewImg.src = '';
+  if (wasVisible) {
+    unlockBodyForModal();
+  }
 }
 if (closeImgBtn) closeImgBtn.onclick = closeImage;
 if (imgContainer) {
@@ -2912,15 +2948,29 @@ function showMicroSim(entry) {
 function openSummary(){                      // usa a disciplina/assunto atuais
   const d = encodeURIComponent(currentDisc);
   const s = encodeURIComponent(currentSub);
+  const wasHidden = summaryContainer.style.display !== "flex";
   summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=${s}`;   // carrega o resumo certo
   summaryContainer.style.display = "flex";
+  if (wasHidden) {
+    lockBodyForModal();
+  }
 }
 function openDisciplineSummary(disc){        // resumo geral da disciplina
   const d = encodeURIComponent(disc);
+  const wasHidden = summaryContainer.style.display !== "flex";
   summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=00`;
   summaryContainer.style.display = "flex";
+  if (wasHidden) {
+    lockBodyForModal();
+  }
 }
-function closeSummary(){ summaryContainer.style.display = "none"; }
+function closeSummary(){
+  const wasVisible = summaryContainer.style.display === "flex";
+  summaryContainer.style.display = "none";
+  if (wasVisible) {
+    unlockBodyForModal();
+  }
+}
 window.closeSummary = closeSummary;           // para o iframe conseguir fechar
 
 /* ===================================================================

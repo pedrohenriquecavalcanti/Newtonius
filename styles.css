@@ -1030,6 +1030,13 @@ button:hover { filter: brightness(1.2); }
 /* ───────────── HOME LOOK ───────────── */
 body.home #header          { background: var(--c-bg-app); }   /* barra preta */
 
+html.modal-locked,
+body.modal-locked {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
 /* posição horizontal (para a esquerda) – vale nas duas situações */
 body.home #pomodoroBtn      { right: 70px; }
 
