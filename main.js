@@ -2355,7 +2355,7 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = pdfIpadMode ? 'pinch-zoom' : 'none';
+    layer.style.touchAction = pdfIpadMode ? 'pan-x pan-y pinch-zoom' : 'none';
   }
 }
 
@@ -2364,14 +2364,19 @@ let pdfTouchBlockerAttached = false;
 function detachPdfTouchBlocker() {
   if (!pdfTouchBlockerAttached) return;
   if (pdfContainer) {
-    pdfContainer.removeEventListener('touchstart', handlePdfTouchBlocker);
     pdfContainer.removeEventListener('touchmove', handlePdfTouchBlocker);
   }
   pdfTouchBlockerAttached = false;
 }
 
+function isPdfToolbarTarget(target) {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest('#pdfToolbar');
+}
+
 function handlePdfTouchBlocker(event) {
   if (!pdfIpadMode) return;
+  if (isPdfToolbarTarget(event.target)) return;
   if (event.touches && event.touches.length <= 1) {
     event.preventDefault();
   }
@@ -2379,7 +2384,6 @@ function handlePdfTouchBlocker(event) {
 
 function ensurePdfTouchBlocker() {
   if (!pdfIpadMode || !pdfContainer || pdfTouchBlockerAttached) return;
-  pdfContainer.addEventListener('touchstart', handlePdfTouchBlocker, { passive: false });
   pdfContainer.addEventListener('touchmove', handlePdfTouchBlocker, { passive: false });
   pdfTouchBlockerAttached = true;
 }
