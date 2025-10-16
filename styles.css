@@ -491,6 +491,10 @@ button:hover { filter: brightness(1.2); }
   opacity: 0.35;
   cursor: not-allowed;
 }
+.pdf-tool-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.25);
+  color: #111;
+}
 .answer-letter{
   margin:40px;
   font-size:48px;
@@ -503,6 +507,12 @@ button:hover { filter: brightness(1.2); }
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas:active {
   cursor: grabbing;
+}
+#pdfViewerContainer.ipad-mode .pdf-page-wrapper canvas {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+#pdfViewerContainer.ipad-mode .pdf-draw-layer {
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* =====================================================================

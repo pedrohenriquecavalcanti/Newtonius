@@ -260,6 +260,7 @@ const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
+const pdfIpadModeBtn = document.getElementById("pdfIpadModeBtn");
 const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
 const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
@@ -311,6 +312,7 @@ let isFullPdfLoaded = false;
 let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
 let pdfDrawingTool = 'hand';
+let pdfIpadMode = false;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
@@ -1708,14 +1710,10 @@ function showNatReview(){
 
   combined.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const keepKey = `natKeep_${key}`;
     let st = +localStorage.getItem(key) || 0;
-    if(st!==1 && localStorage.getItem(keepKey)==='1'){
-      localStorage.removeItem(keepKey);
-    }
     const qualifies = ()=>{
-      if(localStorage.getItem(keepKey)==='1') return true;
-      return item.type === 'wrong' ? st === 2 : st === 0;
+      if(st === 2) return true;
+      return item.type !== 'wrong' && st === 0;
     };
     if(!qualifies()) return;
 
@@ -1770,34 +1768,32 @@ function showNatReview(){
           localStorage.removeItem(logKey);
         }
       }
-      if(st===1){
-        localStorage.setItem(keepKey,'1');
-      }else{
-        localStorage.removeItem(keepKey);
+      if(st===2 && item.type !== 'wrong'){
+        item.type = 'wrong';
+        ensureReviewBox();
       }
       paintState();
-      if(localStorage.getItem(keepKey)!=='1' && !qualifies()){
-        row.remove();
-        ensureEmptyState();
-      }
+      ensureEmptyState();
       refreshStats();
     };
     row.appendChild(box);
 
-    if(item.type === 'wrong'){
-      const reviewKey = `natReview_${key}`;
-      let reviewState = +localStorage.getItem(reviewKey) || 0;
-      const reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
-      const paintReview = ()=>{
-        reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
-        reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
-        reviewBox.title = reviewState===0
-          ? 'Marcar revisão'
-          : reviewState===1
-            ? 'Revisado – certo'
-            : 'Revisado – errado';
-      };
-      paintReview();
+    const reviewKey = `natReview_${key}`;
+    let reviewState = +localStorage.getItem(reviewKey) || 0;
+    let reviewBox = null;
+    const paintReview = ()=>{
+      if(!reviewBox) return;
+      reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
+      reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
+      reviewBox.title = reviewState===0
+        ? 'Marcar revisão'
+        : reviewState===1
+          ? 'Revisado – certo'
+          : 'Revisado – errado';
+    };
+    const ensureReviewBox = ()=>{
+      if(reviewBox) return;
+      reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
       reviewBox.onclick = ()=>{
         reviewState = (reviewState+1)%3;
         if(reviewState===0){
@@ -1807,7 +1803,11 @@ function showNatReview(){
         }
         paintReview();
       };
+      paintReview();
       row.appendChild(reviewBox);
+    };
+    if(item.type === 'wrong'){
+      ensureReviewBox();
     }
 
     const cKey = `comment_${key}`;
@@ -2355,24 +2355,77 @@ function applyPdfToolToLayer(layer) {
     layer.style.touchAction = 'auto';
   } else {
     layer.style.pointerEvents = 'auto';
-    layer.style.touchAction = 'none';
+    layer.style.touchAction = pdfIpadMode ? 'pan-x pan-y pinch-zoom' : 'none';
   }
+}
+
+let pdfTouchBlockerAttached = false;
+
+function detachPdfTouchBlocker() {
+  if (!pdfTouchBlockerAttached) return;
+  if (pdfContainer) {
+    pdfContainer.removeEventListener('touchmove', handlePdfTouchBlocker);
+  }
+  pdfTouchBlockerAttached = false;
+}
+
+function isPdfToolbarTarget(target) {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest('#pdfToolbar');
+}
+
+function handlePdfTouchBlocker(event) {
+  if (!pdfIpadMode) return;
+  if (isPdfToolbarTarget(event.target)) return;
+  if (event.touches && event.touches.length <= 1) {
+    event.preventDefault();
+  }
+}
+
+function ensurePdfTouchBlocker() {
+  if (!pdfIpadMode || !pdfContainer || pdfTouchBlockerAttached) return;
+  pdfContainer.addEventListener('touchmove', handlePdfTouchBlocker, { passive: false });
+  pdfTouchBlockerAttached = true;
 }
 
 function setPdfDrawingTool(tool) {
   pdfDrawingTool = tool;
   if (pdfHandBtn) {
     pdfHandBtn.classList.toggle('active', tool === 'hand');
+    pdfHandBtn.setAttribute('aria-pressed', String(tool === 'hand'));
   }
   if (pdfPenBtn) {
     pdfPenBtn.classList.toggle('active', tool === 'pen');
+    pdfPenBtn.setAttribute('aria-pressed', String(tool === 'pen'));
   }
   if (pdfEraserBtn) {
     pdfEraserBtn.classList.toggle('active', tool === 'eraser');
+    pdfEraserBtn.setAttribute('aria-pressed', String(tool === 'eraser'));
   }
   getPdfDrawingLayers().forEach(applyPdfToolToLayer);
   if (pdfContainer) {
     pdfContainer.classList.toggle('hand-mode', tool === 'hand');
+  }
+}
+
+function setPdfIpadMode(enabled, { forcePen = false } = {}) {
+  pdfIpadMode = !!enabled;
+  if (pdfIpadModeBtn) {
+    pdfIpadModeBtn.classList.toggle('active', pdfIpadMode);
+    pdfIpadModeBtn.setAttribute('aria-pressed', String(pdfIpadMode));
+  }
+  if (pdfContainer) {
+    pdfContainer.classList.toggle('ipad-mode', pdfIpadMode);
+  }
+  if (pdfIpadMode) {
+    ensurePdfTouchBlocker();
+  } else {
+    detachPdfTouchBlocker();
+  }
+  if (forcePen) {
+    setPdfDrawingTool('pen');
+  } else {
+    getPdfDrawingLayers().forEach(applyPdfToolToLayer);
   }
 }
 
@@ -2407,6 +2460,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
   canvas.addEventListener('pointerdown', (event) => {
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
+    const pointerType = event.pointerType || 'mouse';
+    if (pdfIpadMode && pointerType !== 'pen' && pointerType !== 'mouse') {
+      return;
+    }
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
@@ -2460,6 +2517,10 @@ function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
   return drawingCanvas;
 }
 
+function waitNextFrame() {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
 async function loadFullPdf() {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   if (!lastPdfName || !lastPdfTotalPages) return;
@@ -2473,6 +2534,8 @@ async function loadFullPdf() {
   try {
     success = await openPdf(lastPdfName, allPages);
     if (success && viewportState) {
+      await waitNextFrame();
+      await waitNextFrame();
       restorePdfViewportState(viewportState);
     }
   } catch (err) {
@@ -2500,10 +2563,10 @@ async function handlePdfKeydown(event) {
 function capturePdfViewportState() {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!scope) return null;
-  const canvases = Array.from(scope.querySelectorAll('canvas[data-page-number]'));
-  if (!canvases.length) return null;
+  const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
+  if (!wrappers.length) return null;
   const scrollTop = pdfContainer.scrollTop;
-  const firstVisible = canvases.find(canvas => scrollTop < canvas.offsetTop + canvas.offsetHeight);
+  const firstVisible = wrappers.find(wrapper => scrollTop < wrapper.offsetTop + wrapper.offsetHeight);
   if (!firstVisible) return null;
   const pageNumber = Number(firstVisible.dataset.pageNumber);
   if (!Number.isFinite(pageNumber)) return null;
@@ -2514,9 +2577,9 @@ function capturePdfViewportState() {
 function restorePdfViewportState(state) {
   const scope = pdfPagesWrapper || pdfContainer;
   if (!state || !scope) return;
-  const canvas = scope.querySelector(`canvas[data-page-number="${state.pageNumber}"]`);
-  if (!canvas) return;
-  const targetScroll = canvas.offsetTop + (state.offsetWithinPage || 0);
+  const wrapper = scope.querySelector(`.pdf-page-wrapper[data-page-number="${state.pageNumber}"]`);
+  if (!wrapper) return;
+  const targetScroll = wrapper.offsetTop + (state.offsetWithinPage || 0);
   pdfContainer.scrollTop = Math.max(0, targetScroll);
 }
 
@@ -2527,7 +2590,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   if (wasHidden) {
-    setPdfDrawingTool('hand');
+    setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
   }
   persistCurrentPdfDrawings();
@@ -2577,6 +2640,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
     canvas.style.maxWidth = '100%';
     const wrapper = document.createElement('div');
     wrapper.className = 'pdf-page-wrapper';
+    wrapper.dataset.pageNumber = String(num);
     wrapper.style.width = canvas.style.width;
     wrapper.style.maxWidth = '100%';
     wrapper.appendChild(canvas);
@@ -2623,6 +2687,7 @@ function openGabarito(q){
 
 function closePdfViewer() {
   persistCurrentPdfDrawings();
+  setPdfIpadMode(false);
   pdfContainer.style.display = "none";
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;
@@ -2650,6 +2715,13 @@ if (pdfPenBtn) {
 }
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
+}
+if (pdfIpadModeBtn) {
+  pdfIpadModeBtn.addEventListener('click', () => {
+    const enabling = !pdfIpadMode;
+    const forcePen = enabling && pdfDrawingTool === 'hand';
+    setPdfIpadMode(enabling, { forcePen });
+  });
 }
 if (loadAllPagesBtn) {
   loadAllPagesBtn.addEventListener('click', (event) => {
