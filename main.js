@@ -320,6 +320,7 @@ const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
 let pdfPenDrawingActive = false;
+let pdfViewportSyncCleanup = null;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2232,6 +2233,43 @@ function updateLoadAllButtonState() {
   loadAllPagesBtn.setAttribute('aria-disabled', String(disable));
 }
 
+function syncPdfToolbarScale() {
+  if (!pdfContainer) return;
+  const viewportScale = window.visualViewport?.scale;
+  const scale = typeof viewportScale === 'number' && Number.isFinite(viewportScale)
+    ? viewportScale
+    : 1;
+  pdfContainer.style.setProperty('--pdf-ui-scale', String(scale));
+}
+
+function enablePdfViewportSync() {
+  if (!pdfContainer) return;
+  disablePdfViewportSync();
+  if (!window.visualViewport) {
+    pdfContainer.style.setProperty('--pdf-ui-scale', '1');
+    return;
+  }
+  const viewport = window.visualViewport;
+  const handler = () => syncPdfToolbarScale();
+  viewport.addEventListener('resize', handler);
+  viewport.addEventListener('scroll', handler);
+  syncPdfToolbarScale();
+  pdfViewportSyncCleanup = () => {
+    viewport.removeEventListener('resize', handler);
+    viewport.removeEventListener('scroll', handler);
+  };
+}
+
+function disablePdfViewportSync() {
+  if (typeof pdfViewportSyncCleanup === 'function') {
+    pdfViewportSyncCleanup();
+    pdfViewportSyncCleanup = null;
+  }
+  if (pdfContainer) {
+    pdfContainer.style.setProperty('--pdf-ui-scale', '1');
+  }
+}
+
 function getPdfDrawingStorageKey(pdfName, pageNumber) {
   if (typeof localStorage === 'undefined') return null;
   if (!pdfName && pdfName !== '') return null;
@@ -2638,6 +2676,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
+  enablePdfViewportSync();
   if (wasHidden) {
     setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
@@ -2705,6 +2744,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
 function openAnswer(answer){
   pdfContainer.style.display = 'flex';
+  enablePdfViewportSync();
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
   lastPdfName = null;
@@ -2737,6 +2777,7 @@ function openGabarito(q){
 function closePdfViewer() {
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
+  disablePdfViewportSync();
   pdfContainer.style.display = "none";
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;

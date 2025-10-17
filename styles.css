@@ -399,6 +399,7 @@ button:hover { filter: brightness(1.2); }
   overflow-y: auto;
   z-index: 1000;
   padding: 16px 16px 32px;
+  --pdf-ui-scale: 1;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -ms-user-select: none;
@@ -455,6 +456,9 @@ button:hover { filter: brightness(1.2); }
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transform-origin: top center;
+  transform: scale(var(--pdf-ui-scale));
+  will-change: transform;
 }
 .pdf-tool-btn {
   width: 40px;
