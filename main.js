@@ -2235,6 +2235,11 @@ function clearPdfViewerContent() {
   }
 }
 
+function setBodyScrollLocked(locked) {
+  if (!document || !document.body) return;
+  document.body.classList.toggle('lock-scroll', !!locked);
+}
+
 function setPdfPageMenuOpen(open) {
   pdfPageMenuOpen = !!open;
   if (pdfPageNav) {
@@ -2243,21 +2248,20 @@ function setPdfPageMenuOpen(open) {
   }
   if (pdfPageMenuToggleBtn) {
     pdfPageMenuToggleBtn.setAttribute('aria-expanded', String(pdfPageMenuOpen));
-    pdfPageMenuToggleBtn.setAttribute(
-      'aria-label',
-      pdfPageMenuOpen ? 'Fechar navegação de páginas' : 'Abrir navegação de páginas'
-    );
-    pdfPageMenuToggleBtn.title = pdfPageMenuOpen ? 'Fechar páginas' : 'Páginas';
+    pdfPageMenuToggleBtn.setAttribute('aria-label', 'Navegação de páginas');
+    pdfPageMenuToggleBtn.title = 'Páginas';
     const icon = pdfPageMenuToggleBtn.querySelector('i');
     if (icon) {
-      icon.classList.toggle('fa-plus', !pdfPageMenuOpen);
-      icon.classList.toggle('fa-minus', pdfPageMenuOpen);
+      icon.classList.add('fa-plus');
+      icon.classList.remove('fa-minus');
     }
   }
 }
 
 function togglePdfPageMenu() {
-  setPdfPageMenuOpen(!pdfPageMenuOpen);
+  if (!pdfPageMenuOpen) {
+    setPdfPageMenuOpen(true);
+  }
 }
 
 function updatePdfNavigationState() {
@@ -2763,6 +2767,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
+  setBodyScrollLocked(true);
   if (wasHidden) {
     setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
@@ -2839,6 +2844,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
 function openAnswer(answer){
   pdfContainer.style.display = 'flex';
+  setBodyScrollLocked(true);
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
   lastPdfName = null;
@@ -2873,6 +2879,7 @@ function closePdfViewer() {
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
   pdfContainer.style.display = "none";
+  setBodyScrollLocked(false);
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;
   setPdfPageMenuOpen(false);
@@ -2909,13 +2916,11 @@ if (pdfPageMenuToggleBtn) {
 if (pdfPrevPageBtn) {
   pdfPrevPageBtn.addEventListener('click', () => {
     navigatePdfPage(-1);
-    setPdfPageMenuOpen(false);
   });
 }
 if (pdfNextPageBtn) {
   pdfNextPageBtn.addEventListener('click', () => {
     navigatePdfPage(1);
-    setPdfPageMenuOpen(false);
   });
 }
 setPdfPageMenuOpen(false);
