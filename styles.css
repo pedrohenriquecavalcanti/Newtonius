@@ -435,22 +435,22 @@ button:hover { filter: brightness(1.2); }
 }
 #pdfToolbar {
   position: fixed;
-  top: 16px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
   margin: 0 auto;
   width: fit-content;
-  max-width: min(420px, calc(100% - 32px));
-  background: rgba(20, 20, 20, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  max-width: min(360px, calc(100% - 24px));
+  background: rgba(18, 18, 18, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 6px 12px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  padding: 4px 10px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
   z-index: 1500;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -459,8 +459,8 @@ button:hover { filter: brightness(1.2); }
   -webkit-tap-highlight-color: transparent;
 }
 .pdf-tool-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
   display: flex;
@@ -471,7 +471,7 @@ button:hover { filter: brightness(1.2); }
   cursor: pointer;
   transition: background .2s, transform .2s, opacity .2s;
   -webkit-tap-highlight-color: transparent;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 .pdf-tool-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
@@ -482,8 +482,8 @@ button:hover { filter: brightness(1.2); }
   color: #111;
 }
 .pdf-tool-btn--close {
-  margin-left: 8px;
-  background: rgba(255, 80, 80, 0.25);
+  margin-left: 6px;
+  background: rgba(255, 80, 80, 0.22);
   color: #ffecec;
 }
 .pdf-tool-btn--close:hover {
@@ -501,14 +501,14 @@ button:hover { filter: brightness(1.2); }
 .pdf-page-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
+  gap: 4px;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: #fff;
 }
 .pdf-page-indicator {
-  min-width: 52px;
+  min-width: 46px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }

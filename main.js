@@ -2557,15 +2557,6 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     if (pdfIpadMode && pointerType !== 'pen' && pointerType !== 'mouse') {
       return;
     }
-    if (pointerType === 'pen' && (pdfDrawingTool === 'pen' || pdfDrawingTool === 'eraser')) {
-      if (registerStylusTripleTap(event)) {
-        const nextTool = pdfDrawingTool === 'pen' ? 'eraser' : 'pen';
-        setPdfDrawingTool(nextTool);
-        pdfPenDrawingActive = false;
-        event.preventDefault();
-        return;
-      }
-    }
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
