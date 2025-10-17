@@ -2442,13 +2442,18 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   ctx.lineJoin = 'round';
   let drawing = false;
   let strokeDirty = false;
-  let lastPoint = null;
+  let lastSmoothedPoint = null;
 
-  const getPressureFactor = (event, tool) => {
-    if (tool !== 'pen') return 1;
-    const pressure = typeof event.pressure === 'number' ? event.pressure : 0.5;
-    const clamped = Math.max(0.15, Math.min(pressure || 0.5, 1));
-    return 0.5 + clamped * 0.8;
+  const SMOOTHING_FACTOR = 0.35;
+
+  const smoothTowards = (target, previous) => {
+    if (!previous) {
+      return { x: target.x, y: target.y };
+    }
+    return {
+      x: previous.x + (target.x - previous.x) * SMOOTHING_FACTOR,
+      y: previous.y + (target.y - previous.y) * SMOOTHING_FACTOR
+    };
   };
 
   const getPoint = (event) => {
@@ -2466,7 +2471,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     drawing = false;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
-    lastPoint = null;
+    lastSmoothedPoint = null;
     if (strokeDirty) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
@@ -2486,13 +2491,13 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     const { x, y } = getPoint(event);
     drawing = true;
     strokeDirty = false;
-    lastPoint = { x, y };
+    lastSmoothedPoint = { x, y };
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = PDF_PEN_COLOR;
-      ctx.lineWidth = PDF_PEN_WIDTH * getPressureFactor(event, 'pen');
+      ctx.lineWidth = PDF_PEN_WIDTH;
     } else {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
@@ -2506,17 +2511,18 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     if (!drawing) return;
     const { x, y } = getPoint(event);
     const currentPoint = { x, y };
-    const prevPoint = lastPoint || currentPoint;
+    const previousSmoothed = lastSmoothedPoint || currentPoint;
+    const smoothedPoint = smoothTowards(currentPoint, lastSmoothedPoint);
     const midPoint = {
-      x: (prevPoint.x + currentPoint.x) / 2,
-      y: (prevPoint.y + currentPoint.y) / 2
+      x: (previousSmoothed.x + smoothedPoint.x) / 2,
+      y: (previousSmoothed.y + smoothedPoint.y) / 2
     };
     if (pdfDrawingTool === 'pen') {
-      ctx.lineWidth = PDF_PEN_WIDTH * getPressureFactor(event, 'pen');
+      ctx.lineWidth = PDF_PEN_WIDTH;
     }
-    ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, midPoint.x, midPoint.y);
+    ctx.quadraticCurveTo(previousSmoothed.x, previousSmoothed.y, midPoint.x, midPoint.y);
     ctx.stroke();
-    lastPoint = currentPoint;
+    lastSmoothedPoint = smoothedPoint;
     strokeDirty = true;
     event.preventDefault();
   });
