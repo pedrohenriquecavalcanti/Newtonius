@@ -409,6 +409,14 @@ button:hover { filter: brightness(1.2); }
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+#pdfViewerContainer.ipad-mode {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+#pdfViewerContainer.ipad-mode #pdfPagesWrapper,
+#pdfViewerContainer.ipad-mode .pdf-page-wrapper {
+  touch-action: pan-y;
+}
 #pdfPagesWrapper {
   width: 100%;
   display: flex;

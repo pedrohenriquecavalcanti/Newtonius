@@ -330,6 +330,7 @@ const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
+const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
 const STYLUS_TAP_DISTANCE = 36;
 
@@ -2543,7 +2544,7 @@ function getPdfDrawingStorageKey(pdfName, pageNumber) {
   const page = Number(pageNumber);
   if (!Number.isFinite(page)) return null;
   const safeName = encodeURIComponent(pdfName);
-  return `${PDF_DRAW_PREFIX}${getTodayStr()}::${safeName}::${page}`;
+  return `${PDF_DRAW_PREFIX}${safeName}::${page}`;
 }
 
 function isPdfCanvasBlank(canvas) {
@@ -2629,23 +2630,65 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
   image.src = stored;
 }
 
+function migrateLegacyPdfDrawings() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const migrations = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+      if (!key.startsWith(PDF_DRAW_PREFIX)) continue;
+      const parts = key.split('::');
+      if (parts.length < 4) continue;
+      const [, maybeDate, encodedName, pageStr] = parts;
+      if (!PDF_DRAW_LEGACY_DATE_PATTERN.test(maybeDate)) continue;
+      const baseKey = `${PDF_DRAW_PREFIX}${encodedName}::${pageStr}`;
+      const value = localStorage.getItem(key);
+      if (value != null) {
+        migrations.push({ oldKey: key, newKey: baseKey, value });
+      }
+      const legacyStrokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
+      const strokeValue = localStorage.getItem(legacyStrokeKey);
+      if (strokeValue != null) {
+        migrations.push({ oldKey: legacyStrokeKey, newKey: `${baseKey}${PDF_DRAW_STROKES_SUFFIX}`, value: strokeValue });
+      }
+    }
+    migrations.forEach(({ oldKey, newKey, value }) => {
+      if (value != null && localStorage.getItem(newKey) == null) {
+        try {
+          localStorage.setItem(newKey, value);
+        } catch (err) {
+          console.error('Falha ao migrar anotação do PDF para chave permanente.', err);
+        }
+      }
+      localStorage.removeItem(oldKey);
+    });
+    if (migrations.length) {
+      console.info('Anotações antigas do PDF migradas para armazenamento permanente.');
+    }
+    localStorage.removeItem(PDF_DRAW_LAST_CLEAN_KEY);
+  } catch (err) {
+    console.error('Falha ao migrar anotações antigas do PDF', err);
+  }
+}
+
 function cleanupStalePdfDrawings() {
   if (typeof localStorage === 'undefined') return;
   try {
-    const today = getTodayStr();
-    const lastClean = localStorage.getItem(PDF_DRAW_LAST_CLEAN_KEY);
-    if (lastClean === today) return;
-    const staleKeys = [];
+    migrateLegacyPdfDrawings();
+    const orphanStrokeKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (!key || !key.startsWith(PDF_DRAW_PREFIX) || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
-      const [, storedDate] = key.split('::');
-      if (storedDate && storedDate !== today) {
-        staleKeys.push(key);
+      if (!key || !key.startsWith(PDF_DRAW_PREFIX)) continue;
+      if (key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+      if (key.endsWith(PDF_DRAW_STROKES_SUFFIX)) {
+        const baseKey = key.slice(0, -PDF_DRAW_STROKES_SUFFIX.length);
+        if (!localStorage.getItem(baseKey)) {
+          orphanStrokeKeys.push(key);
+        }
       }
     }
-    staleKeys.forEach(key => localStorage.removeItem(key));
-    localStorage.setItem(PDF_DRAW_LAST_CLEAN_KEY, today);
+    orphanStrokeKeys.forEach(key => localStorage.removeItem(key));
   } catch (err) {
     console.error('Falha ao limpar anotações antigas do PDF', err);
   }
@@ -2727,6 +2770,7 @@ function applyPdfToolToLayer(layer) {
 }
 
 let pdfTouchBlockerAttached = false;
+let pdfGestureBlockersAttached = false;
 
 function detachPdfTouchBlocker() {
   if (!pdfTouchBlockerAttached) return;
@@ -2754,6 +2798,42 @@ function ensurePdfTouchBlocker() {
   if (!pdfIpadMode || !pdfContainer || pdfTouchBlockerAttached) return;
   pdfContainer.addEventListener('touchmove', handlePdfTouchBlocker, { passive: false });
   pdfTouchBlockerAttached = true;
+}
+
+function preventPdfGestureZoom(event) {
+  if (!pdfIpadMode) return;
+  if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
+  event.preventDefault();
+  if (typeof event.stopImmediatePropagation === 'function') {
+    event.stopImmediatePropagation();
+  } else if (typeof event.stopPropagation === 'function') {
+    event.stopPropagation();
+  }
+}
+
+function handlePdfGestureWheel(event) {
+  if (!pdfIpadMode) return;
+  if (!event.ctrlKey) return;
+  event.preventDefault();
+}
+
+function attachPdfGestureBlockers() {
+  if (!pdfContainer || pdfGestureBlockersAttached) return;
+  const options = { passive: false };
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+    pdfContainer.addEventListener(type, preventPdfGestureZoom, options);
+  });
+  pdfContainer.addEventListener('wheel', handlePdfGestureWheel, { passive: false });
+  pdfGestureBlockersAttached = true;
+}
+
+function detachPdfGestureBlockers() {
+  if (!pdfContainer || !pdfGestureBlockersAttached) return;
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+    pdfContainer.removeEventListener(type, preventPdfGestureZoom);
+  });
+  pdfContainer.removeEventListener('wheel', handlePdfGestureWheel);
+  pdfGestureBlockersAttached = false;
 }
 
 function setPdfDrawingTool(tool) {
@@ -2787,8 +2867,10 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   }
   if (pdfIpadMode) {
     ensurePdfTouchBlocker();
+    attachPdfGestureBlockers();
   } else {
     detachPdfTouchBlocker();
+    detachPdfGestureBlockers();
     pdfStylusDrawingActive = false;
     resetPdfPinchPreview();
     pdfPinchState = null;
