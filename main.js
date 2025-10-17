@@ -381,7 +381,12 @@ function renderPdfStroke(ctx, stroke, highlight = false) {
   if (!points.length) return;
 
   const color = highlight ? PDF_ERASER_HIGHLIGHT_COLOR : (stroke.color || PDF_PEN_COLOR);
-  const width = Number.isFinite(stroke.width) ? stroke.width : PDF_PEN_WIDTH;
+  const baseWidth = Number.isFinite(stroke.baseWidth)
+    ? stroke.baseWidth
+    : Number.isFinite(stroke.width)
+      ? stroke.width
+      : PDF_PEN_WIDTH;
+  const width = Number.isFinite(baseWidth) ? baseWidth : PDF_PEN_WIDTH;
 
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -442,7 +447,6 @@ function scalePdfDrawingState(state, scaleX, scaleY) {
   if (Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) {
     return;
   }
-  const widthScale = (sx + sy) / 2;
   if (Array.isArray(state.strokes)) {
     state.strokes.forEach(stroke => {
       if (!stroke) return;
@@ -453,9 +457,13 @@ function scalePdfDrawingState(state, scaleX, scaleY) {
           point.y *= sy;
         });
       }
-      if (Number.isFinite(stroke.width)) {
-        stroke.width *= widthScale;
-      }
+      const originalWidth = Number.isFinite(stroke.baseWidth)
+        ? stroke.baseWidth
+        : Number.isFinite(stroke.width)
+          ? stroke.width
+          : PDF_PEN_WIDTH;
+      stroke.baseWidth = Number.isFinite(originalWidth) ? originalWidth : PDF_PEN_WIDTH;
+      stroke.width = stroke.baseWidth;
     });
   }
 }
@@ -464,15 +472,22 @@ function serializePdfStrokes(strokes) {
   try {
     const payload = {
       v: 1,
-      strokes: (strokes || []).map((stroke, index) => ({
-        id: Number.isFinite(stroke?.id) ? stroke.id : index + 1,
-        t: stroke?.type || 'pen',
-        c: stroke?.color || PDF_PEN_COLOR,
-        w: Number.isFinite(stroke?.width) ? stroke.width : PDF_PEN_WIDTH,
-        pts: Array.isArray(stroke?.points)
-          ? stroke.points.map(pt => [Number(pt?.x ?? 0), Number(pt?.y ?? 0)])
-          : []
-      }))
+      strokes: (strokes || []).map((stroke, index) => {
+        const width = Number.isFinite(stroke?.baseWidth)
+          ? stroke.baseWidth
+          : Number.isFinite(stroke?.width)
+            ? stroke.width
+            : PDF_PEN_WIDTH;
+        return {
+          id: Number.isFinite(stroke?.id) ? stroke.id : index + 1,
+          t: stroke?.type || 'pen',
+          c: stroke?.color || PDF_PEN_COLOR,
+          w: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
+          pts: Array.isArray(stroke?.points)
+            ? stroke.points.map(pt => [Number(pt?.x ?? 0), Number(pt?.y ?? 0)])
+            : []
+        };
+      })
     };
     return JSON.stringify(payload);
   } catch (err) {
@@ -500,11 +515,13 @@ function deserializePdfStrokes(serialized) {
             return null;
           })
           .filter(Boolean);
+        const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_WIDTH;
         return {
           id: Number.isFinite(item?.id) ? item.id : index + 1,
           type: item?.t || 'pen',
           color: item?.c || PDF_PEN_COLOR,
-          width: Number.isFinite(item?.w) ? item.w : PDF_PEN_WIDTH,
+          width,
+          baseWidth: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
           points
         };
       })
@@ -2970,6 +2987,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
         type: 'pen',
         color: PDF_PEN_COLOR,
         width,
+        baseWidth: width,
         points: [point]
       };
       state.strokes.push(activeStroke);
