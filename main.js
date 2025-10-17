@@ -260,7 +260,6 @@ const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
-const pdfIpadModeBtn = document.getElementById("pdfIpadModeBtn");
 const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
 const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
@@ -320,6 +319,12 @@ const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
 let pdfPenDrawingActive = false;
+const penTapCandidates = new Map();
+let penTapTimes = [];
+const PEN_TAP_DISTANCE_THRESHOLD = 12;
+const PEN_TAP_DURATION_MS = 220;
+const PEN_TRIPLE_TAP_WINDOW_MS = 700;
+const recentPenTapDots = [];
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2323,6 +2328,45 @@ function markPdfLayerDirty(canvas) {
   pdfDirtyLayers.add(canvas);
 }
 
+function recordRecentPenTapDot(canvas, x, y, radius, timestamp) {
+  recentPenTapDots.push({ canvas, x, y, radius, timestamp });
+  if (recentPenTapDots.length > 12) {
+    recentPenTapDots.shift();
+  }
+}
+
+function removeRecentPenTapDots(now, maxCount = 2) {
+  let removed = 0;
+  for (let i = recentPenTapDots.length - 1; i >= 0 && removed < maxCount; i--) {
+    const dot = recentPenTapDots[i];
+    if (now - dot.timestamp > PEN_TRIPLE_TAP_WINDOW_MS) {
+      continue;
+    }
+    const ctx = dot.canvas?.getContext('2d');
+    if (!ctx) {
+      continue;
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, dot.radius + 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    markPdfLayerDirty(dot.canvas);
+    recentPenTapDots.splice(i, 1);
+    removed++;
+  }
+}
+
+function togglePdfPenAndEraser() {
+  if (pdfDrawingTool === 'hand') {
+    setPdfDrawingTool('pen');
+    return;
+  }
+  const nextTool = pdfDrawingTool === 'pen' ? 'eraser' : 'pen';
+  setPdfDrawingTool(nextTool);
+}
+
 function persistCurrentPdfDrawings({ force = false } = {}) {
   if (typeof localStorage === 'undefined') {
     pdfDirtyLayers.clear();
@@ -2415,10 +2459,6 @@ function setPdfDrawingTool(tool) {
 
 function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   pdfIpadMode = !!enabled;
-  if (pdfIpadModeBtn) {
-    pdfIpadModeBtn.classList.toggle('active', pdfIpadMode);
-    pdfIpadModeBtn.setAttribute('aria-pressed', String(pdfIpadMode));
-  }
   if (pdfContainer) {
     pdfContainer.classList.toggle('ipad-mode', pdfIpadMode);
   }
@@ -2495,6 +2535,16 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     if (pdfIpadMode && pointerType !== 'pen' && pointerType !== 'mouse') {
       return;
     }
+    if (pointerType === 'pen') {
+      penTapCandidates.set(event.pointerId, {
+        startX: event.clientX,
+        startY: event.clientY,
+        startTime: performance.now(),
+        moved: false
+      });
+    } else {
+      penTapCandidates.delete(event.pointerId);
+    }
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
@@ -2520,6 +2570,16 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
   canvas.addEventListener('pointermove', (event) => {
     if (!drawing) return;
+    if (event.pointerType === 'pen') {
+      const candidate = penTapCandidates.get(event.pointerId);
+      if (candidate && !candidate.moved) {
+        const dx = event.clientX - candidate.startX;
+        const dy = event.clientY - candidate.startY;
+        if (Math.hypot(dx, dy) > PEN_TAP_DISTANCE_THRESHOLD) {
+          candidate.moved = true;
+        }
+      }
+    }
     const { x, y } = getPoint(event);
     const currentPoint = { x, y };
     const previousSmoothed = lastSmoothedPoint || currentPoint;
@@ -2541,11 +2601,63 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
     canvas.addEventListener(type, (event) => {
+      let suppressTapDot = false;
+      let tapTimestamp = null;
+      let tapDetected = false;
+      if (event.pointerType === 'pen') {
+        const candidate = penTapCandidates.get(event.pointerId);
+        const now = performance.now();
+        if (candidate) {
+          const elapsed = now - candidate.startTime;
+          if (!candidate.moved && elapsed <= PEN_TAP_DURATION_MS && !strokeDirty) {
+            tapDetected = true;
+            tapTimestamp = now;
+            penTapTimes = penTapTimes.filter(ts => now - ts <= PEN_TRIPLE_TAP_WINDOW_MS);
+            penTapTimes.push(now);
+            if (penTapTimes.length >= 3) {
+              suppressTapDot = true;
+              penTapTimes = [];
+              removeRecentPenTapDots(now, 2);
+              togglePdfPenAndEraser();
+            }
+          } else if (candidate.moved) {
+            penTapTimes = [];
+          } else {
+            penTapTimes = [];
+          }
+        }
+        penTapCandidates.delete(event.pointerId);
+      }
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
       if (event.pointerType === 'pen') {
         pdfPenDrawingActive = false;
+      }
+      if (type === 'pointerup' && drawing && !strokeDirty && lastRawPoint && !suppressTapDot) {
+        if (pdfDrawingTool === 'pen') {
+          const radius = Math.max(1.5, PDF_PEN_WIDTH / 2);
+          ctx.save();
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.beginPath();
+          ctx.arc(lastRawPoint.x, lastRawPoint.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = PDF_PEN_COLOR;
+          ctx.fill();
+          ctx.restore();
+          strokeDirty = true;
+          if (tapDetected && tapTimestamp !== null) {
+            recordRecentPenTapDot(canvas, lastRawPoint.x, lastRawPoint.y, radius, tapTimestamp);
+          }
+        } else if (pdfDrawingTool === 'eraser') {
+          const radius = PDF_ERASER_WIDTH / 2;
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.arc(lastRawPoint.x, lastRawPoint.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          strokeDirty = true;
+        }
       }
       stopDrawing();
     });
@@ -2765,13 +2877,6 @@ if (pdfPenBtn) {
 }
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
-}
-if (pdfIpadModeBtn) {
-  pdfIpadModeBtn.addEventListener('click', () => {
-    const enabling = !pdfIpadMode;
-    const forcePen = enabling && pdfDrawingTool === 'hand';
-    setPdfIpadMode(enabling, { forcePen });
-  });
 }
 if (loadAllPagesBtn) {
   loadAllPagesBtn.addEventListener('click', (event) => {
