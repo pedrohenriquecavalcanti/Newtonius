@@ -311,7 +311,7 @@ let lastPdfTotalPages = 0;
 let isFullPdfLoaded = false;
 let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
-let pdfDrawingTool = 'hand';
+let pdfDrawingTool = 'pen';
 let pdfIpadMode = false;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
@@ -2443,16 +2443,25 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   let drawing = false;
   let strokeDirty = false;
   let lastSmoothedPoint = null;
+  let lastRawPoint = null;
 
-  const SMOOTHING_FACTOR = 0.35;
+  const SMOOTHING_BASE = 0.12;
+  const SMOOTHING_MAX = 0.45;
+  const SMOOTHING_DISTANCE_SCALE = 10;
 
-  const smoothTowards = (target, previous) => {
+  const smoothTowards = (target, previous, rawPrevious) => {
     if (!previous) {
       return { x: target.x, y: target.y };
     }
+    const reference = rawPrevious || target;
+    const dx = target.x - reference.x;
+    const dy = target.y - reference.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distanceFactor = Math.max(0, Math.min(1, distance / SMOOTHING_DISTANCE_SCALE));
+    const smoothingFactor = SMOOTHING_BASE + (SMOOTHING_MAX - SMOOTHING_BASE) * distanceFactor;
     return {
-      x: previous.x + (target.x - previous.x) * SMOOTHING_FACTOR,
-      y: previous.y + (target.y - previous.y) * SMOOTHING_FACTOR
+      x: previous.x + (target.x - previous.x) * smoothingFactor,
+      y: previous.y + (target.y - previous.y) * smoothingFactor
     };
   };
 
@@ -2472,6 +2481,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
     lastSmoothedPoint = null;
+    lastRawPoint = null;
     if (strokeDirty) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
@@ -2504,6 +2514,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       ctx.lineWidth = PDF_ERASER_WIDTH;
     }
     pdfPenDrawingActive = pointerType === 'pen';
+    lastRawPoint = { x, y };
     event.preventDefault();
   });
 
@@ -2512,7 +2523,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     const { x, y } = getPoint(event);
     const currentPoint = { x, y };
     const previousSmoothed = lastSmoothedPoint || currentPoint;
-    const smoothedPoint = smoothTowards(currentPoint, lastSmoothedPoint);
+    const smoothedPoint = smoothTowards(currentPoint, lastSmoothedPoint, lastRawPoint);
     const midPoint = {
       x: (previousSmoothed.x + smoothedPoint.x) / 2,
       y: (previousSmoothed.y + smoothedPoint.y) / 2
@@ -2523,6 +2534,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     ctx.quadraticCurveTo(previousSmoothed.x, previousSmoothed.y, midPoint.x, midPoint.y);
     ctx.stroke();
     lastSmoothedPoint = smoothedPoint;
+    lastRawPoint = currentPoint;
     strokeDirty = true;
     event.preventDefault();
   });
