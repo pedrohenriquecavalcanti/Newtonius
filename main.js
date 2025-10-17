@@ -318,6 +318,11 @@ const PDF_PEN_WIDTH = 4;
 const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
+const PENCIL_BARREL_BUTTON = 5;
+const PENCIL_BARREL_BUTTON_MASK = 1 << PENCIL_BARREL_BUTTON; // 32
+const PENCIL_BARREL_TAP_WINDOW = 800;
+let pencilBarrelTapCount = 0;
+let pencilBarrelTapTimer = null;
 const pdfDirtyLayers = new Set();
 let pdfPenDrawingActive = false;
 
@@ -2362,6 +2367,39 @@ function applyPdfToolToLayer(layer) {
 
 let pdfTouchBlockerAttached = false;
 
+function resetPencilBarrelTapCounter() {
+  pencilBarrelTapCount = 0;
+  if (pencilBarrelTapTimer) {
+    clearTimeout(pencilBarrelTapTimer);
+    pencilBarrelTapTimer = null;
+  }
+}
+
+function registerPencilBarrelTap() {
+  pencilBarrelTapCount += 1;
+  if (pencilBarrelTapTimer) {
+    clearTimeout(pencilBarrelTapTimer);
+  }
+  pencilBarrelTapTimer = setTimeout(() => {
+    resetPencilBarrelTapCounter();
+  }, PENCIL_BARREL_TAP_WINDOW);
+
+  if (pencilBarrelTapCount >= 3) {
+    resetPencilBarrelTapCounter();
+    const nextTool = pdfDrawingTool === 'pen' ? 'eraser' : 'pen';
+    setPdfDrawingTool(nextTool);
+  }
+}
+
+function handlePencilBarrelTap(event) {
+  if (!event || event.pointerType !== 'pen') return false;
+  const isBarrelTap = event.button === PENCIL_BARREL_BUTTON || event.buttons === PENCIL_BARREL_BUTTON_MASK;
+  if (!isBarrelTap) return false;
+  event.preventDefault();
+  registerPencilBarrelTap();
+  return true;
+}
+
 function detachPdfTouchBlocker() {
   if (!pdfTouchBlockerAttached) return;
   if (pdfContainer) {
@@ -2477,6 +2515,29 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
   const stopDrawing = () => {
     if (!drawing) return;
+    if (!strokeDirty && lastRawPoint) {
+      const { x, y } = lastRawPoint;
+      if (pdfDrawingTool === 'pen') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = PDF_PEN_COLOR;
+        ctx.arc(x, y, PDF_PEN_WIDTH / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+        strokeDirty = true;
+      } else if (pdfDrawingTool === 'eraser') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.arc(x, y, PDF_ERASER_WIDTH / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+        strokeDirty = true;
+      }
+    }
     drawing = false;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
@@ -2490,6 +2551,9 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   };
 
   canvas.addEventListener('pointerdown', (event) => {
+    if (handlePencilBarrelTap(event)) {
+      return;
+    }
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
     const pointerType = event.pointerType || 'mouse';
     if (pdfIpadMode && pointerType !== 'pen' && pointerType !== 'mouse') {
