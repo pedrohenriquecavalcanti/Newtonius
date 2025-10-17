@@ -320,6 +320,7 @@ const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const pdfDirtyLayers = new Set();
 let pdfPenDrawingActive = false;
 const PEN_TRIPLE_TAP_WINDOW_MS = 600;
+const PEN_TAP_MOVE_TOLERANCE = 6;
 let penTapTimestamps = [];
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
@@ -2432,6 +2433,20 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   }
 }
 
+function isPenLikePointer(event) {
+  if (!event) return false;
+  if (event.pointerType === 'pen') return true;
+  const pointerType = event.pointerType || '';
+  if (pointerType === 'mouse') return false;
+  const tiltIndicatesPen = typeof event.tiltX === 'number' && typeof event.tiltY === 'number' && (event.tiltX !== 0 || event.tiltY !== 0);
+  if (tiltIndicatesPen) return true;
+  const hasBarrelRotation = typeof event.twist === 'number' && event.twist !== 0;
+  if (hasBarrelRotation) return true;
+  const hasPenPressure = typeof event.pressure === 'number' && event.pressure > 0 && event.pressure < 1;
+  if (hasPenPressure && pointerType === '') return true;
+  return false;
+}
+
 function registerPenTap() {
   const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
   penTapTimestamps = penTapTimestamps.filter((ts) => now - ts <= PEN_TRIPLE_TAP_WINDOW_MS);
@@ -2452,6 +2467,10 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   let strokeDirty = false;
   let lastSmoothedPoint = null;
   let lastRawPoint = null;
+  let penTapCandidate = false;
+  let penTapTravel = 0;
+  let activePointerId = null;
+  let activePointerWasPen = false;
 
   const SMOOTHING_BASE = 0.12;
   const SMOOTHING_MAX = 0.45;
@@ -2500,7 +2519,8 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   canvas.addEventListener('pointerdown', (event) => {
     if (pdfDrawingTool !== 'pen' && pdfDrawingTool !== 'eraser') return;
     const pointerType = event.pointerType || 'mouse';
-    if (pdfIpadMode && pointerType !== 'pen' && pointerType !== 'mouse') {
+    const penLikePointer = isPenLikePointer(event);
+    if (pdfIpadMode && !penLikePointer && pointerType !== 'mouse') {
       return;
     }
     if (canvas.setPointerCapture) {
@@ -2521,18 +2541,35 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       ctx.strokeStyle = 'rgba(0,0,0,1)';
       ctx.lineWidth = PDF_ERASER_WIDTH;
     }
-    pdfPenDrawingActive = pointerType === 'pen';
+    pdfPenDrawingActive = penLikePointer;
     lastRawPoint = { x, y };
+    penTapCandidate = penLikePointer && (pdfDrawingTool === 'pen' || pdfDrawingTool === 'eraser');
+    penTapTravel = 0;
+    activePointerId = event.pointerId;
+    activePointerWasPen = penLikePointer;
     event.preventDefault();
   });
 
   canvas.addEventListener('pointermove', (event) => {
     if (!drawing) return;
-    if (event.pointerType === 'pen') {
-      penTapTimestamps = [];
-    }
+    const penLikePointer = isPenLikePointer(event);
     const { x, y } = getPoint(event);
     const currentPoint = { x, y };
+    if (penTapCandidate && event.pointerId === activePointerId) {
+      if (lastRawPoint) {
+        penTapTravel += Math.hypot(currentPoint.x - lastRawPoint.x, currentPoint.y - lastRawPoint.y);
+      }
+      if (penTapTravel <= PEN_TAP_MOVE_TOLERANCE) {
+        lastRawPoint = currentPoint;
+        lastSmoothedPoint = currentPoint;
+        event.preventDefault();
+        return;
+      }
+      penTapCandidate = false;
+    }
+    if (penLikePointer) {
+      penTapTimestamps = [];
+    }
     const previousSmoothed = lastSmoothedPoint || currentPoint;
     const smoothedPoint = smoothTowards(currentPoint, lastSmoothedPoint, lastRawPoint);
     const midPoint = {
@@ -2555,17 +2592,24 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
-      const isPen = event.pointerType === 'pen';
-      const registerTap = isPen && !strokeDirty && type === 'pointerup';
-      if (isPen) {
+      const penLikePointer = isPenLikePointer(event) || (event.pointerId === activePointerId && activePointerWasPen);
+      const registerTap = penLikePointer && penTapCandidate && type === 'pointerup';
+      if (penLikePointer) {
         pdfPenDrawingActive = false;
       }
       stopDrawing();
       if (registerTap) {
         registerPenTap();
-      } else if (isPen) {
+      } else if (penLikePointer) {
         penTapTimestamps = [];
       }
+      if (type !== 'pointerup') {
+        penTapTimestamps = [];
+      }
+      penTapCandidate = false;
+      activePointerId = null;
+      activePointerWasPen = false;
+      penTapTravel = 0;
     });
   });
 }
