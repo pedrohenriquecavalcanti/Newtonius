@@ -3225,10 +3225,8 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
       canvas.height = viewport.height;
       canvas.style.width = '100%';
       canvas.style.height = '100%';
-      canvas.style.maxWidth = '100%';
       canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
       wrapper.style.width = `${displayWidth}px`;
-      wrapper.style.maxWidth = '100%';
       wrapper.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
 
       await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
@@ -3469,13 +3467,11 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
     canvas.dataset.pageNumber = String(num);
     canvas.style.width = '100%';
     canvas.style.height = '100%';
-    canvas.style.maxWidth = '100%';
     canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
     const wrapper = document.createElement('div');
     wrapper.className = 'pdf-page-wrapper';
     wrapper.dataset.pageNumber = String(num);
     wrapper.style.width = `${displayWidth}px`;
-    wrapper.style.maxWidth = '100%';
     wrapper.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
     wrapper.appendChild(canvas);
     const drawingLayer = createDrawingLayer(canvas, pdfName, num);
