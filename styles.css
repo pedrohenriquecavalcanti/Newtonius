@@ -456,6 +456,20 @@ button:hover { filter: brightness(1.2); }
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+.pdf-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+}
+.pdf-page-indicator {
+  min-width: 64px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 .pdf-tool-btn {
   width: 40px;
   height: 40px;
