@@ -2442,6 +2442,14 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   ctx.lineJoin = 'round';
   let drawing = false;
   let strokeDirty = false;
+  let lastPoint = null;
+
+  const getPressureFactor = (event, tool) => {
+    if (tool !== 'pen') return 1;
+    const pressure = typeof event.pressure === 'number' ? event.pressure : 0.5;
+    const clamped = Math.max(0.15, Math.min(pressure || 0.5, 1));
+    return 0.5 + clamped * 0.8;
+  };
 
   const getPoint = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -2458,6 +2466,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     drawing = false;
     ctx.closePath();
     ctx.globalCompositeOperation = 'source-over';
+    lastPoint = null;
     if (strokeDirty) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
@@ -2477,12 +2486,13 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     const { x, y } = getPoint(event);
     drawing = true;
     strokeDirty = false;
+    lastPoint = { x, y };
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = PDF_PEN_COLOR;
-      ctx.lineWidth = PDF_PEN_WIDTH;
+      ctx.lineWidth = PDF_PEN_WIDTH * getPressureFactor(event, 'pen');
     } else {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
@@ -2495,8 +2505,18 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   canvas.addEventListener('pointermove', (event) => {
     if (!drawing) return;
     const { x, y } = getPoint(event);
-    ctx.lineTo(x, y);
+    const currentPoint = { x, y };
+    const prevPoint = lastPoint || currentPoint;
+    const midPoint = {
+      x: (prevPoint.x + currentPoint.x) / 2,
+      y: (prevPoint.y + currentPoint.y) / 2
+    };
+    if (pdfDrawingTool === 'pen') {
+      ctx.lineWidth = PDF_PEN_WIDTH * getPressureFactor(event, 'pen');
+    }
+    ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, midPoint.x, midPoint.y);
     ctx.stroke();
+    lastPoint = currentPoint;
     strokeDirty = true;
     event.preventDefault();
   });
