@@ -256,10 +256,14 @@ const header       = document.getElementById("header");
 const headerTitle  = document.getElementById("headerTitle");
 const summaryBtn   = document.getElementById("summaryBtn");
 const pdfContainer = document.getElementById("pdfViewerContainer");
+const pdfToolbar   = document.getElementById("pdfToolbar");
 const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
+const pdfZoomOutBtn = document.getElementById("pdfZoomOutBtn");
+const pdfZoomInBtn  = document.getElementById("pdfZoomInBtn");
+const pdfZoomDisplay = document.getElementById("pdfZoomDisplay");
 const pdfPageMenuToggleBtn = document.getElementById("pdfPageMenuToggleBtn");
 const pdfPrevPageBtn = document.getElementById("pdfPrevPageBtn");
 const pdfNextPageBtn = document.getElementById("pdfNextPageBtn");
@@ -317,6 +321,12 @@ let pdfKeyListenerAttached = false;
 let pdfDrawingTool = 'pen';
 let pdfIpadMode = false;
 let pdfPageMenuOpen = false;
+const PDF_DEFAULT_ZOOM = 1.75;
+const PDF_MIN_ZOOM = 0.75;
+const PDF_MAX_ZOOM = 3;
+const PDF_ZOOM_STEP = 0.25;
+let currentPdfZoom = PDF_DEFAULT_ZOOM;
+let pdfZoomRenderToken = 0;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
 const PDF_PEN_WIDTH_STYLUS = 6;
@@ -2469,6 +2479,98 @@ function togglePdfPageMenu() {
   }
 }
 
+function clampPdfZoom(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return currentPdfZoom || PDF_DEFAULT_ZOOM;
+  }
+  return Math.min(PDF_MAX_ZOOM, Math.max(PDF_MIN_ZOOM, numeric));
+}
+
+function getRenderedPdfPages() {
+  const scope = pdfPagesWrapper || pdfContainer;
+  if (!scope) return [];
+  return Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'))
+    .map(el => Number(el.dataset.pageNumber))
+    .filter(num => Number.isFinite(num));
+}
+
+function updatePdfZoomControlsState() {
+  const epsilon = 0.0001;
+  if (pdfZoomOutBtn) {
+    pdfZoomOutBtn.disabled = currentPdfZoom <= (PDF_MIN_ZOOM + epsilon);
+  }
+  if (pdfZoomInBtn) {
+    pdfZoomInBtn.disabled = currentPdfZoom >= (PDF_MAX_ZOOM - epsilon);
+  }
+}
+
+function updatePdfZoomDisplay() {
+  if (!pdfZoomDisplay) return;
+  const percent = Math.round(currentPdfZoom * 100);
+  pdfZoomDisplay.textContent = `${percent}%`;
+}
+
+function applyPdfZoomStyles() {
+  if (!pdfToolbar) return;
+  const normalized = currentPdfZoom / PDF_DEFAULT_ZOOM;
+  const scale = Math.min(1.35, Math.max(0.85, normalized));
+  pdfToolbar.style.setProperty('--toolbar-scale', scale.toFixed(3));
+}
+
+async function setPdfZoom(newZoom) {
+  const clamped = clampPdfZoom(newZoom);
+  const hasPdfOpen =
+    pdfContainer && pdfContainer.style.display === 'flex' && !!lastPdfName;
+  const changed = Math.abs(clamped - currentPdfZoom) > 0.0001;
+  currentPdfZoom = clamped;
+  updatePdfZoomControlsState();
+  updatePdfZoomDisplay();
+  applyPdfZoomStyles();
+  if (!hasPdfOpen || !changed) {
+    return currentPdfZoom;
+  }
+  const pages = getRenderedPdfPages();
+  if (!pages.length) {
+    return currentPdfZoom;
+  }
+  const viewportState = capturePdfViewportState();
+  const token = ++pdfZoomRenderToken;
+  const success = await openPdf(lastPdfName, pages, undefined, clamped);
+  if (!success) {
+    return currentPdfZoom;
+  }
+  if (token !== pdfZoomRenderToken) {
+    return currentPdfZoom;
+  }
+  if (viewportState) {
+    await waitNextFrame();
+    restorePdfViewportState(viewportState);
+  }
+  return currentPdfZoom;
+}
+
+function changePdfZoom(delta) {
+  const target = currentPdfZoom + delta;
+  return setPdfZoom(target);
+}
+
+function resetPdfZoom() {
+  currentPdfZoom = PDF_DEFAULT_ZOOM;
+  pdfZoomRenderToken++;
+  updatePdfZoomControlsState();
+  updatePdfZoomDisplay();
+  applyPdfZoomStyles();
+}
+
+function handlePdfWheelZoom(event) {
+  if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
+  if (!event.ctrlKey) return;
+  event.preventDefault();
+  const direction = event.deltaY < 0 ? 1 : -1;
+  changePdfZoom(direction * PDF_ZOOM_STEP);
+}
+
 function updatePdfNavigationState() {
   const hasPdf = !!lastPdfName && Number.isFinite(lastPdfTotalPages) && lastPdfTotalPages > 0;
   const pageNumber = hasPdf && Number.isFinite(currentPdfPage) ? currentPdfPage : null;
@@ -2967,6 +3069,25 @@ async function loadFullPdf() {
 async function handlePdfKeydown(event) {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   const key = event.key;
+  if (event.ctrlKey || event.metaKey) {
+    if (key === '0') {
+      event.preventDefault();
+      await setPdfZoom(PDF_DEFAULT_ZOOM);
+      return;
+    }
+    const isPlusKey = key === '+' || key === '=' || key === 'Add' || key === 'NumpadAdd';
+    const isMinusKey = key === '-' || key === '_' || key === 'Subtract' || key === 'NumpadSubtract';
+    if (isPlusKey) {
+      event.preventDefault();
+      await changePdfZoom(PDF_ZOOM_STEP);
+      return;
+    }
+    if (isMinusKey) {
+      event.preventDefault();
+      await changePdfZoom(-PDF_ZOOM_STEP);
+      return;
+    }
+  }
   if (key === 'ArrowRight') {
     event.preventDefault();
     navigatePdfPage(1);
@@ -3008,7 +3129,7 @@ function restorePdfViewportState(state) {
 }
 
 /** Abre/Renderiza um PDF no modal. */
-async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
+async function openPdf(pdfName, pages, quality=2, zoom) {
   const pageList = Array.isArray(pages) ? pages : [pages];
   const pagesToRender = pageList
     .map(num => Number(num))
@@ -3016,6 +3137,7 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const sortedPages = pagesToRender.slice().sort((a, b) => a - b);
   const desiredPage = sortedPages.length ? sortedPages[0] : null;
   const wasHidden = pdfContainer.style.display !== "flex";
+  const isNewDocument = pdfName !== lastPdfName;
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
   setBodyScrollLocked(true);
@@ -3052,6 +3174,16 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
   lastPdfName = pdfName;
   lastPdfTotalPages = pdf?.numPages || 0;
+  if (typeof zoom === 'number' && Number.isFinite(zoom)) {
+    currentPdfZoom = clampPdfZoom(zoom);
+  } else if (wasHidden || isNewDocument) {
+    currentPdfZoom = PDF_DEFAULT_ZOOM;
+  } else {
+    currentPdfZoom = clampPdfZoom(currentPdfZoom);
+  }
+  if (wasHidden || isNewDocument) {
+    pdfZoomRenderToken++;
+  }
   if (desiredPage !== null) {
     const total = lastPdfTotalPages || desiredPage;
     currentPdfPage = Math.max(1, Math.min(desiredPage, total));
@@ -3063,9 +3195,12 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const uniquePages = new Set(pagesToRender.length ? pagesToRender : pageList);
   isFullPdfLoaded = lastPdfTotalPages > 0 && uniquePages.size === lastPdfTotalPages;
   updatePdfNavigationState();
+  updatePdfZoomControlsState();
+  updatePdfZoomDisplay();
+  applyPdfZoomStyles();
 
   const dpr   = window.devicePixelRatio || 1;
-  const scale = quality * dpr * zoom;
+  const scale = quality * dpr * currentPdfZoom;
 
   const targetContainer = pdfPagesWrapper || pdfContainer;
 
@@ -3100,6 +3235,7 @@ function openAnswer(answer){
   setBodyScrollLocked(true);
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
+  resetPdfZoom();
   lastPdfName = null;
   lastPdfTotalPages = 0;
   isFullPdfLoaded = false;
@@ -3147,6 +3283,7 @@ function closePdfViewer() {
   setPdfDrawingTool('hand');
   pdfStylusDrawingActive = false;
   currentPdfPage = null;
+  resetPdfZoom();
   updatePdfNavigationState();
 }
 
@@ -3162,6 +3299,12 @@ if (pdfPenBtn) {
 }
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
+}
+if (pdfZoomOutBtn) {
+  pdfZoomOutBtn.addEventListener('click', () => changePdfZoom(-PDF_ZOOM_STEP));
+}
+if (pdfZoomInBtn) {
+  pdfZoomInBtn.addEventListener('click', () => changePdfZoom(PDF_ZOOM_STEP));
 }
 if (pdfPageMenuToggleBtn) {
   pdfPageMenuToggleBtn.addEventListener('click', togglePdfPageMenu);
@@ -3179,6 +3322,10 @@ if (pdfNextPageBtn) {
 setPdfPageMenuOpen(false);
 setPdfDrawingTool(pdfDrawingTool);
 updatePdfNavigationState();
+resetPdfZoom();
+if (pdfContainer) {
+  pdfContainer.addEventListener('wheel', handlePdfWheelZoom, { passive: false });
+}
 
 function openImage(url) {
   if (!previewImg) {
