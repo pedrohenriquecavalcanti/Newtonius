@@ -260,8 +260,11 @@ const pdfPagesWrapper = document.getElementById("pdfPagesWrapper");
 const pdfHandBtn   = document.getElementById("pdfHandBtn");
 const pdfPenBtn    = document.getElementById("pdfPenBtn");
 const pdfEraserBtn = document.getElementById("pdfEraserBtn");
-const pdfIpadModeBtn = document.getElementById("pdfIpadModeBtn");
-const loadAllPagesBtn = document.getElementById("loadAllPagesBtn");
+const pdfPageMenuToggleBtn = document.getElementById("pdfPageMenuToggleBtn");
+const pdfPrevPageBtn = document.getElementById("pdfPrevPageBtn");
+const pdfNextPageBtn = document.getElementById("pdfNextPageBtn");
+const pdfPageNav = document.getElementById("pdfPageNav");
+const pdfPageIndicator = document.getElementById("pdfPageIndicator");
 const closeBtn     = document.getElementById("closePdfBtn");
 const imgContainer = document.getElementById("imgPreviewContainer");
 const closeImgBtn  = document.getElementById("closeImgBtn");
@@ -313,13 +316,20 @@ let isFullPdfLoading = false;
 let pdfKeyListenerAttached = false;
 let pdfDrawingTool = 'pen';
 let pdfIpadMode = false;
+let pdfPageMenuOpen = false;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_WIDTH = 4;
+const PDF_PEN_WIDTH_STYLUS = 5;
 const PDF_ERASER_WIDTH = 20;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
+const STYLUS_TAP_TIMEOUT = 600;
+const STYLUS_TAP_DISTANCE = 36;
+
+let currentPdfPage = null;
+let stylusTapHistory = [];
 const pdfDirtyLayers = new Set();
-let pdfPenDrawingActive = false;
+let pdfStylusDrawingActive = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2225,11 +2235,73 @@ function clearPdfViewerContent() {
   }
 }
 
-function updateLoadAllButtonState() {
-  if (!loadAllPagesBtn) return;
-  const disable = !lastPdfName || !lastPdfTotalPages || isFullPdfLoaded || isFullPdfLoading;
-  loadAllPagesBtn.disabled = disable;
-  loadAllPagesBtn.setAttribute('aria-disabled', String(disable));
+function setBodyScrollLocked(locked) {
+  if (!document || !document.body) return;
+  document.body.classList.toggle('lock-scroll', !!locked);
+}
+
+function setPdfPageMenuOpen(open) {
+  pdfPageMenuOpen = !!open;
+  if (pdfPageNav) {
+    pdfPageNav.classList.toggle('open', pdfPageMenuOpen);
+    pdfPageNav.setAttribute('aria-hidden', String(!pdfPageMenuOpen));
+  }
+  if (pdfPageMenuToggleBtn) {
+    pdfPageMenuToggleBtn.setAttribute('aria-expanded', String(pdfPageMenuOpen));
+    pdfPageMenuToggleBtn.setAttribute('aria-label', 'Navegação de páginas');
+    pdfPageMenuToggleBtn.title = 'Páginas';
+    pdfPageMenuToggleBtn.classList.toggle('pdf-tool-btn--hidden', pdfPageMenuOpen);
+    if (pdfPageMenuOpen) {
+      pdfPageMenuToggleBtn.setAttribute('tabindex', '-1');
+      pdfPageMenuToggleBtn.setAttribute('aria-hidden', 'true');
+    } else {
+      pdfPageMenuToggleBtn.removeAttribute('tabindex');
+      pdfPageMenuToggleBtn.setAttribute('aria-hidden', 'false');
+    }
+    const icon = pdfPageMenuToggleBtn.querySelector('i');
+    if (icon) {
+      icon.classList.add('fa-plus');
+      icon.classList.remove('fa-minus');
+    }
+  }
+}
+
+function togglePdfPageMenu() {
+  if (!pdfPageMenuOpen) {
+    setPdfPageMenuOpen(true);
+  }
+}
+
+function updatePdfNavigationState() {
+  const hasPdf = !!lastPdfName && Number.isFinite(lastPdfTotalPages) && lastPdfTotalPages > 0;
+  const pageNumber = hasPdf && Number.isFinite(currentPdfPage) ? currentPdfPage : null;
+  if (pdfPageIndicator) {
+    pdfPageIndicator.textContent = pageNumber ? `${pageNumber}/${lastPdfTotalPages}` : '--/--';
+  }
+  if (pdfPrevPageBtn) {
+    const disablePrev = !pageNumber || pageNumber <= 1;
+    pdfPrevPageBtn.disabled = disablePrev;
+    pdfPrevPageBtn.setAttribute('aria-disabled', String(disablePrev));
+  }
+  if (pdfNextPageBtn) {
+    const disableNext = !pageNumber || pageNumber >= lastPdfTotalPages;
+    pdfNextPageBtn.disabled = disableNext;
+    pdfNextPageBtn.setAttribute('aria-disabled', String(disableNext));
+  }
+}
+
+function navigatePdfPage(delta) {
+  if (!Number.isFinite(delta) || delta === 0) return;
+  if (!lastPdfName || !Number.isFinite(currentPdfPage)) return;
+  if (isFullPdfLoading) return;
+  const target = currentPdfPage + delta;
+  if (target < 1) return;
+  if (Number.isFinite(lastPdfTotalPages) && lastPdfTotalPages > 0 && target > lastPdfTotalPages) {
+    return;
+  }
+  currentPdfPage = target;
+  updatePdfNavigationState();
+  return openPdf(lastPdfName, target);
 }
 
 function getPdfDrawingStorageKey(pdfName, pageNumber) {
@@ -2349,6 +2421,36 @@ function getPdfDrawingLayers() {
   return Array.from(scope.querySelectorAll('.pdf-draw-layer'));
 }
 
+function stylusTapDistance(a, b) {
+  const dx = (a?.x || 0) - (b?.x || 0);
+  const dy = (a?.y || 0) - (b?.y || 0);
+  return Math.hypot(dx, dy);
+}
+
+function registerStylusTripleTap(event) {
+  const time = typeof event.timeStamp === 'number' ? event.timeStamp : Date.now();
+  const tap = { time, x: event.clientX || 0, y: event.clientY || 0 };
+  stylusTapHistory = stylusTapHistory.filter(item => time - item.time <= STYLUS_TAP_TIMEOUT);
+  stylusTapHistory.push(tap);
+  if (stylusTapHistory.length < 3) return false;
+  const recent = stylusTapHistory.slice(-3);
+  if (time - recent[0].time > STYLUS_TAP_TIMEOUT) {
+    return false;
+  }
+  let clustered = true;
+  for (let i = 0; i < recent.length && clustered; i += 1) {
+    for (let j = i + 1; j < recent.length; j += 1) {
+      if (stylusTapDistance(recent[i], recent[j]) > STYLUS_TAP_DISTANCE) {
+        clustered = false;
+        break;
+      }
+    }
+  }
+  if (!clustered) return false;
+  stylusTapHistory = [];
+  return true;
+}
+
 function applyPdfToolToLayer(layer) {
   if (!layer) return;
   if (pdfDrawingTool === 'hand') {
@@ -2378,7 +2480,7 @@ function isPdfToolbarTarget(target) {
 function handlePdfTouchBlocker(event) {
   if (!pdfIpadMode) return;
   if (isPdfToolbarTarget(event.target)) return;
-  if (!pdfPenDrawingActive) return;
+  if (!pdfStylusDrawingActive) return;
   if (event.touches && event.touches.length <= 1) {
     event.preventDefault();
   }
@@ -2392,6 +2494,7 @@ function ensurePdfTouchBlocker() {
 
 function setPdfDrawingTool(tool) {
   pdfDrawingTool = tool;
+  stylusTapHistory = [];
   if (pdfHandBtn) {
     pdfHandBtn.classList.toggle('active', tool === 'hand');
     pdfHandBtn.setAttribute('aria-pressed', String(tool === 'hand'));
@@ -2409,16 +2512,12 @@ function setPdfDrawingTool(tool) {
     pdfContainer.classList.toggle('hand-mode', tool === 'hand');
   }
   if (tool === 'hand') {
-    pdfPenDrawingActive = false;
+    pdfStylusDrawingActive = false;
   }
 }
 
 function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   pdfIpadMode = !!enabled;
-  if (pdfIpadModeBtn) {
-    pdfIpadModeBtn.classList.toggle('active', pdfIpadMode);
-    pdfIpadModeBtn.setAttribute('aria-pressed', String(pdfIpadMode));
-  }
   if (pdfContainer) {
     pdfContainer.classList.toggle('ipad-mode', pdfIpadMode);
   }
@@ -2426,7 +2525,7 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
     ensurePdfTouchBlocker();
   } else {
     detachPdfTouchBlocker();
-    pdfPenDrawingActive = false;
+    pdfStylusDrawingActive = false;
   }
   if (forcePen) {
     setPdfDrawingTool('pen');
@@ -2444,6 +2543,8 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
   let strokeDirty = false;
   let lastSmoothedPoint = null;
   let lastRawPoint = null;
+  let strokeHadMovement = false;
+  let activeStrokeWidth = PDF_PEN_WIDTH;
 
   const SMOOTHING_BASE = 0.12;
   const SMOOTHING_MAX = 0.45;
@@ -2482,11 +2583,12 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     ctx.globalCompositeOperation = 'source-over';
     lastSmoothedPoint = null;
     lastRawPoint = null;
+    strokeHadMovement = false;
     if (strokeDirty) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
-    pdfPenDrawingActive = false;
+    pdfStylusDrawingActive = false;
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -2501,19 +2603,22 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     const { x, y } = getPoint(event);
     drawing = true;
     strokeDirty = false;
+    strokeHadMovement = false;
     lastSmoothedPoint = { x, y };
     ctx.beginPath();
     ctx.moveTo(x, y);
     if (pdfDrawingTool === 'pen') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = PDF_PEN_COLOR;
-      ctx.lineWidth = PDF_PEN_WIDTH;
+      activeStrokeWidth = pointerType === 'pen' ? PDF_PEN_WIDTH_STYLUS : PDF_PEN_WIDTH;
+      ctx.lineWidth = activeStrokeWidth;
     } else {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.strokeStyle = 'rgba(0,0,0,1)';
-      ctx.lineWidth = PDF_ERASER_WIDTH;
+      activeStrokeWidth = PDF_ERASER_WIDTH;
+      ctx.lineWidth = activeStrokeWidth;
     }
-    pdfPenDrawingActive = pointerType === 'pen';
+    pdfStylusDrawingActive = pointerType === 'pen' && (pdfDrawingTool === 'pen' || pdfDrawingTool === 'eraser');
     lastRawPoint = { x, y };
     event.preventDefault();
   });
@@ -2529,13 +2634,16 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       y: (previousSmoothed.y + smoothedPoint.y) / 2
     };
     if (pdfDrawingTool === 'pen') {
-      ctx.lineWidth = PDF_PEN_WIDTH;
+      ctx.lineWidth = activeStrokeWidth;
+    } else {
+      ctx.lineWidth = PDF_ERASER_WIDTH;
     }
     ctx.quadraticCurveTo(previousSmoothed.x, previousSmoothed.y, midPoint.x, midPoint.y);
     ctx.stroke();
     lastSmoothedPoint = smoothedPoint;
     lastRawPoint = currentPoint;
     strokeDirty = true;
+    strokeHadMovement = true;
     event.preventDefault();
   });
 
@@ -2544,8 +2652,17 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
+      if (!strokeHadMovement && pdfDrawingTool === 'pen' && lastRawPoint) {
+        ctx.beginPath();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = PDF_PEN_COLOR;
+        const radius = Math.max(activeStrokeWidth / 2, 1);
+        ctx.arc(lastRawPoint.x, lastRawPoint.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        strokeDirty = true;
+      }
       if (event.pointerType === 'pen') {
-        pdfPenDrawingActive = false;
+        pdfStylusDrawingActive = false;
       }
       stopDrawing();
     });
@@ -2578,7 +2695,7 @@ async function loadFullPdf() {
   const allPages = Array.from({ length: lastPdfTotalPages }, (_, i) => i + 1);
   const viewportState = capturePdfViewportState();
   isFullPdfLoading = true;
-  updateLoadAllButtonState();
+  updatePdfNavigationState();
   let success = false;
   try {
     success = await openPdf(lastPdfName, allPages);
@@ -2586,6 +2703,11 @@ async function loadFullPdf() {
       await waitNextFrame();
       await waitNextFrame();
       restorePdfViewportState(viewportState);
+      if (Number.isFinite(viewportState.pageNumber)) {
+        const targetPage = Math.max(1, Math.min(viewportState.pageNumber, lastPdfTotalPages || viewportState.pageNumber));
+        currentPdfPage = targetPage;
+        updatePdfNavigationState();
+      }
     }
   } catch (err) {
     console.error(err);
@@ -2594,7 +2716,7 @@ async function loadFullPdf() {
     if (!success) {
       isFullPdfLoaded = false;
     }
-    updateLoadAllButtonState();
+    updatePdfNavigationState();
   }
 }
 
@@ -2602,6 +2724,16 @@ async function loadFullPdf() {
 async function handlePdfKeydown(event) {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   const key = event.key;
+  if (key === 'ArrowRight') {
+    event.preventDefault();
+    navigatePdfPage(1);
+    return;
+  }
+  if (key === 'ArrowLeft') {
+    event.preventDefault();
+    navigatePdfPage(-1);
+    return;
+  }
   const isPlus = key === '+' || key === 'Add' || key === 'NumpadAdd' || (key === '=' && event.shiftKey);
   if (!isPlus) return;
 
@@ -2635,12 +2767,21 @@ function restorePdfViewportState(state) {
 /** Abre/Renderiza um PDF no modal. */
 async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   const pageList = Array.isArray(pages) ? pages : [pages];
+  const pagesToRender = pageList
+    .map(num => Number(num))
+    .filter(num => Number.isFinite(num) && num >= 1);
+  const sortedPages = pagesToRender.slice().sort((a, b) => a - b);
+  const desiredPage = sortedPages.length ? sortedPages[0] : null;
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
   pdfContainer.style.display = "flex";
+  setBodyScrollLocked(true);
   if (wasHidden) {
     setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
+    setPdfPageMenuOpen(false);
+  } else {
+    setPdfPageMenuOpen(pdfPageMenuOpen);
   }
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
@@ -2668,16 +2809,24 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
   lastPdfName = pdfName;
   lastPdfTotalPages = pdf?.numPages || 0;
-  const uniquePages = new Set(pageList);
+  if (desiredPage !== null) {
+    const total = lastPdfTotalPages || desiredPage;
+    currentPdfPage = Math.max(1, Math.min(desiredPage, total));
+  } else if (lastPdfTotalPages > 0) {
+    currentPdfPage = 1;
+  } else {
+    currentPdfPage = null;
+  }
+  const uniquePages = new Set(pagesToRender.length ? pagesToRender : pageList);
   isFullPdfLoaded = lastPdfTotalPages > 0 && uniquePages.size === lastPdfTotalPages;
-  updateLoadAllButtonState();
+  updatePdfNavigationState();
 
   const dpr   = window.devicePixelRatio || 1;
   const scale = quality * dpr * zoom;
 
   const targetContainer = pdfPagesWrapper || pdfContainer;
 
-  for (const num of pageList) {
+  for (const num of pagesToRender) {
     const page     = await pdf.getPage(num);
     const viewport = page.getViewport({ scale });
     const canvas   = document.createElement("canvas");
@@ -2705,12 +2854,14 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
 
 function openAnswer(answer){
   pdfContainer.style.display = 'flex';
+  setBodyScrollLocked(true);
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
   lastPdfName = null;
   lastPdfTotalPages = 0;
   isFullPdfLoaded = false;
   isFullPdfLoading = false;
+  currentPdfPage = null;
   const div = Object.assign(document.createElement('div'),{
     className:'answer-letter',
     textContent: `Gabarito: ${answer}`
@@ -2721,7 +2872,7 @@ function openAnswer(answer){
   } else {
     pdfContainer.appendChild(div);
   }
-  updateLoadAllButtonState();
+  updatePdfNavigationState();
 }
 
 function openGabarito(q){
@@ -2738,8 +2889,10 @@ function closePdfViewer() {
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
   pdfContainer.style.display = "none";
+  setBodyScrollLocked(false);
   clearPdfViewerContent();
   pdfContainer.scrollTop = 0;
+  setPdfPageMenuOpen(false);
   if (pdfKeyListenerAttached) {
     document.removeEventListener('keydown', handlePdfKeydown);
     pdfKeyListenerAttached = false;
@@ -2749,8 +2902,9 @@ function closePdfViewer() {
   isFullPdfLoaded = false;
   isFullPdfLoading = false;
   setPdfDrawingTool('hand');
-  pdfPenDrawingActive = false;
-  updateLoadAllButtonState();
+  pdfStylusDrawingActive = false;
+  currentPdfPage = null;
+  updatePdfNavigationState();
 }
 
 if (closeBtn) {
@@ -2766,21 +2920,22 @@ if (pdfPenBtn) {
 if (pdfEraserBtn) {
   pdfEraserBtn.addEventListener('click', () => setPdfDrawingTool('eraser'));
 }
-if (pdfIpadModeBtn) {
-  pdfIpadModeBtn.addEventListener('click', () => {
-    const enabling = !pdfIpadMode;
-    const forcePen = enabling && pdfDrawingTool === 'hand';
-    setPdfIpadMode(enabling, { forcePen });
+if (pdfPageMenuToggleBtn) {
+  pdfPageMenuToggleBtn.addEventListener('click', togglePdfPageMenu);
+}
+if (pdfPrevPageBtn) {
+  pdfPrevPageBtn.addEventListener('click', () => {
+    navigatePdfPage(-1);
   });
 }
-if (loadAllPagesBtn) {
-  loadAllPagesBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    loadFullPdf();
+if (pdfNextPageBtn) {
+  pdfNextPageBtn.addEventListener('click', () => {
+    navigatePdfPage(1);
   });
 }
+setPdfPageMenuOpen(false);
 setPdfDrawingTool(pdfDrawingTool);
-updateLoadAllButtonState();
+updatePdfNavigationState();
 
 function openImage(url) {
   if (!previewImg) {

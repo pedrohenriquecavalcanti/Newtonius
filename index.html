@@ -98,12 +98,26 @@
       <button id="pdfEraserBtn" class="pdf-tool-btn" title="Borracha">
         <i class="fas fa-eraser"></i>
       </button>
-      <button id="pdfIpadModeBtn" class="pdf-tool-btn" title="Modo iPad (Palm Rejection)" aria-pressed="false">
-        <i class="fas fa-tablet-screen-button"></i>
-      </button>
-      <button id="loadAllPagesBtn" class="pdf-tool-btn" title="Carregar todas as páginas">
+      <button
+        id="pdfPageMenuToggleBtn"
+        class="pdf-tool-btn"
+        title="Páginas"
+        aria-label="Abrir navegação de páginas"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls="pdfPageNav"
+      >
         <i class="fas fa-plus"></i>
       </button>
+      <div id="pdfPageNav" class="pdf-page-nav" aria-live="polite" aria-hidden="true">
+        <button id="pdfPrevPageBtn" class="pdf-tool-btn" title="Página anterior" aria-label="Página anterior">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span id="pdfPageIndicator" class="pdf-page-indicator">--/--</span>
+        <button id="pdfNextPageBtn" class="pdf-tool-btn" title="Próxima página" aria-label="Próxima página">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
       <button id="closePdfBtn" class="pdf-tool-btn pdf-tool-btn--close" title="Fechar PDF" aria-label="Fechar PDF">
         <i class="fas fa-times"></i>
       </button>

@@ -46,6 +46,10 @@ body {
   line-height: 1.5;
 }
 
+body.lock-scroll {
+  overflow: hidden;
+}
+
 /* =====================================================================================
    COMPONENTE: BOTÃO GENÉRICO
    =====================================================================================*/
@@ -434,21 +438,23 @@ button:hover { filter: brightness(1.2); }
   touch-action: none;
 }
 #pdfToolbar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  margin: 8px auto 24px;
+  gap: 4px;
+  margin: 0 auto;
   width: fit-content;
-  max-width: calc(100% - 32px);
-  background: rgba(20, 20, 20, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  max-width: min(360px, calc(100% - 24px));
+  background: rgba(18, 18, 18, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 999px;
-  padding: 10px 18px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  padding: 3px 8px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
   z-index: 1500;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -457,34 +463,40 @@ button:hover { filter: brightness(1.2); }
   -webkit-tap-highlight-color: transparent;
 }
 .pdf-tool-btn {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   background: transparent;
   color: #fff;
   cursor: pointer;
   transition: background .2s, transform .2s, opacity .2s;
   -webkit-tap-highlight-color: transparent;
+  font-size: 0.85rem;
+}
+.pdf-tool-btn--hidden {
+  display: none !important;
 }
 .pdf-tool-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   transform: scale(1.05);
 }
 .pdf-tool-btn.active {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   color: #111;
 }
 .pdf-tool-btn--close {
-  margin-left: 8px;
-  background: rgba(255, 80, 80, 0.25);
+  margin-left: 6px;
+  background: rgba(255, 80, 80, 0.18);
   color: #ffecec;
 }
 .pdf-tool-btn--close:hover {
-  background: rgba(255, 80, 80, 0.45);
+  background: rgba(255, 80, 80, 0.4);
   color: #fff;
 }
 .pdf-tool-btn:disabled {
@@ -492,8 +504,25 @@ button:hover { filter: brightness(1.2); }
   cursor: not-allowed;
 }
 .pdf-tool-btn[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   color: #111;
+}
+.pdf-page-nav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+.pdf-page-nav.open {
+  display: flex;
+}
+.pdf-page-indicator {
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .answer-letter{
   margin:40px;
