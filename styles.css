@@ -437,6 +437,19 @@ button:hover { filter: brightness(1.2); }
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
+.pdf-page-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 120px;
+  padding: 24px 16px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  text-align: center;
+  background: rgba(18, 18, 18, 0.12);
+  border-radius: 4px;
+}
 .pdf-draw-layer {
   position: absolute;
   inset: 0;

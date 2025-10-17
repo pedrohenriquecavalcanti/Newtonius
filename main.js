@@ -327,6 +327,7 @@ const PDF_PEN_WIDTH_STYLUS = 7;
 const PDF_ERASER_WIDTH = 7;
 const PDF_ERASER_HIGHLIGHT_COLOR = 'rgba(168, 168, 168, 0.9)';
 const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
+const PDF_LAZY_RENDER_BUFFER = 1;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
@@ -343,6 +344,11 @@ let lastPdfRenderedPages = [];
 let pdfPinchState = null;
 let currentPdfDocument = null;
 let currentPdfDocumentName = null;
+let currentPdfRenderQuality = PDF_RENDER_QUALITY;
+const pdfPageStates = new Map();
+let pdfPageObserver = null;
+let pdfRenderQueue = [];
+let pdfRenderProcessing = false;
 
 function smoothPdfPoint(target, previous, rawPrevious) {
   if (!target) return previous || rawPrevious || null;
@@ -2462,10 +2468,271 @@ editDiv.addEventListener('click', function(e) {
 function clearPdfViewerContent() {
   pdfDirtyLayers.clear();
   lastPdfRenderedPages = [];
+  resetPdfRenderState();
   if (pdfPagesWrapper) {
     pdfPagesWrapper.innerHTML = '';
   } else if (pdfContainer) {
     pdfContainer.querySelectorAll('canvas, .answer-letter, .pdf-page-wrapper').forEach(el => el.remove());
+  }
+}
+
+function resetPdfRenderState() {
+  pdfRenderQueue = [];
+  pdfRenderProcessing = false;
+  if (pdfPageObserver) {
+    pdfPageObserver.disconnect();
+    pdfPageObserver = null;
+  }
+  pdfPageStates.clear();
+}
+
+function ensurePdfPageObserver() {
+  if (pdfPageObserver) {
+    return pdfPageObserver;
+  }
+  if (typeof IntersectionObserver !== 'function' || !pdfContainer) {
+    return null;
+  }
+  pdfPageObserver = new IntersectionObserver(handlePdfPageIntersection, {
+    root: pdfContainer,
+    rootMargin: '256px 0px',
+    threshold: 0.01
+  });
+  return pdfPageObserver;
+}
+
+function handlePdfPageIntersection(entries) {
+  if (!Array.isArray(entries)) return;
+  entries.forEach(entry => {
+    if (!entry?.isIntersecting) return;
+    const pageNumber = Number(entry.target?.dataset?.pageNumber);
+    if (!Number.isFinite(pageNumber)) return;
+    schedulePdfPageRender(pageNumber, { priority: true });
+    prefetchAdjacentPdfPages(pageNumber);
+  });
+}
+
+function getPdfPageState(pageNumber) {
+  const page = Number(pageNumber);
+  if (!Number.isFinite(page)) return undefined;
+  return pdfPageStates.get(page);
+}
+
+function createPdfPageState(pageNumber, pdfName) {
+  const page = Number(pageNumber);
+  if (!Number.isFinite(page)) return null;
+  const existing = pdfPageStates.get(page);
+  if (existing) {
+    return existing;
+  }
+  const wrapper = document.createElement('div');
+  wrapper.className = 'pdf-page-wrapper';
+  wrapper.dataset.pageNumber = String(page);
+  wrapper.style.width = '100%';
+  wrapper.style.maxWidth = '100%';
+  const canvas = document.createElement('canvas');
+  canvas.dataset.pageNumber = String(page);
+  canvas.style.display = 'block';
+  canvas.style.width = '100%';
+  canvas.style.height = 'auto';
+  canvas.style.maxWidth = '100%';
+  const placeholder = document.createElement('div');
+  placeholder.className = 'pdf-page-placeholder';
+  placeholder.textContent = 'Carregando página…';
+  wrapper.appendChild(canvas);
+  wrapper.appendChild(placeholder);
+  const state = {
+    pageNumber: page,
+    pdfName,
+    wrapper,
+    canvas,
+    drawingLayer: null,
+    placeholder,
+    rendered: false,
+    renderingPromise: null
+  };
+  pdfPageStates.set(page, state);
+  return state;
+}
+
+function syncPdfPageStates(pageNumbers, pdfName, container) {
+  if (!container) return;
+  const observer = ensurePdfPageObserver();
+  const fragment = document.createDocumentFragment();
+  const seen = new Set();
+  pageNumbers.forEach(num => {
+    const page = Number(num);
+    if (!Number.isFinite(page) || seen.has(page)) return;
+    seen.add(page);
+    const state = createPdfPageState(page, pdfName);
+    if (!state) return;
+    state.pdfName = pdfName;
+    state.wrapper.dataset.pageNumber = String(page);
+    state.canvas.dataset.pageNumber = String(page);
+    fragment.appendChild(state.wrapper);
+    if (observer) {
+      observer.observe(state.wrapper);
+    }
+  });
+  container.appendChild(fragment);
+}
+
+function flushPdfRenderQueue() {
+  pdfRenderQueue = [];
+}
+
+function schedulePdfPageRender(pageNumber, options = {}) {
+  const state = getPdfPageState(pageNumber);
+  if (!state) return;
+  if (state.rendered && !options.force) return;
+  if (state.renderingPromise && !options.force) return;
+  const page = state.pageNumber;
+  const existingIndex = pdfRenderQueue.findIndex(task => task.pageNumber === page);
+  if (existingIndex >= 0) {
+    const task = pdfRenderQueue[existingIndex];
+    task.force = task.force || !!options.force;
+    if (options.priority && existingIndex > 0) {
+      pdfRenderQueue.splice(existingIndex, 1);
+      pdfRenderQueue.unshift(task);
+    }
+  } else {
+    const task = { pageNumber: page, force: !!options.force };
+    if (options.priority) {
+      pdfRenderQueue.unshift(task);
+    } else {
+      pdfRenderQueue.push(task);
+    }
+  }
+  if (options.immediate) {
+    processPdfRenderQueue();
+  } else if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => processPdfRenderQueue());
+  } else {
+    setTimeout(() => processPdfRenderQueue(), 0);
+  }
+}
+
+function processPdfRenderQueue() {
+  if (pdfRenderProcessing) return;
+  if (!pdfRenderQueue.length) return;
+  pdfRenderProcessing = true;
+  (async () => {
+    while (pdfRenderQueue.length) {
+      const task = pdfRenderQueue.shift();
+      if (!task) continue;
+      try {
+        await performPdfPageRender(task.pageNumber, { force: task.force });
+      } catch (err) {
+        console.error('Falha ao renderizar página do PDF', err);
+      }
+    }
+    pdfRenderProcessing = false;
+  })();
+}
+
+async function performPdfPageRender(pageNumber, { force = false } = {}) {
+  const state = getPdfPageState(pageNumber);
+  if (!state) return false;
+  if (state.renderingPromise) {
+    if (force) {
+      return state.renderingPromise.then(() => performPdfPageRender(pageNumber, { force: true }));
+    }
+    return state.renderingPromise;
+  }
+  if (state.rendered && !force) {
+    return true;
+  }
+  if (!lastPdfName || state.pdfName !== lastPdfName) {
+    return false;
+  }
+  const expectedState = state;
+  const pdf = await loadPdfDocument(lastPdfName);
+  if (!pdf) return false;
+  if (pdfPageStates.get(expectedState.pageNumber) !== expectedState) {
+    return false;
+  }
+  const quality = currentPdfRenderQuality || PDF_RENDER_QUALITY;
+  const zoom = Number.isFinite(currentPdfZoom) ? currentPdfZoom : PDF_DEFAULT_ZOOM;
+  const dpr = window.devicePixelRatio || 1;
+  const scale = quality * dpr * zoom;
+  const wasRendered = expectedState.rendered;
+  const previousLayerWidth = expectedState.drawingLayer?.width || 0;
+  const previousLayerHeight = expectedState.drawingLayer?.height || 0;
+  const promise = (async () => {
+    const page = await pdf.getPage(expectedState.pageNumber);
+    if (!page) return false;
+    if (pdfPageStates.get(expectedState.pageNumber) !== expectedState) {
+      return false;
+    }
+    const viewport = page.getViewport({ scale });
+    const canvas = expectedState.canvas;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = `${viewport.width / (quality * dpr)}px`;
+    canvas.style.height = `${viewport.height / (quality * dpr)}px`;
+    canvas.style.maxWidth = '100%';
+    expectedState.wrapper.style.width = canvas.style.width;
+    expectedState.wrapper.style.maxWidth = '100%';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return false;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    if (expectedState.placeholder) {
+      expectedState.placeholder.remove();
+      expectedState.placeholder = null;
+    }
+    if (!expectedState.drawingLayer) {
+      expectedState.drawingLayer = createDrawingLayer(canvas, lastPdfName, expectedState.pageNumber);
+      expectedState.wrapper.appendChild(expectedState.drawingLayer);
+    }
+    const drawingLayer = expectedState.drawingLayer;
+    if (drawingLayer) {
+      const previousWidth = wasRendered ? previousLayerWidth : drawingLayer.width;
+      const previousHeight = wasRendered ? previousLayerHeight : drawingLayer.height;
+      drawingLayer.width = canvas.width;
+      drawingLayer.height = canvas.height;
+      drawingLayer.style.width = '100%';
+      drawingLayer.style.height = '100%';
+      const drawingState = getPdfCanvasState(drawingLayer);
+      if (!wasRendered) {
+        restorePdfDrawingLayer(lastPdfName, expectedState.pageNumber, drawingLayer);
+      } else if (drawingState && previousWidth && previousHeight) {
+        const scaleX = canvas.width / previousWidth;
+        const scaleY = canvas.height / previousHeight;
+        scalePdfDrawingState(drawingState, scaleX, scaleY);
+        renderPdfCanvas(drawingLayer);
+      } else if (drawingState) {
+        renderPdfCanvas(drawingLayer);
+      }
+      applyPdfToolToLayer(drawingLayer);
+    }
+    expectedState.rendered = true;
+    return true;
+  })().catch(err => {
+    if (!wasRendered && expectedState.placeholder) {
+      expectedState.placeholder.textContent = 'Falha ao carregar página';
+    }
+    expectedState.rendered = wasRendered;
+    throw err;
+  }).finally(() => {
+    expectedState.renderingPromise = null;
+  });
+
+  expectedState.renderingPromise = promise;
+  return promise;
+}
+
+function prefetchAdjacentPdfPages(pageNumber, distance = PDF_LAZY_RENDER_BUFFER) {
+  const base = Number(pageNumber);
+  if (!Number.isFinite(base) || distance <= 0) return;
+  for (let offset = 1; offset <= distance; offset += 1) {
+    const prev = base - offset;
+    const next = base + offset;
+    if (getPdfPageState(prev)) {
+      schedulePdfPageRender(prev);
+    }
+    if (getPdfPageState(next)) {
+      schedulePdfPageRender(next);
+    }
   }
 }
 
@@ -3062,6 +3329,21 @@ async function loadFullPdf() {
   let success = false;
   try {
     success = await openPdf(lastPdfName, allPages);
+    if (success) {
+      flushPdfRenderQueue();
+      for (const pageNumber of allPages) {
+        try {
+          await performPdfPageRender(pageNumber);
+        } catch (err) {
+          console.error('Falha ao renderizar página durante carregamento completo do PDF', err);
+          success = false;
+          break;
+        }
+      }
+      if (success) {
+        isFullPdfLoaded = true;
+      }
+    }
     if (success && viewportState) {
       await waitNextFrame();
       await waitNextFrame();
@@ -3175,23 +3457,20 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
     }
     return;
   }
-  const pdf = await loadPdfDocument(lastPdfName);
-  if (!pdf) {
+  const pdfDoc = await loadPdfDocument(lastPdfName);
+  if (!pdfDoc) {
     console.error('Documento PDF indisponível para ajuste de zoom.');
     return;
   }
 
-  const scope = pdfPagesWrapper || pdfContainer;
-  const wrappers = scope
-    ? Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'))
-    : [];
+  const pageNumbers = Array.from(pdfPageStates.keys()).sort((a, b) => a - b);
 
-  if (!wrappers.length) {
+  if (!pageNumbers.length) {
     const pages = lastPdfRenderedPages.length
       ? lastPdfRenderedPages.slice()
       : (Number.isFinite(currentPdfPage) ? [currentPdfPage] : [1]);
     try {
-      await openPdf(lastPdfName, pages, PDF_RENDER_QUALITY, clampedZoom);
+      await openPdf(lastPdfName, pages, currentPdfRenderQuality || PDF_RENDER_QUALITY, clampedZoom);
     } catch (err) {
       console.error('Falha ao ajustar zoom do PDF', err);
       return;
@@ -3202,55 +3481,20 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
     return;
   }
 
-  const dpr = window.devicePixelRatio || 1;
-  const quality = PDF_RENDER_QUALITY;
-  const renderScale = quality * dpr * clampedZoom;
+  currentPdfZoom = clampedZoom;
+  flushPdfRenderQueue();
   const updatedPages = [];
-
-  for (const wrapper of wrappers) {
-    const pageNumber = Number(wrapper.dataset.pageNumber);
-    if (!Number.isFinite(pageNumber)) continue;
-    updatedPages.push(pageNumber);
-    const canvas = wrapper.querySelector('canvas');
-    if (!(canvas instanceof HTMLCanvasElement)) continue;
-    const drawingLayer = wrapper.querySelector('.pdf-draw-layer');
-    const previousWidth = canvas.width || 1;
-    const previousHeight = canvas.height || 1;
-
+  for (const pageNumber of pageNumbers) {
     try {
-      const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: renderScale });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = `${viewport.width / (quality * dpr)}px`;
-      canvas.style.height = `${viewport.height / (quality * dpr)}px`;
-      canvas.style.maxWidth = '100%';
-      wrapper.style.width = canvas.style.width;
-      wrapper.style.maxWidth = '100%';
-
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-
-      if (drawingLayer instanceof HTMLCanvasElement) {
-        const scaleX = previousWidth ? canvas.width / previousWidth : 1;
-        const scaleY = previousHeight ? canvas.height / previousHeight : 1;
-        drawingLayer.width = canvas.width;
-        drawingLayer.height = canvas.height;
-        drawingLayer.style.width = '100%';
-        drawingLayer.style.height = '100%';
-        const stateRef = getPdfCanvasState(drawingLayer);
-        scalePdfDrawingState(stateRef, scaleX, scaleY);
-        renderPdfCanvas(drawingLayer);
-        applyPdfToolToLayer(drawingLayer);
-      }
+      await performPdfPageRender(pageNumber, { force: true });
+      updatedPages.push(pageNumber);
     } catch (err) {
       console.error('Falha ao redesenhar página do PDF durante ajuste de zoom', err);
     }
   }
-
   if (updatedPages.length) {
     lastPdfRenderedPages = updatedPages;
   }
-  currentPdfZoom = clampedZoom;
   if (state) {
     await waitNextFrame();
     restorePdfViewportState(state);
@@ -3445,39 +3689,59 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   } else {
     currentPdfPage = null;
   }
-  const uniquePages = new Set(pagesToRender.length ? pagesToRender : pageList);
-  isFullPdfLoaded = lastPdfTotalPages > 0 && uniquePages.size === lastPdfTotalPages;
+  isFullPdfLoaded = false;
   updatePdfNavigationState();
-
-  const dpr   = window.devicePixelRatio || 1;
-  const scale = quality * dpr * effectiveZoom;
-
   const targetContainer = pdfPagesWrapper || pdfContainer;
+  currentPdfRenderQuality = quality;
+  const observer = ensurePdfPageObserver();
+  const basePages = sortedPages.length
+    ? sortedPages
+    : (Number.isFinite(currentPdfPage) ? [currentPdfPage] : []);
+  const normalizedPages = Array.from(new Set(basePages))
+    .map(num => Math.max(1, Math.min(num, lastPdfTotalPages || num)))
+    .sort((a, b) => a - b);
 
-  lastPdfRenderedPages = pagesToRender.slice();
-
-  for (const num of pagesToRender) {
-    const page     = await pdf.getPage(num);
-    const viewport = page.getViewport({ scale });
-    const canvas   = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.dataset.pageNumber = String(num);
-    canvas.style.width = `${viewport.width/(quality*dpr)}px`;
-    canvas.style.height = `${viewport.height/(quality*dpr)}px`;
-    canvas.style.maxWidth = '100%';
-    const wrapper = document.createElement('div');
-    wrapper.className = 'pdf-page-wrapper';
-    wrapper.dataset.pageNumber = String(num);
-    wrapper.style.width = canvas.style.width;
-    wrapper.style.maxWidth = '100%';
-    wrapper.appendChild(canvas);
-    const drawingLayer = createDrawingLayer(canvas, pdfName, num);
-    wrapper.appendChild(drawingLayer);
-    targetContainer.appendChild(wrapper);
-    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
-    restorePdfDrawingLayer(pdfName, num, drawingLayer);
+  if (!normalizedPages.length && lastPdfTotalPages > 0) {
+    normalizedPages.push(1);
   }
+
+  lastPdfRenderedPages = normalizedPages.slice();
+  syncPdfPageStates(normalizedPages, pdfName, targetContainer);
+
+  if (!normalizedPages.length) {
+    setPdfDrawingTool(pdfDrawingTool);
+    return true;
+  }
+
+  let initialPage = Number.isFinite(currentPdfPage) ? currentPdfPage : normalizedPages[0];
+  if (!normalizedPages.includes(initialPage)) {
+    initialPage = normalizedPages[0];
+    currentPdfPage = initialPage;
+    updatePdfNavigationState();
+  }
+
+  try {
+    await performPdfPageRender(initialPage);
+  } catch (err) {
+    console.error('Falha ao renderizar página do PDF', err);
+    alert('Não foi possível renderizar o PDF.');
+    clearPdfViewerContent();
+    return false;
+  }
+
+  if (!observer) {
+    for (const pageNumber of normalizedPages) {
+      if (pageNumber === initialPage) continue;
+      try {
+        await performPdfPageRender(pageNumber);
+      } catch (err) {
+        console.error('Falha ao renderizar página adicional do PDF', err);
+      }
+    }
+  } else if (Number.isFinite(initialPage)) {
+    prefetchAdjacentPdfPages(initialPage);
+  }
+
   setPdfDrawingTool(pdfDrawingTool);
   return true;
 }
