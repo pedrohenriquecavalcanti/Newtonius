@@ -488,9 +488,12 @@ button:hover { filter: brightness(1.2); }
   color: rgba(255, 255, 255, 0.92);
   transform: scale(1.05);
 }
-.pdf-tool-btn.active {
-  background: rgba(255, 255, 255, 0.32);
+.pdf-tool-btn.active,
+.pdf-tool-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.58);
   color: #111;
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.12), 0 0 0 2px rgba(255, 255, 255, 0.45);
+  transform: scale(1.05);
 }
 .pdf-tool-btn--close {
   margin-left: 6px;
@@ -499,15 +502,11 @@ button:hover { filter: brightness(1.2); }
 }
 .pdf-tool-btn--close:hover {
   background: rgba(255, 80, 80, 0.46);
-  color: #fff;
+  color: #ff4d4d;
 }
 .pdf-tool-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-}
-.pdf-tool-btn[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.32);
-  color: #111;
 }
 .pdf-page-nav {
   display: none;
