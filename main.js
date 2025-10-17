@@ -369,7 +369,9 @@ function getPdfCanvasState(canvas) {
       strokes: [],
       selectedStrokeIds: new Set(),
       nextId: 1,
-      backgroundImage: null
+      backgroundImage: null,
+      canvasWidth: Number.isFinite(canvas?.width) ? canvas.width : null,
+      canvasHeight: Number.isFinite(canvas?.height) ? canvas.height : null
     };
   }
   return canvas._pdfState;
@@ -440,14 +442,13 @@ function renderPdfCanvas(canvas) {
   ctx.restore();
 }
 
-function scalePdfDrawingState(state, scaleX, scaleY) {
+function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
   if (!state || (!Number.isFinite(scaleX) && !Number.isFinite(scaleY))) return;
   const sx = Number.isFinite(scaleX) ? scaleX : 1;
   const sy = Number.isFinite(scaleY) ? scaleY : 1;
-  if (Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) {
-    return;
-  }
-  if (Array.isArray(state.strokes)) {
+  const shouldScale = Math.abs(sx - 1) >= 0.001 || Math.abs(sy - 1) >= 0.001;
+
+  if (shouldScale && Array.isArray(state.strokes)) {
     state.strokes.forEach(stroke => {
       if (!stroke) return;
       if (Array.isArray(stroke.points)) {
@@ -466,12 +467,26 @@ function scalePdfDrawingState(state, scaleX, scaleY) {
       stroke.width = stroke.baseWidth;
     });
   }
+
+  if (Number.isFinite(newSize?.width)) {
+    state.canvasWidth = newSize.width;
+  } else if (shouldScale && Number.isFinite(state.canvasWidth)) {
+    state.canvasWidth *= sx;
+  }
+
+  if (Number.isFinite(newSize?.height)) {
+    state.canvasHeight = newSize.height;
+  } else if (shouldScale && Number.isFinite(state.canvasHeight)) {
+    state.canvasHeight *= sy;
+  }
 }
 
-function serializePdfStrokes(strokes) {
+function serializePdfStrokes(strokes, metadata = {}) {
   try {
+    const storedWidth = Number.isFinite(metadata?.width) ? metadata.width : null;
+    const storedHeight = Number.isFinite(metadata?.height) ? metadata.height : null;
     const payload = {
-      v: 1,
+      v: 2,
       strokes: (strokes || []).map((stroke, index) => {
         const width = Number.isFinite(stroke?.baseWidth)
           ? stroke.baseWidth
@@ -489,6 +504,12 @@ function serializePdfStrokes(strokes) {
         };
       })
     };
+    if (Number.isFinite(storedWidth)) {
+      payload.w = storedWidth;
+    }
+    if (Number.isFinite(storedHeight)) {
+      payload.h = storedHeight;
+    }
     return JSON.stringify(payload);
   } catch (err) {
     console.error('Falha ao serializar anotações do PDF', err);
@@ -497,11 +518,11 @@ function serializePdfStrokes(strokes) {
 }
 
 function deserializePdfStrokes(serialized) {
-  if (!serialized) return [];
+  if (!serialized) return { strokes: [], width: null, height: null };
   try {
     const data = JSON.parse(serialized);
     const list = Array.isArray(data?.strokes) ? data.strokes : [];
-    return list
+    const strokes = list
       .map((item, index) => {
         const rawPoints = Array.isArray(item?.pts) ? item.pts : [];
         const points = rawPoints
@@ -526,9 +547,20 @@ function deserializePdfStrokes(serialized) {
         };
       })
       .filter(stroke => Array.isArray(stroke.points) && stroke.points.length);
+    const storedWidth = Number.isFinite(data?.w)
+      ? data.w
+      : Number.isFinite(data?.width)
+        ? data.width
+        : null;
+    const storedHeight = Number.isFinite(data?.h)
+      ? data.h
+      : Number.isFinite(data?.height)
+        ? data.height
+        : null;
+    return { strokes, width: storedWidth, height: storedHeight };
   } catch (err) {
     console.error('Falha ao desserializar anotações do PDF', err);
-    return [];
+    return { strokes: [], width: null, height: null };
   }
 }
 
@@ -580,6 +612,7 @@ let currentPdfPage = null;
 let stylusTapHistory = [];
 const pdfDirtyLayers = new Set();
 let pdfStylusDrawingActive = false;
+let pdfPersistListenersAttached = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
@@ -2596,7 +2629,12 @@ function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
     const dataUrl = canvas.toDataURL('image/png');
     localStorage.setItem(key, dataUrl);
     if (state?.strokes?.length) {
-      const serialized = serializePdfStrokes(state.strokes);
+      state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
+      state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+      const serialized = serializePdfStrokes(state.strokes, {
+        width: state.canvasWidth,
+        height: state.canvasHeight
+      });
       if (serialized) {
         localStorage.setItem(strokeKey, serialized);
       }
@@ -2616,18 +2654,48 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
   if (state) {
     state.selectedStrokeIds.clear();
   }
+  const stored = localStorage.getItem(key);
   const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
   const serialized = localStorage.getItem(strokeKey);
   if (serialized && state) {
-    const strokes = deserializePdfStrokes(serialized);
+    const { strokes, width: storedWidth, height: storedHeight } = deserializePdfStrokes(serialized);
     state.strokes = strokes;
     state.backgroundImage = null;
     const maxId = strokes.reduce((max, stroke) => Math.max(max, Number(stroke.id) || 0), 0);
     state.nextId = Math.max(maxId + 1, state.nextId || 1);
+    if (Number.isFinite(storedWidth) && Number.isFinite(storedHeight) && storedWidth > 0 && storedHeight > 0) {
+      state.canvasWidth = storedWidth;
+      state.canvasHeight = storedHeight;
+      const scaleX = canvas.width / storedWidth;
+      const scaleY = canvas.height / storedHeight;
+      scalePdfDrawingState(state, scaleX, scaleY, {
+        width: canvas.width,
+        height: canvas.height
+      });
+    } else {
+      state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
+      state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+      if (stored) {
+        const fallbackImage = new Image();
+        fallbackImage.onload = () => {
+          const baseWidth = fallbackImage.naturalWidth || fallbackImage.width;
+          const baseHeight = fallbackImage.naturalHeight || fallbackImage.height;
+          if (!baseWidth || !baseHeight) return;
+          const sx = canvas.width / baseWidth;
+          const sy = canvas.height / baseHeight;
+          if (Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) return;
+          scalePdfDrawingState(state, sx, sy, {
+            width: canvas.width,
+            height: canvas.height
+          });
+          renderPdfCanvas(canvas);
+        };
+        fallbackImage.src = stored;
+      }
+    }
     renderPdfCanvas(canvas);
     return;
   }
-  const stored = localStorage.getItem(key);
   if (!stored) return;
   const image = new Image();
   image.onload = () => {
@@ -2717,6 +2785,19 @@ function markPdfLayerDirty(canvas) {
   if (!canvas) return;
   canvas.dataset.dirty = 'true';
   pdfDirtyLayers.add(canvas);
+}
+
+function ensurePdfPersistenceHandlers() {
+  if (pdfPersistListenersAttached) return;
+  const persist = () => persistCurrentPdfDrawings({ force: true });
+  window.addEventListener('beforeunload', persist);
+  window.addEventListener('pagehide', persist);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      persist();
+    }
+  });
+  pdfPersistListenersAttached = true;
 }
 
 function persistCurrentPdfDrawings({ force = false } = {}) {
@@ -3057,6 +3138,8 @@ function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
     state.selectedStrokeIds = new Set();
     state.nextId = 1;
     state.backgroundImage = null;
+    state.canvasWidth = drawingCanvas.width;
+    state.canvasHeight = drawingCanvas.height;
   }
   attachDrawingEvents(drawingCanvas, pdfName, pageNumber);
   applyPdfToolToLayer(drawingCanvas);
@@ -3256,7 +3339,10 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
         drawingLayer.style.width = '100%';
         drawingLayer.style.height = '100%';
         const stateRef = getPdfCanvasState(drawingLayer);
-        scalePdfDrawingState(stateRef, scaleX, scaleY);
+        scalePdfDrawingState(stateRef, scaleX, scaleY, {
+          width: canvas.width,
+          height: canvas.height
+        });
         renderPdfCanvas(drawingLayer);
         applyPdfToolToLayer(drawingLayer);
       }
@@ -3412,6 +3498,7 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   const desiredPage = sortedPages.length ? sortedPages[0] : null;
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
+  ensurePdfPersistenceHandlers();
   pdfContainer.style.display = "flex";
   setBodyScrollLocked(true);
   if (wasHidden) {
