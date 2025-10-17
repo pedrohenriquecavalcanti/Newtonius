@@ -98,7 +98,18 @@
       <button id="pdfEraserBtn" class="pdf-tool-btn" title="Borracha">
         <i class="fas fa-eraser"></i>
       </button>
-      <div id="pdfPageNav" class="pdf-page-nav" aria-live="polite">
+      <button
+        id="pdfPageMenuToggleBtn"
+        class="pdf-tool-btn"
+        title="Páginas"
+        aria-label="Abrir navegação de páginas"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls="pdfPageNav"
+      >
+        <i class="fas fa-plus"></i>
+      </button>
+      <div id="pdfPageNav" class="pdf-page-nav" aria-live="polite" aria-hidden="true">
         <button id="pdfPrevPageBtn" class="pdf-tool-btn" title="Página anterior" aria-label="Página anterior">
           <i class="fas fa-chevron-left"></i>
         </button>

@@ -445,12 +445,12 @@ button:hover { filter: brightness(1.2); }
   margin: 0 auto;
   width: fit-content;
   max-width: min(360px, calc(100% - 24px));
-  background: rgba(18, 18, 18, 0.32);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 18, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   padding: 4px 10px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   z-index: 1500;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -474,20 +474,20 @@ button:hover { filter: brightness(1.2); }
   font-size: 0.85rem;
 }
 .pdf-tool-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   transform: scale(1.05);
 }
 .pdf-tool-btn.active {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   color: #111;
 }
 .pdf-tool-btn--close {
   margin-left: 6px;
-  background: rgba(255, 80, 80, 0.22);
+  background: rgba(255, 80, 80, 0.18);
   color: #ffecec;
 }
 .pdf-tool-btn--close:hover {
-  background: rgba(255, 80, 80, 0.45);
+  background: rgba(255, 80, 80, 0.4);
   color: #fff;
 }
 .pdf-tool-btn:disabled {
@@ -495,17 +495,20 @@ button:hover { filter: brightness(1.2); }
   cursor: not-allowed;
 }
 .pdf-tool-btn[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   color: #111;
 }
 .pdf-page-nav {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 4px;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: #fff;
+}
+.pdf-page-nav.open {
+  display: flex;
 }
 .pdf-page-indicator {
   min-width: 46px;
