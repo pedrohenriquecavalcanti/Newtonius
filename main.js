@@ -2250,6 +2250,14 @@ function setPdfPageMenuOpen(open) {
     pdfPageMenuToggleBtn.setAttribute('aria-expanded', String(pdfPageMenuOpen));
     pdfPageMenuToggleBtn.setAttribute('aria-label', 'Navegação de páginas');
     pdfPageMenuToggleBtn.title = 'Páginas';
+    pdfPageMenuToggleBtn.classList.toggle('pdf-tool-btn--hidden', pdfPageMenuOpen);
+    if (pdfPageMenuOpen) {
+      pdfPageMenuToggleBtn.setAttribute('tabindex', '-1');
+      pdfPageMenuToggleBtn.setAttribute('aria-hidden', 'true');
+    } else {
+      pdfPageMenuToggleBtn.removeAttribute('tabindex');
+      pdfPageMenuToggleBtn.setAttribute('aria-hidden', 'false');
+    }
     const icon = pdfPageMenuToggleBtn.querySelector('i');
     if (icon) {
       icon.classList.add('fa-plus');
@@ -2771,10 +2779,12 @@ async function openPdf(pdfName, pages, quality=2, zoom=1.75) {
   if (wasHidden) {
     setPdfIpadMode(true, { forcePen: true });
     pdfContainer.scrollTop = 0;
+    setPdfPageMenuOpen(false);
+  } else {
+    setPdfPageMenuOpen(pdfPageMenuOpen);
   }
   persistCurrentPdfDrawings();
   clearPdfViewerContent();
-  setPdfPageMenuOpen(false);
 
   if (!pdfKeyListenerAttached) {
     document.addEventListener('keydown', handlePdfKeydown);
