@@ -236,6 +236,8 @@ const DISCIPLINES_BY_MODE = {
   mat: ['Matemática']
 };
 
+const NAT_REVIEW_DISCIPLINES = DISCIPLINES_BY_MODE.nat || [];
+
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
@@ -279,9 +281,11 @@ const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
+const pickerReviewDisc = document.getElementById("pickerReviewDisc");
 const pickerSub     = document.getElementById("pickerSub");
 const pickerExamMode= document.getElementById("pickerExamMode");
 const pickerExam    = document.getElementById("pickerExam");
@@ -1200,6 +1204,33 @@ importBtn.onclick = () => {
   importFile.click();
 };
 
+if (clearManuscriptsBtn) {
+  clearManuscriptsBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    const confirmed = confirm(
+      'Deseja apagar todos os manuscritos salvos nos PDFs? Essa ação não pode ser desfeita.'
+    );
+    if (!confirmed) return;
+
+    try {
+      pdfDirtyLayers.clear();
+    } catch (err) {
+      console.warn('Falha ao limpar a fila de camadas do PDF antes da remoção.', err);
+    }
+
+    const pagesCleared = clearPdfDrawings();
+    if (pagesCleared === null) {
+      alert('Não foi possível limpar os manuscritos. Verifique o console para mais detalhes.');
+      return;
+    }
+    if (pagesCleared === 0) {
+      alert('Nenhum manuscrito encontrado.');
+    } else {
+      alert(`${pagesCleared} página(s) com manuscritos foram apagadas.`);
+    }
+  };
+}
+
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {
     settingsMenu.style.display = "none";
@@ -1280,7 +1311,9 @@ toggleD1Btn.onclick = () => {
 
 function loadTrail(dayStr){
   const raw = localStorage.getItem(`trail_${dayStr}`);
-  return raw ? JSON.parse(raw) : { novo: [] };
+  const data = raw ? JSON.parse(raw) : {};
+  data.novo ||= [];
+  return data;
 }
 function saveTrail(dayStr,data){
   localStorage.setItem(`trail_${dayStr}`, JSON.stringify(data));
@@ -1364,11 +1397,13 @@ function countMicroProgress(entry){
 
 function openPicker(callback){
   pickerDisc.innerHTML = '';
+  pickerReviewDisc.innerHTML = '';
   pickerSub.innerHTML  = '';
   pickerExamMode.innerHTML='';
   pickerExam.innerHTML='';
   pickerExamMode.style.display='none';
   pickerExam.style.display='none';
+  pickerAdd.disabled = false;
   for(const d of Object.keys(SUBJECT_NAMES)){
     const opt = document.createElement('option');
     opt.value = d;
@@ -1379,18 +1414,30 @@ function openPicker(callback){
   optExam.value='__exams__';
   optExam.textContent='Provas e Simulados';
   pickerDisc.appendChild(optExam);
+  const optReview=document.createElement('option');
+  optReview.value='__review__';
+  optReview.textContent='Revisão';
+  pickerDisc.appendChild(optReview);
   const optComment=document.createElement('option');
   optComment.value='__comment__';
   optComment.textContent='Comentário';
   pickerDisc.appendChild(optComment);
   pickerDisc.onchange = () => {
-    if(pickerDisc.value==='__comment__'){
+    const selected = pickerDisc.value;
+    const hideReviewSelectors = () => {
+      pickerReviewDisc.style.display = 'none';
+      pickerReviewDisc.onchange = null;
+    };
+
+    if(selected==='__comment__'){
+      hideReviewSelectors();
       pickerSub.style.display='none';
       pickerComment.style.display='inline-block';
       pickerMicro.style.display='none';
       pickerExamMode.style.display='none';
       pickerExam.style.display='none';
-    }else if(pickerDisc.value==='__exams__'){
+    }else if(selected==='__exams__'){
+      hideReviewSelectors();
       pickerSub.style.display='none';
       pickerComment.style.display='none';
       pickerMicro.style.display='none';
@@ -1413,7 +1460,49 @@ function openPicker(callback){
       };
       pickerExamMode.onchange=populateExam;
       populateExam();
+    }else if(selected==='__review__'){
+      pickerComment.style.display='none';
+      pickerMicro.style.display='none';
+      pickerExamMode.style.display='none';
+      pickerExam.style.display='none';
+      pickerReviewDisc.style.display='';
+      pickerSub.style.display='';
+      pickerReviewDisc.innerHTML='';
+      NAT_REVIEW_DISCIPLINES.forEach(disc=>{
+        const opt=document.createElement('option');
+        opt.value=disc;
+        opt.textContent=disc;
+        pickerReviewDisc.appendChild(opt);
+      });
+      if(!pickerReviewDisc.options.length){
+        pickerSub.innerHTML='';
+        pickerAdd.disabled = true;
+        return;
+      }
+      pickerAdd.disabled = false;
+      const populateReviewSubs = ()=>{
+        const disc = pickerReviewDisc.value;
+        pickerSub.innerHTML='';
+        if(!disc){
+          pickerAdd.disabled = true;
+          return;
+        }
+        pickerAdd.disabled = false;
+        const optAll=document.createElement('option');
+        optAll.value=ALL_SUB;
+        optAll.textContent='Disciplina Inteira';
+        pickerSub.appendChild(optAll);
+        (SUBJECT_NAMES[disc]||[]).forEach((n,i)=>{
+          const o=document.createElement('option');
+          o.value=String(i+1).padStart(2,'0');
+          o.textContent=n;
+          pickerSub.appendChild(o);
+        });
+      };
+      pickerReviewDisc.onchange = populateReviewSubs;
+      populateReviewSubs();
     }else{
+      hideReviewSelectors();
       pickerSub.style.display='';
       pickerComment.style.display='none';
       pickerSub.innerHTML = '';
@@ -1421,14 +1510,14 @@ function openPicker(callback){
       optAll.value=ALL_SUB;
       optAll.textContent='Disciplina Inteira';
       pickerSub.appendChild(optAll);
-      SUBJECT_NAMES[pickerDisc.value].forEach((n,i)=>{
+      SUBJECT_NAMES[selected].forEach((n,i)=>{
         const o=document.createElement('option');
         o.value=String(i+1).padStart(2,'0');
         o.textContent=n;
         pickerSub.appendChild(o);
       });
       pickerMicro.style.display =
-        pickerDisc.value==='Matemática'? 'inline-block' : 'none';
+        selected==='Matemática'? 'inline-block' : 'none';
       pickerExamMode.style.display='none';
       pickerExam.style.display='none';
     }
@@ -1441,6 +1530,13 @@ function openPicker(callback){
       pickerComment.value='';
     }else if(pickerDisc.value==='__exams__'){
       callback({exam:pickerExam.value,mode:pickerExamMode.value});
+    }else if(pickerDisc.value==='__review__'){
+      const reviewDisc = pickerReviewDisc.value;
+      if(!reviewDisc){
+        alert('Selecione uma disciplina para revisar.');
+        return;
+      }
+      callback({review:true, disc: reviewDisc, sub: pickerSub.value});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -1537,6 +1633,7 @@ function renderTrailDay(day,expand){
     };
     wrap.appendChild(btnAdd);
     sec.appendChild(wrap);
+    data[key] ||= [];
     data[key].forEach((s,idx)=>{
       const item=document.createElement('div');
       item.className='trail-item';
@@ -1581,11 +1678,43 @@ function renderTrailDay(day,expand){
         return;
       }
 
-        if(s.exam){
-          const subj=document.createElement('button');
-          subj.className='trail-subject';
-          const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
-          const area=areaTitles[s.mode]||'';
+      if(s.review){
+        const subj=document.createElement('button');
+        subj.className='trail-subject trail-review';
+        const hasAll = s.sub === ALL_SUB;
+        const labelParts = ['Revisão', s.disc];
+        if(!hasAll){
+          labelParts.push(getFriendlyName(s.disc,s.sub));
+        }
+        subj.textContent=labelParts.join(' • ');
+        subj.onclick=()=>{
+          trailReturn=dayStr;
+          trailReturnSub=false;
+          showNatReview({disc:s.disc, sub:s.sub});
+        };
+        const count=document.createElement('span');
+        count.className='trail-count';
+        count.textContent=countNatReviewItems({disc:s.disc, sub:s.sub}).toString();
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(count);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
+
+      if(s.exam){
+        const subj=document.createElement('button');
+        subj.className='trail-subject';
+        const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+        const area=areaTitles[s.mode]||'';
           subj.textContent=area?`${s.exam}: ${area}`:s.exam;
           const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
           if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
@@ -1791,6 +1920,53 @@ function renderExamSummary(){
   container.appendChild(table);
   app.appendChild(container);
 }
+
+function collectNatReviewItems(filter=null){
+  const natData = examsDataByMode.nat || {};
+  const examOrder = examOrderNat || [];
+  const visited = new Set();
+  const allowed = new Set(NAT_REVIEW_DISCIPLINES);
+  const matchesFilter = (disc, sub) => {
+    if(!allowed.has(disc)) return false;
+    if(filter?.disc && disc !== filter.disc) return false;
+    if(filter?.sub && filter.sub !== ALL_SUB && sub !== filter.sub) return false;
+    return true;
+  };
+  const combined = [];
+  const pushQuestionsFromExam = exam => {
+    const questions = natData[exam] || [];
+    const upper = exam.toUpperCase();
+    const isEnem = upper.includes('ENEM');
+    const isSas  = upper.includes('SAS');
+    if(!isEnem && !isSas) return;
+    questions.forEach(({disc,sub,q})=>{
+      if(!matchesFilter(disc,sub)) return;
+      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      if((isEnem || isSas) && state === 2){
+        combined.push({exam,disc,sub,q,type:'wrong'});
+      }
+      if(isEnem && state === 0){
+        combined.push({exam,disc,sub,q,type:'pending'});
+      }
+    });
+    visited.add(exam);
+  };
+  examOrder.forEach(exam => pushQuestionsFromExam(exam));
+  Object.keys(natData).forEach(exam => {
+    if(!visited.has(exam)) pushQuestionsFromExam(exam);
+  });
+  return combined;
+}
+
+function countNatReviewItems(filter=null){
+  const combined = collectNatReviewItems(filter);
+  return combined.reduce((acc,item)=>{
+    const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
+    if(st === 2) return acc + 1;
+    if(item.type !== 'wrong' && st === 0) return acc + 1;
+    return acc;
+  },0);
+}
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
 /* ---------------- PROVAS E SIMULADOS ---------------- */
 function showExamMenu(){
@@ -1926,7 +2102,7 @@ function showExam(exam){
   });
 }
 
-function showNatReview(){
+function showNatReview(filter=null){
   currentDisc = null;
   currentSub = null;
   currentExam = null;
@@ -1934,7 +2110,10 @@ function showNatReview(){
   currentExamMode = 'nat';
   leaveHome();
   toggleSettingsVisibility(false);
-  updateHeader(true, 'Revisão');
+  const headerLabel = filter
+    ? `Revisão • ${filter.disc}${filter.sub && filter.sub !== ALL_SUB ? ' • '+getFriendlyName(filter.disc, filter.sub) : ''}`
+    : 'Revisão';
+  updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
   summaryBtn.onclick = null;
   orderHint.style.display = 'none';
@@ -1947,37 +2126,13 @@ function showNatReview(){
   clear();
   window.scrollTo(0,0);
 
-  const natDiscs = new Set(['Biologia','Química','Física']);
-  const natData = examsDataByMode.nat || {};
-  const combined = [];
-  const examOrder = examOrderNat || [];
-  const visited = new Set();
-  const pushQuestionsFromExam = exam => {
-    const questions = natData[exam] || [];
-    const upper = exam.toUpperCase();
-    const isEnem = upper.includes('ENEM');
-    const isSas  = upper.includes('SAS');
-    if(!isEnem && !isSas) return;
-    questions.forEach(({disc,sub,q})=>{
-      if(!natDiscs.has(disc)) return;
-      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
-      if((isEnem || isSas) && state === 2){
-        combined.push({exam,disc,sub,q,type:'wrong'});
-      }
-      if(isEnem && state === 0){
-        combined.push({exam,disc,sub,q,type:'pending'});
-      }
-    });
-    visited.add(exam);
-  };
-  examOrder.forEach(exam => pushQuestionsFromExam(exam));
-  Object.keys(natData).forEach(exam => {
-    if(!visited.has(exam)) pushQuestionsFromExam(exam);
-  });
+  const combined = collectNatReviewItems(filter);
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
-  emptyMsg.textContent = 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
+  emptyMsg.textContent = filter
+    ? 'Nenhuma questão para revisar no filtro escolhido.'
+    : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
   const ensureEmptyState = ()=>{
     const hasRow = !!app.querySelector('.question-row');
@@ -2776,6 +2931,28 @@ function cleanupStalePdfDrawings() {
     orphanStrokeKeys.forEach(key => localStorage.removeItem(key));
   } catch (err) {
     console.error('Falha ao limpar anotações antigas do PDF', err);
+  }
+}
+
+function clearPdfDrawings() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const keysToRemove = [];
+    let pages = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(PDF_DRAW_PREFIX)) continue;
+      keysToRemove.push(key);
+      if (!key.endsWith(PDF_DRAW_STROKES_SUFFIX) && key !== PDF_DRAW_LAST_CLEAN_KEY) {
+        pages++;
+      }
+    }
+    if (!keysToRemove.length) return 0;
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    return pages;
+  } catch (err) {
+    console.error('Falha ao remover manuscritos dos PDFs', err);
+    return null;
   }
 }
 

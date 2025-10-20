@@ -1021,6 +1021,7 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.geografia-sociologia { background: var(--c-geo-soc); }
 .trail-subject.historia-filosofia   { background: var(--c-his-fil); }
 .trail-subject.redacao              { background: var(--c-reda); }
+.trail-subject.trail-review         { background: #9fe3b1; color: #0a3a1f; }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
