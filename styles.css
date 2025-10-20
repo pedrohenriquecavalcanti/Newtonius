@@ -836,40 +836,6 @@ button:hover { filter: brightness(1.2); }
   opacity:.45;
   cursor:default;
 }
-/* === Trilha Estratégica (v2) === */
-.trail-actions {
-  width: 100%;
-  max-width: 820px;
-  margin: 8px auto 0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.trail-review-btn {
-  all: unset;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border-radius: 6px;
-  background: #3fa34d;
-  color: #0e1f0e;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.trail-review-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-.trail-review-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
 .day-btn {
   width: 100%;
   max-width: 820px;
@@ -1004,6 +970,35 @@ button:hover { filter: brightness(1.2); }
 
 .trail-section.dragover {
   background: #222;
+}
+
+.trail-item-review {
+  align-items: stretch;
+}
+
+.trail-subject.trail-review-shortcut {
+  background: linear-gradient(135deg, #c1f6c4, #9ae69f);
+  color: #0e2911;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.trail-subject.trail-review-shortcut::before {
+  content: '\270D';
+}
+
+.trail-item-review .trail-remove {
+  margin-left: 12px;
+}
+
+.trail-subject.trail-review-shortcut:hover {
+  filter: brightness(1.05);
+}
+
+.trail-subject.trail-review-shortcut:active {
+  filter: brightness(0.97);
 }
 
 .trail-subject {

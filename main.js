@@ -278,7 +278,6 @@ const exportBtn     = document.getElementById("exportBtn");
 const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
-const natReviewBtn  = document.getElementById("natReviewBtn");
 const clearPdfNotesBtn = document.getElementById("clearPdfNotesBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
@@ -308,7 +307,7 @@ let currentExam  = null; // nome do exame em exibicao
 let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
-let reviewReturnToTrail = false; // volta à Trilha após abrir Revisão a partir dela
+let reviewReturnToTrail = null;  // guarda dia para voltar à Trilha após Revisão
 
 // Metadados do PDF aberto no modal
 let lastPdfName = null;
@@ -1319,12 +1318,6 @@ examsBtn.onclick = () => {
   showExamMenu();
 };
 
-natReviewBtn.onclick = () => {
-  settingsMenu.style.display = 'none';
-  reviewReturnToTrail = false;
-  showNatReview();
-};
-
 function updateD1Btn(){
   toggleD1Btn.textContent = d1Enabled ? 'Esconder - D1' : 'Exibir - D1';
 }
@@ -1435,6 +1428,10 @@ function openPicker(callback){
     opt.textContent = d;
     pickerDisc.appendChild(opt);
   }
+  const optReview=document.createElement('option');
+  optReview.value='__review__';
+  optReview.textContent='Revisão';
+  pickerDisc.appendChild(optReview);
   const optExam=document.createElement('option');
   optExam.value='__exams__';
   optExam.textContent='Provas e Simulados';
@@ -1444,7 +1441,13 @@ function openPicker(callback){
   optComment.textContent='Comentário';
   pickerDisc.appendChild(optComment);
   pickerDisc.onchange = () => {
-    if(pickerDisc.value==='__comment__'){
+    if(pickerDisc.value==='__review__'){
+      pickerSub.style.display='none';
+      pickerComment.style.display='none';
+      pickerMicro.style.display='none';
+      pickerExamMode.style.display='none';
+      pickerExam.style.display='none';
+    }else if(pickerDisc.value==='__comment__'){
       pickerSub.style.display='none';
       pickerComment.style.display='inline-block';
       pickerMicro.style.display='none';
@@ -1495,7 +1498,9 @@ function openPicker(callback){
   };
   pickerDisc.onchange();
   pickerAdd.onclick = () => {
-    if(pickerDisc.value==='__comment__'){
+    if(pickerDisc.value==='__review__'){
+      callback({review:true});
+    }else if(pickerDisc.value==='__comment__'){
       const txt=pickerComment.value.trim().replace(/-->/g,'→');
       if(txt) callback({comment:txt});
       pickerComment.value='';
@@ -1641,28 +1646,51 @@ function renderTrailDay(day,expand){
         return;
       }
 
-        if(s.exam){
-          const subj=document.createElement('button');
-          subj.className='trail-subject';
-          const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
-          const area=areaTitles[s.mode]||'';
-          subj.textContent=area?`${s.exam}: ${area}`:s.exam;
-          const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
-          if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
-          subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
-          const rm=document.createElement('button');
-          rm.className='trail-remove';
-          rm.textContent='\u00D7';
-          rm.onclick=()=>{
-            data[key].splice(idx,1);
-            saveTrail(dayStr,data);
-            showTrail(dayStr, true);
-          };
-          item.appendChild(subj);
-          item.appendChild(rm);
-          sec.appendChild(item);
-          return;
-        }
+      if(s.review){
+        item.classList.add('trail-item-review');
+        const subj=document.createElement('button');
+        subj.className='trail-subject trail-review-shortcut';
+        subj.textContent='Revisão';
+        subj.onclick=()=>{
+          reviewReturnToTrail = dayStr;
+          showNatReview();
+        };
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
+
+      if(s.exam){
+        const subj=document.createElement('button');
+        subj.className='trail-subject';
+        const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+        const area=areaTitles[s.mode]||'';
+        subj.textContent=area?`${s.exam}: ${area}`:s.exam;
+        const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
+        if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
+        subj.onclick=()=>{ trailReturn=dayStr; currentExamMode=s.mode; showExam(s.exam); };
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
 
       const isMicro = s.sub==='micro';
       const isDisc  = s.sub===ALL_SUB;
@@ -1727,7 +1755,7 @@ function showTrail(expandDay, preserveScroll=false){
   currentDisc=currentSub=null;
   trailReturn=null;
   trailReturnSub=false;
-  reviewReturnToTrail = false;
+  reviewReturnToTrail = null;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Trilha Estratégica');
@@ -1738,18 +1766,6 @@ function showTrail(expandDay, preserveScroll=false){
   const prevY = preserveScroll ? window.scrollY : 0;
   clear();
   if(!preserveScroll) window.scrollTo(0,0);
-  const trailActions = document.createElement('div');
-  trailActions.className = 'trail-actions';
-  const reviewBtn = document.createElement('button');
-  reviewBtn.type = 'button';
-  reviewBtn.className = 'trail-review-btn';
-  reviewBtn.textContent = 'Revisão';
-  reviewBtn.onclick = () => {
-    reviewReturnToTrail = true;
-    showNatReview();
-  };
-  trailActions.appendChild(reviewBtn);
-  app.appendChild(trailActions);
   if(expandDay) openTrailDays.add(expandDay);
   const agendaOpen = openTrailDays.has(AGENDA_DAY);
   renderTrailDay(AGENDA_DAY, agendaOpen);
@@ -4113,8 +4129,9 @@ backBtn.onclick = () => {
     return;
   }
   if(reviewReturnToTrail){
-    reviewReturnToTrail = false;
-    showTrail();
+    const dayToExpand = reviewReturnToTrail;
+    reviewReturnToTrail = null;
+    showTrail(dayToExpand);
     return;
   }
   if(trailReturn){
