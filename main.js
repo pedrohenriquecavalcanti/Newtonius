@@ -1471,7 +1471,7 @@ function openPicker(callback){
       pickerReviewDisc.innerHTML='';
       const optAllDisc=document.createElement('option');
       optAllDisc.value=REVIEW_ALL_DISC;
-      optAllDisc.textContent='Tudo';
+      optAllDisc.textContent='Revisão: Natureza';
       pickerReviewDisc.appendChild(optAllDisc);
       NAT_REVIEW_DISCIPLINES.forEach(disc=>{
         const opt=document.createElement('option');
@@ -1498,7 +1498,7 @@ function openPicker(callback){
         if(isAll){
           const opt=document.createElement('option');
           opt.value=ALL_SUB;
-          opt.textContent='Tudo';
+          opt.textContent='Revisão: Natureza';
           pickerSub.appendChild(opt);
           pickerSub.value=ALL_SUB;
           return;
@@ -1700,7 +1700,7 @@ function renderTrailDay(day,expand){
         const hasAll = isAllDisc || s.sub === ALL_SUB;
         const labelParts = ['Revisão'];
         if(isAllDisc){
-          labelParts.push('Tudo');
+          labelParts.push('Natureza');
         }else{
           labelParts.push(s.disc);
           if(!hasAll){
@@ -2141,7 +2141,7 @@ function showNatReview(filter=null){
   toggleSettingsVisibility(false);
   let headerLabel = 'Revisão';
   if(isAll){
-    headerLabel = 'Revisão: Tudo';
+    headerLabel = 'Revisão: Natureza';
   }else if(filter){
     headerLabel = `Revisão: ${filter.disc}`;
     if(filter.sub && filter.sub !== ALL_SUB){
