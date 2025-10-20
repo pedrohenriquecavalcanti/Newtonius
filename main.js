@@ -279,6 +279,7 @@ const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const clearPdfNotesBtn = document.getElementById("clearPdfNotesBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
@@ -307,6 +308,7 @@ let currentExam  = null; // nome do exame em exibicao
 let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
+let reviewReturnToTrail = false; // volta à Trilha após abrir Revisão a partir dela
 
 // Metadados do PDF aberto no modal
 let lastPdfName = null;
@@ -1200,6 +1202,63 @@ importBtn.onclick = () => {
   importFile.click();
 };
 
+if (clearPdfNotesBtn) {
+  clearPdfNotesBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    const confirmed = confirm(
+      'Deseja limpar os manuscritos?\nTodas as anotações feitas nos PDFs serão removidas permanentemente.'
+    );
+    if (!confirmed) return;
+
+    const originalText = clearPdfNotesBtn.textContent;
+    clearPdfNotesBtn.disabled = true;
+    clearPdfNotesBtn.textContent = 'Limpando...';
+
+    try {
+      let removed = 0;
+      if (typeof localStorage !== 'undefined') {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(PDF_DRAW_PREFIX)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((key) => {
+          localStorage.removeItem(key);
+          removed += 1;
+        });
+      }
+
+      pdfDirtyLayers.clear();
+      getPdfDrawingLayers().forEach((layer) => {
+        if (!(layer instanceof HTMLCanvasElement)) return;
+        const ctx = layer.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, layer.width, layer.height);
+        }
+        const state = getPdfCanvasState(layer);
+        if (state) {
+          state.strokes = [];
+          if (state.selectedStrokeIds?.clear) state.selectedStrokeIds.clear();
+          state.nextId = 1;
+          state.backgroundImage = null;
+        }
+        layer.dataset.dirty = 'false';
+        renderPdfCanvas(layer);
+      });
+
+      alert(removed ? 'Manuscritos limpos com sucesso!' : 'Nenhum manuscrito foi encontrado.');
+    } catch (err) {
+      console.error('Erro ao limpar manuscritos', err);
+      alert('Não foi possível limpar os manuscritos. Tente novamente.');
+    } finally {
+      clearPdfNotesBtn.disabled = false;
+      clearPdfNotesBtn.textContent = originalText;
+    }
+  };
+}
+
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {
     settingsMenu.style.display = "none";
@@ -1262,6 +1321,7 @@ examsBtn.onclick = () => {
 
 natReviewBtn.onclick = () => {
   settingsMenu.style.display = 'none';
+  reviewReturnToTrail = false;
   showNatReview();
 };
 
@@ -1667,6 +1727,7 @@ function showTrail(expandDay, preserveScroll=false){
   currentDisc=currentSub=null;
   trailReturn=null;
   trailReturnSub=false;
+  reviewReturnToTrail = false;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Trilha Estratégica');
@@ -1677,6 +1738,18 @@ function showTrail(expandDay, preserveScroll=false){
   const prevY = preserveScroll ? window.scrollY : 0;
   clear();
   if(!preserveScroll) window.scrollTo(0,0);
+  const trailActions = document.createElement('div');
+  trailActions.className = 'trail-actions';
+  const reviewBtn = document.createElement('button');
+  reviewBtn.type = 'button';
+  reviewBtn.className = 'trail-review-btn';
+  reviewBtn.textContent = 'Revisão';
+  reviewBtn.onclick = () => {
+    reviewReturnToTrail = true;
+    showNatReview();
+  };
+  trailActions.appendChild(reviewBtn);
+  app.appendChild(trailActions);
   if(expandDay) openTrailDays.add(expandDay);
   const agendaOpen = openTrailDays.has(AGENDA_DAY);
   renderTrailDay(AGENDA_DAY, agendaOpen);
@@ -4037,6 +4110,11 @@ backBtn.onclick = () => {
       examListOpen=false;
       showMenu();
     }
+    return;
+  }
+  if(reviewReturnToTrail){
+    reviewReturnToTrail = false;
+    showTrail();
     return;
   }
   if(trailReturn){
