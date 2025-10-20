@@ -237,6 +237,7 @@ const DISCIPLINES_BY_MODE = {
 };
 
 const NAT_REVIEW_DISCIPLINES = DISCIPLINES_BY_MODE.nat || [];
+const REVIEW_ALL_DISC = '__review_all__';
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
@@ -1468,6 +1469,10 @@ function openPicker(callback){
       pickerReviewDisc.style.display='';
       pickerSub.style.display='';
       pickerReviewDisc.innerHTML='';
+      const optAllDisc=document.createElement('option');
+      optAllDisc.value=REVIEW_ALL_DISC;
+      optAllDisc.textContent='Tudo';
+      pickerReviewDisc.appendChild(optAllDisc);
       NAT_REVIEW_DISCIPLINES.forEach(disc=>{
         const opt=document.createElement('option');
         opt.value=disc;
@@ -1488,6 +1493,16 @@ function openPicker(callback){
           return;
         }
         pickerAdd.disabled = false;
+        const isAll = disc === REVIEW_ALL_DISC;
+        pickerSub.style.display = isAll ? 'none' : '';
+        if(isAll){
+          const opt=document.createElement('option');
+          opt.value=ALL_SUB;
+          opt.textContent='Tudo';
+          pickerSub.appendChild(opt);
+          pickerSub.value=ALL_SUB;
+          return;
+        }
         const optAll=document.createElement('option');
         optAll.value=ALL_SUB;
         optAll.textContent='Disciplina Inteira';
@@ -1681,20 +1696,30 @@ function renderTrailDay(day,expand){
       if(s.review){
         const subj=document.createElement('button');
         subj.className='trail-subject trail-review';
-        const hasAll = s.sub === ALL_SUB;
-        const labelParts = ['Revisão', s.disc];
-        if(!hasAll){
-          labelParts.push(getFriendlyName(s.disc,s.sub));
+        const isAllDisc = s.disc === REVIEW_ALL_DISC;
+        const hasAll = isAllDisc || s.sub === ALL_SUB;
+        const labelParts = ['Revisão'];
+        if(isAllDisc){
+          labelParts.push('Tudo');
+        }else{
+          labelParts.push(s.disc);
+          if(!hasAll){
+            labelParts.push(getFriendlyName(s.disc,s.sub));
+          }
         }
-        subj.textContent=labelParts.join(' • ');
+        subj.textContent=labelParts.join(': ');
         subj.onclick=()=>{
           trailReturn=dayStr;
           trailReturnSub=false;
-          showNatReview({disc:s.disc, sub:s.sub});
+          const filter = isAllDisc
+            ? {disc:REVIEW_ALL_DISC}
+            : {disc:s.disc, sub:s.sub};
+          showNatReview(filter);
         };
         const count=document.createElement('span');
         count.className='trail-count';
-        count.textContent=countNatReviewItems({disc:s.disc, sub:s.sub}).toString();
+        const countFilter = isAllDisc ? null : {disc:s.disc, sub:s.sub};
+        count.textContent=countNatReviewItems(countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
         rm.textContent='\u00D7';
@@ -1922,14 +1947,15 @@ function renderExamSummary(){
 }
 
 function collectNatReviewItems(filter=null){
+  const normalizedFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
   const natData = examsDataByMode.nat || {};
   const examOrder = examOrderNat || [];
   const visited = new Set();
   const allowed = new Set(NAT_REVIEW_DISCIPLINES);
   const matchesFilter = (disc, sub) => {
     if(!allowed.has(disc)) return false;
-    if(filter?.disc && disc !== filter.disc) return false;
-    if(filter?.sub && filter.sub !== ALL_SUB && sub !== filter.sub) return false;
+    if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
+    if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
     return true;
   };
   const combined = [];
@@ -1959,7 +1985,8 @@ function collectNatReviewItems(filter=null){
 }
 
 function countNatReviewItems(filter=null){
-  const combined = collectNatReviewItems(filter);
+  const effectiveFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
+  const combined = collectNatReviewItems(effectiveFilter);
   return combined.reduce((acc,item)=>{
     const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
     if(st === 2) return acc + 1;
@@ -2103,6 +2130,8 @@ function showExam(exam){
 }
 
 function showNatReview(filter=null){
+  const isAll = filter?.disc === REVIEW_ALL_DISC;
+  const effectiveFilter = isAll ? null : filter;
   currentDisc = null;
   currentSub = null;
   currentExam = null;
@@ -2110,9 +2139,15 @@ function showNatReview(filter=null){
   currentExamMode = 'nat';
   leaveHome();
   toggleSettingsVisibility(false);
-  const headerLabel = filter
-    ? `Revisão • ${filter.disc}${filter.sub && filter.sub !== ALL_SUB ? ' • '+getFriendlyName(filter.disc, filter.sub) : ''}`
-    : 'Revisão';
+  let headerLabel = 'Revisão';
+  if(isAll){
+    headerLabel = 'Revisão: Tudo';
+  }else if(filter){
+    headerLabel = `Revisão: ${filter.disc}`;
+    if(filter.sub && filter.sub !== ALL_SUB){
+      headerLabel += `: ${getFriendlyName(filter.disc, filter.sub)}`;
+    }
+  }
   updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
   summaryBtn.onclick = null;
@@ -2126,11 +2161,11 @@ function showNatReview(filter=null){
   clear();
   window.scrollTo(0,0);
 
-  const combined = collectNatReviewItems(filter);
+  const combined = collectNatReviewItems(effectiveFilter);
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
-  emptyMsg.textContent = filter
+  emptyMsg.textContent = effectiveFilter
     ? 'Nenhuma questão para revisar no filtro escolhido.'
     : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
