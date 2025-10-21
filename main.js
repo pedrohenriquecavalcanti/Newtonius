@@ -335,6 +335,7 @@ const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
+const PDF_AUTOSAVE_DELAY = 1200;
 const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
 const STYLUS_TAP_DISTANCE = 36;
@@ -348,6 +349,7 @@ let lastPdfRenderedPages = [];
 let pdfPinchState = null;
 let currentPdfDocument = null;
 let currentPdfDocumentName = null;
+let pdfAutosaveTimeout = null;
 
 function smoothPdfPoint(target, previous, rawPrevious) {
   if (!target) return previous || rawPrevious || null;
@@ -1984,15 +1986,39 @@ function collectNatReviewItems(filter=null){
   return combined;
 }
 
+function computeNatReviewSnapshot(items){
+  if (typeof localStorage === 'undefined') {
+    return { wrongCount: 0, pendingCount: 0, totalCount: 0, reviewedCount: 0 };
+  }
+  let wrongCount = 0;
+  let pendingCount = 0;
+  let reviewedCount = 0;
+  items.forEach(item=>{
+    const key = qKey(item.disc,item.sub,item.q.label);
+    const state = +localStorage.getItem(key) || 0;
+    const isWrongItem = item.type === 'wrong';
+    const qualifies = isWrongItem ? state === 2 : state === 0;
+    if(!qualifies) return;
+    if(isWrongItem){
+      wrongCount += 1;
+    }else{
+      pendingCount += 1;
+    }
+    const reviewKey = `natReview_${key}`;
+    const reviewState = +localStorage.getItem(reviewKey) || 0;
+    if(reviewState > 0){
+      reviewedCount += 1;
+    }
+  });
+  const totalCount = wrongCount + pendingCount;
+  return { wrongCount, pendingCount, totalCount, reviewedCount };
+}
+
 function countNatReviewItems(filter=null){
   const effectiveFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
   const combined = collectNatReviewItems(effectiveFilter);
-  return combined.reduce((acc,item)=>{
-    const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
-    if(st === 2) return acc + 1;
-    if(item.type !== 'wrong' && st === 0) return acc + 1;
-    return acc;
-  },0);
+  const snapshot = computeNatReviewSnapshot(combined);
+  return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
 /* ---------------- PROVAS E SIMULADOS ---------------- */
@@ -2179,14 +2205,9 @@ function showNatReview(filter=null){
   };
 
   const refreshStats = ()=>{
-    let wrongCount = 0;
-    let pendingCount = 0;
-    combined.forEach(item=>{
-      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
-      if(item.type === 'wrong' && st === 2) wrongCount++;
-      if(item.type === 'pending' && st === 0) pendingCount++;
-    });
-    stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount}`;
+    const snapshot = computeNatReviewSnapshot(combined);
+    const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
+    stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
     stats.className = 'stat';
   };
 
@@ -2286,6 +2307,7 @@ function showNatReview(filter=null){
           localStorage.setItem(reviewKey,reviewState);
         }
         paintReview();
+        refreshStats();
       };
       paintReview();
       row.appendChild(reviewBox);
@@ -2700,6 +2722,7 @@ editDiv.addEventListener('click', function(e) {
    6. VISUALIZAÇÃO DE PDF (PDF.js)
    ============================================================== */
 function clearPdfViewerContent() {
+  cancelPdfAutosave();
   pdfDirtyLayers.clear();
   lastPdfRenderedPages = [];
   if (pdfPagesWrapper) {
@@ -2997,6 +3020,22 @@ function markPdfLayerDirty(canvas) {
   if (!canvas) return;
   canvas.dataset.dirty = 'true';
   pdfDirtyLayers.add(canvas);
+  schedulePdfAutosave();
+}
+
+function cancelPdfAutosave() {
+  if (pdfAutosaveTimeout != null) {
+    clearTimeout(pdfAutosaveTimeout);
+    pdfAutosaveTimeout = null;
+  }
+}
+
+function schedulePdfAutosave() {
+  if (pdfAutosaveTimeout != null) return;
+  pdfAutosaveTimeout = setTimeout(() => {
+    pdfAutosaveTimeout = null;
+    persistCurrentPdfDrawings();
+  }, PDF_AUTOSAVE_DELAY);
 }
 
 function ensurePdfPersistenceHandlers() {
@@ -3013,6 +3052,7 @@ function ensurePdfPersistenceHandlers() {
 }
 
 function persistCurrentPdfDrawings({ force = false } = {}) {
+  cancelPdfAutosave();
   if (typeof localStorage === 'undefined') {
     pdfDirtyLayers.clear();
     return;
