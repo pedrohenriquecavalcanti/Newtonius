@@ -335,6 +335,7 @@ const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
+const PDF_DRAW_METADATA_VERSION = 3;
 const PDF_AUTOSAVE_DELAY = 1200;
 const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
@@ -350,6 +351,7 @@ let pdfPinchState = null;
 let currentPdfDocument = null;
 let currentPdfDocumentName = null;
 let pdfAutosaveTimeout = null;
+let pdfStorageQuotaAlertShown = false;
 
 function smoothPdfPoint(target, previous, rawPrevious) {
   if (!target) return previous || rawPrevious || null;
@@ -2810,6 +2812,133 @@ function getPdfDrawingStorageKey(pdfName, pageNumber) {
   return `${PDF_DRAW_PREFIX}${safeName}::${page}`;
 }
 
+function buildPdfDrawingMetadata({ strokeCount = null, timestamp = Date.now() } = {}) {
+  const ts = Number.isFinite(timestamp) ? timestamp : Date.now();
+  const data = { v: PDF_DRAW_METADATA_VERSION, ts };
+  if (Number.isFinite(strokeCount)) {
+    data.sc = strokeCount;
+  }
+  return JSON.stringify(data);
+}
+
+function parsePdfDrawingMetadata(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  if (raw.startsWith('data:image/')) {
+    return { type: 'image', timestamp: 0 };
+  }
+  try {
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return null;
+    const timestamp = Number.isFinite(data.ts)
+      ? data.ts
+      : Number.isFinite(data.timestamp)
+        ? data.timestamp
+        : 0;
+    const strokeCount = Number.isFinite(data.sc)
+      ? data.sc
+      : Number.isFinite(data.strokes)
+        ? data.strokes
+        : null;
+    return {
+      type: 'meta',
+      timestamp,
+      strokeCount: Number.isFinite(strokeCount) ? strokeCount : null
+    };
+  } catch (err) {
+    if (raw.startsWith('v3|')) {
+      const parts = raw.split('|');
+      const timestamp = Number(parts[1]) || 0;
+      const strokeCount = Number(parts[2]);
+      return {
+        type: 'meta',
+        timestamp,
+        strokeCount: Number.isFinite(strokeCount) ? strokeCount : null
+      };
+    }
+    return null;
+  }
+}
+
+function isQuotaExceededError(error) {
+  if (!error) return false;
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException) {
+    if (error.code === 22 || error.code === 1014) return true;
+  }
+  const name = String(error.name || '').toLowerCase();
+  if (name === 'quotaexceedederror' || name === 'ns_error_dom_quota_reached') {
+    return true;
+  }
+  const message = String(error.message || '').toLowerCase();
+  if (message.includes('quota') || message.includes('storage') || message.includes('cheio')) {
+    return true;
+  }
+  return false;
+}
+
+function purgeOldPdfDrawingEntries({ preserveKeys = new Set(), maxRemovals = 1 } = {}) {
+  if (typeof localStorage === 'undefined') return 0;
+  const preserve = preserveKeys instanceof Set
+    ? preserveKeys
+    : new Set(Array.isArray(preserveKeys) ? preserveKeys : []);
+  const entries = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || preserve.has(key)) continue;
+    if (!key.startsWith(PDF_DRAW_PREFIX) || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+    if (key.endsWith(PDF_DRAW_STROKES_SUFFIX)) continue;
+    const metadata = parsePdfDrawingMetadata(localStorage.getItem(key));
+    const timestamp = metadata?.timestamp || 0;
+    entries.push({ key, timestamp });
+  }
+  if (!entries.length) return 0;
+  entries.sort((a, b) => a.timestamp - b.timestamp);
+  const limit = Math.max(1, Number(maxRemovals) || 0);
+  let removed = 0;
+  for (const entry of entries) {
+    if (removed >= limit) break;
+    localStorage.removeItem(entry.key);
+    localStorage.removeItem(`${entry.key}${PDF_DRAW_STROKES_SUFFIX}`);
+    removed += 1;
+  }
+  return removed;
+}
+
+function optimizePdfDrawingStorage() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const updates = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+      if (!key.startsWith(PDF_DRAW_PREFIX)) continue;
+      if (key.endsWith(PDF_DRAW_STROKES_SUFFIX)) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw || typeof raw !== 'string') continue;
+      if (!raw.startsWith('data:image/')) continue;
+      const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
+      const serialized = localStorage.getItem(strokeKey);
+      if (!serialized) continue;
+      let strokeCount = null;
+      try {
+        const { strokes } = deserializePdfStrokes(serialized);
+        strokeCount = Array.isArray(strokes) ? strokes.length : null;
+      } catch (err) {
+        console.error('Falha ao analisar manuscrito ao otimizar armazenamento do PDF', err);
+      }
+      updates.push({ key, metadata: buildPdfDrawingMetadata({ strokeCount }) });
+    }
+    updates.forEach(({ key, metadata }) => {
+      try {
+        localStorage.setItem(key, metadata);
+      } catch (err) {
+        console.error('Falha ao otimizar armazenamento das anotações do PDF', err);
+      }
+    });
+  } catch (err) {
+    console.error('Falha ao otimizar armazenamento das anotações do PDF', err);
+  }
+}
+
 function isPdfCanvasBlank(canvas) {
   const ctx = canvas?.getContext('2d');
   if (!ctx) return true;
@@ -2828,34 +2957,111 @@ function isPdfCanvasBlank(canvas) {
 }
 
 function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
-  if (typeof localStorage === 'undefined') return;
+  if (typeof localStorage === 'undefined') return false;
   const key = getPdfDrawingStorageKey(pdfName, pageNumber);
-  if (!key) return;
+  if (!key) return false;
   const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
   const state = getPdfCanvasState(canvas);
+  const strokes = Array.isArray(state?.strokes) ? state.strokes : [];
+  const strokeCount = strokes.length;
+
+  let isBlank = false;
   try {
-    if (isPdfCanvasBlank(canvas)) {
-      localStorage.removeItem(key);
-      localStorage.removeItem(strokeKey);
-      return;
+    isBlank = isPdfCanvasBlank(canvas);
+  } catch (err) {
+    console.error('Falha ao inspecionar camada de desenho do PDF', err);
+  }
+
+  if (isBlank || strokeCount === 0) {
+    localStorage.removeItem(key);
+    localStorage.removeItem(strokeKey);
+    return true;
+  }
+
+  if (state) {
+    state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
+    state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+  }
+
+  let serialized = null;
+  if (strokeCount > 0) {
+    serialized = serializePdfStrokes(strokes, {
+      width: state?.canvasWidth,
+      height: state?.canvasHeight
+    });
+  }
+
+  const metadata = serialized
+    ? buildPdfDrawingMetadata({ strokeCount })
+    : null;
+
+  let dataUrl = null;
+  if (!metadata) {
+    try {
+      dataUrl = canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('Falha ao gerar imagem da anotação do PDF', err);
     }
-    const dataUrl = canvas.toDataURL('image/png');
-    localStorage.setItem(key, dataUrl);
-    if (state?.strokes?.length) {
-      state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
-      state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
-      const serialized = serializePdfStrokes(state.strokes, {
-        width: state.canvasWidth,
-        height: state.canvasHeight
-      });
-      if (serialized) {
-        localStorage.setItem(strokeKey, serialized);
-      }
+  }
+
+  if (!metadata && !dataUrl) {
+    console.error('Falha ao salvar anotação do PDF: dados indisponíveis.');
+    return false;
+  }
+
+  const attemptStore = () => {
+    if (metadata) {
+      localStorage.setItem(key, metadata);
+    } else if (dataUrl) {
+      localStorage.setItem(key, dataUrl);
+    }
+    if (serialized) {
+      localStorage.setItem(strokeKey, serialized);
     } else {
       localStorage.removeItem(strokeKey);
     }
+  };
+
+  try {
+    attemptStore();
+    return true;
   } catch (err) {
-    console.error('Falha ao salvar anotação do PDF', err);
+    if (!isQuotaExceededError(err)) {
+      console.error('Falha ao salvar anotação do PDF', err);
+      return false;
+    }
+
+    const preserve = new Set([key]);
+    if (serialized) {
+      preserve.add(strokeKey);
+    }
+
+    let success = false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const removed = purgeOldPdfDrawingEntries({ preserveKeys: preserve, maxRemovals: 1 });
+      if (!removed) break;
+      try {
+        attemptStore();
+        success = true;
+        break;
+      } catch (retryErr) {
+        if (!isQuotaExceededError(retryErr)) {
+          console.error('Falha ao salvar anotação do PDF', retryErr);
+          return false;
+        }
+      }
+    }
+
+    if (!success) {
+      if (!pdfStorageQuotaAlertShown) {
+        alert('Espaço insuficiente para salvar novas anotações. Exporte ou remova manuscritos antigos para liberar memória.');
+        pdfStorageQuotaAlertShown = true;
+      }
+      console.error('Falha ao salvar anotação do PDF: espaço insuficiente.', err);
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -2868,8 +3074,12 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     state.selectedStrokeIds.clear();
   }
   const stored = localStorage.getItem(key);
+  const metadata = parsePdfDrawingMetadata(stored);
   const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
   const serialized = localStorage.getItem(strokeKey);
+  if (state) {
+    state.lastSavedAt = metadata?.timestamp || null;
+  }
   if (serialized && state) {
     const { strokes, width: storedWidth, height: storedHeight } = deserializePdfStrokes(serialized);
     state.strokes = strokes;
@@ -2910,6 +3120,7 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     return;
   }
   if (!stored) return;
+  if (metadata && metadata.type === 'meta') return;
   const image = new Image();
   image.onload = () => {
     if (state) {
@@ -2974,6 +3185,7 @@ function cleanupStalePdfDrawings() {
   if (typeof localStorage === 'undefined') return;
   try {
     migrateLegacyPdfDrawings();
+    optimizePdfDrawingStorage();
     const orphanStrokeKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -3063,13 +3275,15 @@ function persistCurrentPdfDrawings({ force = false } = {}) {
     const pdfName = layer.dataset.pdfName;
     const pageNumber = Number(layer.dataset.pageNumber);
     if (!force && layer.dataset.dirty !== 'true') return;
-    savePdfDrawingLayer(pdfName, pageNumber, layer);
-    layer.dataset.dirty = 'false';
-    pdfDirtyLayers.delete(layer);
+    const saved = savePdfDrawingLayer(pdfName, pageNumber, layer);
+    if (saved) {
+      layer.dataset.dirty = 'false';
+      pdfDirtyLayers.delete(layer);
+    } else {
+      layer.dataset.dirty = 'true';
+      pdfDirtyLayers.add(layer);
+    }
   });
-  if (force) {
-    pdfDirtyLayers.clear();
-  }
 }
 
 function getPdfDrawingLayers() {
