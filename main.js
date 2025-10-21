@@ -336,7 +336,7 @@ const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
 const PDF_DRAW_METADATA_VERSION = 3;
-const PDF_AUTOSAVE_DELAY = 1200;
+const PDF_AUTOSAVE_DELAY = 500;
 const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
 const STYLUS_TAP_DISTANCE = 36;
@@ -620,6 +620,8 @@ function findPdfStrokeHits(strokes, point, radius) {
 let currentPdfPage = null;
 let stylusTapHistory = [];
 const pdfDirtyLayers = new Set();
+const pdfActivePointerIds = new Set();
+let pdfAutosaveSuspended = false;
 let pdfStylusDrawingActive = false;
 let pdfPersistListenersAttached = false;
 
@@ -2726,6 +2728,8 @@ editDiv.addEventListener('click', function(e) {
 function clearPdfViewerContent() {
   cancelPdfAutosave();
   pdfDirtyLayers.clear();
+  pdfActivePointerIds.clear();
+  pdfAutosaveSuspended = false;
   lastPdfRenderedPages = [];
   if (pdfPagesWrapper) {
     pdfPagesWrapper.innerHTML = '';
@@ -2965,14 +2969,17 @@ function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
   const strokes = Array.isArray(state?.strokes) ? state.strokes : [];
   const strokeCount = strokes.length;
 
+  const hasBackgroundImage = state?.backgroundImage instanceof HTMLImageElement;
   let isBlank = false;
-  try {
-    isBlank = isPdfCanvasBlank(canvas);
-  } catch (err) {
-    console.error('Falha ao inspecionar camada de desenho do PDF', err);
+  if (strokeCount === 0 && !hasBackgroundImage) {
+    try {
+      isBlank = isPdfCanvasBlank(canvas);
+    } catch (err) {
+      console.error('Falha ao inspecionar camada de desenho do PDF', err);
+    }
   }
 
-  if (isBlank || strokeCount === 0) {
+  if (isBlank || (strokeCount === 0 && !hasBackgroundImage)) {
     localStorage.removeItem(key);
     localStorage.removeItem(strokeKey);
     return true;
@@ -3228,6 +3235,41 @@ function clearPdfDrawings() {
 
 cleanupStalePdfDrawings();
 
+function getPdfPointerKey(pointerId) {
+  if (pointerId == null) return null;
+  try {
+    return String(pointerId);
+  } catch (err) {
+    console.warn('Falha ao normalizar pointerId para o autosave do PDF.', err);
+    return null;
+  }
+}
+
+function suspendPdfAutosave(pointerId = null) {
+  const key = getPdfPointerKey(pointerId);
+  if (key !== null) {
+    pdfActivePointerIds.add(key);
+  }
+  if (pdfAutosaveSuspended) return;
+  pdfAutosaveSuspended = true;
+  cancelPdfAutosave();
+}
+
+function resumePdfAutosave(pointerId = null) {
+  const key = getPdfPointerKey(pointerId);
+  if (key !== null) {
+    pdfActivePointerIds.delete(key);
+  }
+  if (pdfActivePointerIds.size > 0) {
+    return;
+  }
+  const wasSuspended = pdfAutosaveSuspended;
+  pdfAutosaveSuspended = false;
+  if (wasSuspended || pdfDirtyLayers.size > 0) {
+    schedulePdfAutosave();
+  }
+}
+
 function markPdfLayerDirty(canvas) {
   if (!canvas) return;
   canvas.dataset.dirty = 'true';
@@ -3243,9 +3285,14 @@ function cancelPdfAutosave() {
 }
 
 function schedulePdfAutosave() {
+  if (pdfAutosaveSuspended) return;
   if (pdfAutosaveTimeout != null) return;
+  if (!pdfDirtyLayers.size) return;
   pdfAutosaveTimeout = setTimeout(() => {
     pdfAutosaveTimeout = null;
+    if (pdfAutosaveSuspended || !pdfDirtyLayers.size) {
+      return;
+    }
     persistCurrentPdfDrawings();
   }, PDF_AUTOSAVE_DELAY);
 }
@@ -3284,6 +3331,9 @@ function persistCurrentPdfDrawings({ force = false } = {}) {
       pdfDirtyLayers.add(layer);
     }
   });
+  if (pdfDirtyLayers.size > 0) {
+    schedulePdfAutosave();
+  }
 }
 
 function getPdfDrawingLayers() {
@@ -3480,6 +3530,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     }
     if (!drawing) {
       pdfStylusDrawingActive = false;
+      resumePdfAutosave(event.pointerId);
       return;
     }
 
@@ -3509,6 +3560,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    resumePdfAutosave(event.pointerId);
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -3520,6 +3572,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
+    suspendPdfAutosave(event.pointerId);
     const point = getPoint(event);
     drawing = true;
     strokeDirty = false;
