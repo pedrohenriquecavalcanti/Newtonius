@@ -2422,7 +2422,7 @@ function showNatReview(filter=null){
     if(item.favorite) row.classList.add('review-favorite');
 
     const qBtn = document.createElement('button');
-    qBtn.classList.add('btn','question-btn','two-line-btn');
+    qBtn.classList.add('btn','question-btn','two-line-btn','question-btn--with-menu');
     const examPrefix = `${item.exam}-`;
     const labelText = item.q.label.toUpperCase().startsWith(examPrefix.toUpperCase())
       ? item.q.label
@@ -2450,6 +2450,32 @@ function showNatReview(filter=null){
       className:'small-btn',
       onclick:()=>openGabarito(item.q)
     }));
+
+    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+    let isHidden = !!item.hidden;
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+    let isFavorite = !!item.favorite;
+
+    const menuToggle = document.createElement('span');
+    menuToggle.className = 'question-menu-toggle';
+    menuToggle.textContent = '▾';
+    menuToggle.title = 'Ações da questão';
+    menuToggle.setAttribute('aria-haspopup','menu');
+    menuToggle.setAttribute('aria-expanded','false');
+    qBtn.appendChild(menuToggle);
+
+    const actionMenu = document.createElement('div');
+    actionMenu.className = 'question-action-menu';
+    actionMenu.style.display = 'none';
+    const favoriteOption = document.createElement('button');
+    favoriteOption.type = 'button';
+    favoriteOption.className = 'question-action-option';
+    const hideOption = document.createElement('button');
+    hideOption.type = 'button';
+    hideOption.className = 'question-action-option';
+    actionMenu.appendChild(favoriteOption);
+    actionMenu.appendChild(hideOption);
+    row.appendChild(actionMenu);
 
     const controls = document.createElement('div');
     controls.className = 'review-state-grid';
@@ -2511,45 +2537,69 @@ function showNatReview(filter=null){
     paintReview();
     controls.appendChild(reviewBox);
 
-    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-    let isHidden = !!item.hidden;
-    const hideBox = document.createElement('span');
-    hideBox.className = 'state-box action-box hide-box';
-    const paintHide = ()=>{
-      hideBox.textContent = isHidden ? '🚫' : '👁';
-      hideBox.classList.toggle('active', isHidden);
-      hideBox.title = isHidden ? 'Mostrar questão' : 'Ocultar questão';
-      row.classList.toggle('review-hidden', isHidden);
+    const updateMenuToggle = ()=>{
+      const hasState = isHidden || isFavorite;
+      menuToggle.classList.toggle('menu-active', hasState);
     };
-    hideBox.onclick = ()=>{
-      isHidden = !isHidden;
-      item.hidden = isHidden;
-      if(isHidden){
-        localStorage.setItem(hiddenKey,'1');
-      }else{
-        localStorage.removeItem(hiddenKey);
-      }
-      paintHide();
-      if(!natReviewState.showHidden && isHidden){
-        row.remove();
-      }
-      ensureEmptyState();
-      refreshStats();
-    };
-    paintHide();
-    controls.appendChild(hideBox);
 
-    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-    let isFavorite = !!item.favorite;
-    const favBox = document.createElement('span');
-    favBox.className = 'state-box action-box fav-box';
-    const paintFavorite = ()=>{
-      favBox.textContent = isFavorite ? '★' : '☆';
-      favBox.classList.toggle('active', isFavorite);
-      favBox.title = isFavorite ? 'Remover dos favoritos' : 'Favoritar questão';
-      row.classList.toggle('review-favorite', isFavorite);
+    const paintHide = ()=>{
+      hideOption.textContent = isHidden ? 'Mostrar questão' : 'Ocultar questão';
+      hideOption.classList.toggle('active', isHidden);
+      row.classList.toggle('review-hidden', isHidden);
+      updateMenuToggle();
     };
-    favBox.onclick = ()=>{
+
+    const paintFavorite = ()=>{
+      favoriteOption.textContent = isFavorite ? 'Remover dos favoritos' : 'Favoritar questão';
+      favoriteOption.classList.toggle('active', isFavorite);
+      row.classList.toggle('review-favorite', isFavorite);
+      updateMenuToggle();
+    };
+
+    let menuOpen = false;
+    const onOutsideClick = event => {
+      if(!row.contains(event.target)){
+        closeMenu();
+      }
+    };
+    const closeMenu = ()=>{
+      if(!menuOpen) return;
+      menuOpen = false;
+      actionMenu.style.display = 'none';
+      menuToggle.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded','false');
+      document.removeEventListener('click', onOutsideClick);
+    };
+    const openMenu = ()=>{
+      if(menuOpen) return;
+      menuOpen = true;
+      actionMenu.style.display = 'block';
+      actionMenu.style.visibility = 'hidden';
+      const toggleRect = menuToggle.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const menuRect = actionMenu.getBoundingClientRect();
+      const maxLeft = Math.max(rowRect.width - menuRect.width, 0);
+      const desiredLeft = Math.max(toggleRect.right - rowRect.left - menuRect.width, 0);
+      actionMenu.style.left = `${Math.min(desiredLeft, maxLeft)}px`;
+      actionMenu.style.top = `${toggleRect.bottom - rowRect.top + 4}px`;
+      actionMenu.style.visibility = 'visible';
+      menuToggle.classList.add('open');
+      menuToggle.setAttribute('aria-expanded','true');
+      document.addEventListener('click', onOutsideClick);
+    };
+
+    menuToggle.addEventListener('click', e=>{
+      e.stopPropagation();
+      e.preventDefault();
+      if(menuOpen){
+        closeMenu();
+      }else{
+        openMenu();
+      }
+    });
+
+    favoriteOption.addEventListener('click', e=>{
+      e.preventDefault();
       isFavorite = !isFavorite;
       item.favorite = isFavorite;
       if(isFavorite){
@@ -2558,9 +2608,33 @@ function showNatReview(filter=null){
         localStorage.removeItem(favoriteKey);
       }
       paintFavorite();
-    };
+      closeMenu();
+    });
+
+    hideOption.addEventListener('click', e=>{
+      e.preventDefault();
+      isHidden = !isHidden;
+      item.hidden = isHidden;
+      if(isHidden){
+        localStorage.setItem(hiddenKey,'1');
+      }else{
+        localStorage.removeItem(hiddenKey);
+      }
+      paintHide();
+      closeMenu();
+      if(!natReviewState.showHidden && isHidden){
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
+    });
+
+    qBtn.addEventListener('click', ()=>{
+      if(menuOpen) closeMenu();
+    });
+
     paintFavorite();
-    controls.appendChild(favBox);
+    paintHide();
 
     row.appendChild(controls);
 
