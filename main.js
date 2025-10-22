@@ -238,6 +238,19 @@ const DISCIPLINES_BY_MODE = {
 
 const NAT_REVIEW_DISCIPLINES = DISCIPLINES_BY_MODE.nat || [];
 const REVIEW_ALL_DISC = '__review_all__';
+const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
+const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
+const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
+
+const DEFAULT_NAT_REVIEW_STATE = {
+  disc: REVIEW_ALL_DISC,
+  sub: null,
+  showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
+};
+
+let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
+let reviewSettingsBtn = null;
+let reviewSettingsMenu = null;
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
@@ -296,6 +309,145 @@ const pickerMicro   = document.getElementById("pickerMicro");
 const pickerCancel  = document.getElementById("pickerCancel");
 const orderHint     = document.getElementById("orderHint");
 const toggleD1Btn   = document.getElementById("toggleD1Btn");
+
+function setNatReviewState(partial = {}) {
+  const next = { ...natReviewState };
+  if (partial.disc !== undefined) {
+    next.disc = partial.disc;
+    if (partial.disc === REVIEW_ALL_DISC) {
+      next.sub = null;
+    } else if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
+      next.sub = null;
+    }
+  }
+  if (partial.sub !== undefined) {
+    next.sub = partial.sub;
+  }
+  if (partial.showHidden !== undefined) {
+    next.showHidden = !!partial.showHidden;
+  }
+  natReviewState = next;
+  localStorage.setItem(
+    NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
+    natReviewState.showHidden ? '1' : '0'
+  );
+  return natReviewState;
+}
+
+function resetNatReviewState() {
+  setNatReviewState({ disc: REVIEW_ALL_DISC, sub: null });
+}
+
+function ensureReviewSettingsUI() {
+  if (reviewSettingsBtn && reviewSettingsMenu) return;
+  const headerEl = header;
+  if (!headerEl) return;
+
+  if (!reviewSettingsBtn) {
+    reviewSettingsBtn = document.createElement('button');
+    reviewSettingsBtn.id = 'reviewSettingsBtn';
+    reviewSettingsBtn.type = 'button';
+    reviewSettingsBtn.setAttribute('aria-label', 'Filtros da revisão');
+    reviewSettingsBtn.setAttribute('aria-haspopup', 'true');
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    reviewSettingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
+    reviewSettingsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      ensureReviewSettingsUI();
+      if (!reviewSettingsMenu) return;
+      const isOpen = reviewSettingsMenu.style.display === 'flex';
+      reviewSettingsMenu.style.display = isOpen ? 'none' : 'flex';
+      reviewSettingsBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    });
+    const pomodoroBtn = document.getElementById('pomodoroBtn');
+    if (pomodoroBtn && pomodoroBtn.parentElement === headerEl) {
+      headerEl.insertBefore(reviewSettingsBtn, pomodoroBtn);
+    } else {
+      headerEl.appendChild(reviewSettingsBtn);
+    }
+  }
+
+  if (!reviewSettingsMenu) {
+    reviewSettingsMenu = document.createElement('div');
+    reviewSettingsMenu.id = 'reviewSettingsMenu';
+    reviewSettingsMenu.className = 'review-menu';
+    reviewSettingsMenu.setAttribute('role', 'menu');
+    reviewSettingsMenu.style.display = 'none';
+    headerEl.appendChild(reviewSettingsMenu);
+  }
+}
+
+function toggleReviewSettingsVisibility(show) {
+  ensureReviewSettingsUI();
+  if (!reviewSettingsBtn || !reviewSettingsMenu) return;
+  reviewSettingsBtn.style.display = show ? 'flex' : 'none';
+  if (show) {
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  } else {
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function renderReviewSettingsMenu() {
+  ensureReviewSettingsUI();
+  if (!reviewSettingsMenu || !reviewSettingsBtn) return;
+  const wasOpen = reviewSettingsMenu.style.display === 'flex';
+  reviewSettingsMenu.innerHTML = '';
+
+  const title = document.createElement('p');
+  title.className = 'review-menu-title';
+  title.textContent = 'Área';
+  reviewSettingsMenu.appendChild(title);
+
+  const optionsWrap = document.createElement('div');
+  optionsWrap.className = 'review-menu-options';
+  const areaOptions = [REVIEW_ALL_DISC, ...NAT_REVIEW_DISCIPLINES];
+  areaOptions.forEach(value => {
+    const btn = document.createElement('button');
+    btn.className = 'review-menu-option';
+    btn.type = 'button';
+    btn.textContent = value === REVIEW_ALL_DISC ? 'Natureza' : value;
+    const isSelected =
+      (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
+      natReviewState.disc === value;
+    if (isSelected) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      setNatReviewState({ disc: value, sub: null });
+      reviewSettingsMenu.style.display = 'none';
+      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      showNatReview();
+    });
+    optionsWrap.appendChild(btn);
+  });
+  reviewSettingsMenu.appendChild(optionsWrap);
+
+  const divider = document.createElement('div');
+  divider.className = 'review-menu-divider';
+  reviewSettingsMenu.appendChild(divider);
+
+  const hiddenBtn = document.createElement('button');
+  hiddenBtn.className = 'review-menu-option review-menu-toggle';
+  hiddenBtn.type = 'button';
+  const showHidden = !!natReviewState.showHidden;
+  hiddenBtn.textContent = showHidden ? 'Ocultar ocultadas' : 'Exibir ocultadas';
+  if (showHidden) hiddenBtn.classList.add('active');
+  hiddenBtn.addEventListener('click', () => {
+    setNatReviewState({ showHidden: !natReviewState.showHidden });
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    showNatReview();
+  });
+  reviewSettingsMenu.appendChild(hiddenBtn);
+
+  if (wasOpen) {
+    reviewSettingsMenu.style.display = 'flex';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'true');
+  } else {
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
+}
 
 /* ================================================================
    3. ESTADO MUTÁVEL
@@ -1194,12 +1346,21 @@ document.addEventListener("click", e=>{
   if(!settingsMenu.contains(e.target) && e.target!==settingsBtn){
     settingsMenu.style.display = "none";
   }
+  if(
+    reviewSettingsMenu && reviewSettingsBtn &&
+    !reviewSettingsMenu.contains(e.target) &&
+    e.target !== reviewSettingsBtn
+  ){
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
 });
 
 function toggleSettingsVisibility(showHome){
   settingsBtn.style.display  = showHome ? 'block' : 'none';
   /* se saiu da home, fecha o menu para não ficar solto */
   if (!showHome) settingsMenu.style.display = 'none';
+  toggleReviewSettingsVisibility(false);
 }
 
 exportBtn.onclick = () => {
@@ -1300,6 +1461,7 @@ examsBtn.onclick = () => {
 
 natReviewBtn.onclick = () => {
   settingsMenu.style.display = 'none';
+  resetNatReviewState();
   showNatReview();
 };
 
@@ -1973,12 +2135,17 @@ function collectNatReviewItems(filter=null){
     if(!isEnem && !isSas) return;
     questions.forEach(({disc,sub,q})=>{
       if(!matchesFilter(disc,sub)) return;
-      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      const key = qKey(disc,sub,q.label);
+      const state = +localStorage.getItem(key) || 0;
+      const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+      const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+      const isHidden = localStorage.getItem(hiddenKey) === '1';
+      const isFavorite = localStorage.getItem(favoriteKey) === '1';
       if((isEnem || isSas) && state === 2){
-        combined.push({exam,disc,sub,q,type:'wrong'});
+        combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite});
       }
       if(isEnem && state === 0){
-        combined.push({exam,disc,sub,q,type:'pending'});
+        combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite});
       }
     });
     visited.add(exam);
@@ -2021,7 +2188,8 @@ function computeNatReviewSnapshot(items){
 function countNatReviewItems(filter=null){
   const effectiveFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
   const combined = collectNatReviewItems(effectiveFilter);
-  const snapshot = computeNatReviewSnapshot(combined);
+  const visibleItems = combined.filter(item => !item.hidden);
+  const snapshot = computeNatReviewSnapshot(visibleItems);
   return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
@@ -2159,9 +2327,14 @@ function showExam(exam){
   });
 }
 
+
 function showNatReview(filter=null){
-  const isAll = filter?.disc === REVIEW_ALL_DISC;
-  const effectiveFilter = isAll ? null : filter;
+  if(filter){
+    setNatReviewState(filter);
+  }
+  const { disc, sub, showHidden } = natReviewState;
+  const isAll = disc === REVIEW_ALL_DISC;
+  const effectiveFilter = isAll ? null : { disc, sub };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
@@ -2169,13 +2342,15 @@ function showNatReview(filter=null){
   currentExamMode = 'nat';
   leaveHome();
   toggleSettingsVisibility(false);
+  toggleReviewSettingsVisibility(true);
+  renderReviewSettingsMenu();
   let headerLabel = 'Revisão';
   if(isAll){
     headerLabel = 'Revisão: Natureza';
-  }else if(filter){
-    headerLabel = `Revisão: ${filter.disc}`;
-    if(filter.sub && filter.sub !== ALL_SUB){
-      headerLabel += `: ${getFriendlyName(filter.disc, filter.sub)}`;
+  }else{
+    headerLabel = `Revisão: ${disc}`;
+    if(sub && sub !== ALL_SUB){
+      headerLabel += `: ${getFriendlyName(disc, sub)}`;
     }
   }
   updateHeader(true, headerLabel);
@@ -2192,32 +2367,47 @@ function showNatReview(filter=null){
   window.scrollTo(0,0);
 
   const combined = collectNatReviewItems(effectiveFilter);
+  const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
+    ? 'Nenhuma questão para revisar no filtro escolhido.'
+    : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
-  emptyMsg.textContent = effectiveFilter
-    ? 'Nenhuma questão para revisar no filtro escolhido.'
-    : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
   const ensureEmptyState = ()=>{
     const hasRow = !!app.querySelector('.question-row');
     if(hasRow){
       if(emptyMsg.isConnected) emptyMsg.remove();
-    }else if(!emptyMsg.isConnected){
-      app.appendChild(emptyMsg);
+    }else{
+      let message = baseEmptyText;
+      const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden));
+      const visibleSnapshot = computeNatReviewSnapshot(combined.filter(item => !item.hidden));
+      if(!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0){
+        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir ocultadas”.';
+      }
+      emptyMsg.textContent = message;
+      if(!emptyMsg.isConnected) app.appendChild(emptyMsg);
     }
   };
 
   const refreshStats = ()=>{
-    const snapshot = computeNatReviewSnapshot(combined);
+    const activeItems = showHidden ? combined : combined.filter(item => !item.hidden);
+    const snapshot = computeNatReviewSnapshot(activeItems);
+    const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden));
     const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
-    stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
+    const hiddenRemaining = Math.max(hiddenSnapshot.totalCount - hiddenSnapshot.reviewedCount, 0);
+    let text = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
+    if(hiddenSnapshot.totalCount > 0){
+      text += ` | Ocultadas: ${hiddenRemaining}/${hiddenSnapshot.totalCount}`;
+    }
+    stats.textContent = text;
     stats.className = 'stat';
   };
 
   const fragment = document.createDocumentFragment();
+  const itemsToRender = showHidden ? combined : combined.filter(item => !item.hidden);
 
-  combined.forEach(item=>{
+  itemsToRender.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
     let st = +localStorage.getItem(key) || 0;
     const qualifies = ()=>{
@@ -2228,6 +2418,8 @@ function showNatReview(filter=null){
 
     const row = document.createElement('div');
     row.className = 'question-row';
+    if(item.hidden) row.classList.add('review-hidden');
+    if(item.favorite) row.classList.add('review-favorite');
 
     const qBtn = document.createElement('button');
     qBtn.classList.add('btn','question-btn','two-line-btn');
@@ -2259,13 +2451,18 @@ function showNatReview(filter=null){
       onclick:()=>openGabarito(item.q)
     }));
 
-    const box = Object.assign(document.createElement('span'),{className:'state-box'});
+    const controls = document.createElement('div');
+    controls.className = 'review-state-grid';
+
+    const stateBox = document.createElement('span');
+    stateBox.className = 'state-box result-box';
+    stateBox.title = 'Marcar questão como certa ou errada';
     const paintState = ()=>{
-      box.textContent = st===1?'\u2713':st===2?'\u2717':'';
-      box.style.color = st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+      stateBox.textContent = st===1?'✓':st===2?'✗':'';
+      stateBox.classList.toggle('state-correct', st===1);
+      stateBox.classList.toggle('state-wrong', st===2);
     };
-    paintState();
-    box.onclick = ()=>{
+    stateBox.onclick = ()=>{
       st = (st+1)%3;
       localStorage.setItem(key,st);
       const today = getTodayStr();
@@ -2279,46 +2476,93 @@ function showNatReview(filter=null){
       }
       if(st===2 && item.type !== 'wrong'){
         item.type = 'wrong';
-        ensureReviewBox();
       }
       paintState();
       ensureEmptyState();
       refreshStats();
     };
-    row.appendChild(box);
+    paintState();
+    controls.appendChild(stateBox);
 
     const reviewKey = `natReview_${key}`;
     let reviewState = +localStorage.getItem(reviewKey) || 0;
-    let reviewBox = null;
+    const reviewBox = document.createElement('span');
+    reviewBox.className = 'state-box review-box';
     const paintReview = ()=>{
-      if(!reviewBox) return;
-      reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
-      reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
+      reviewBox.textContent = reviewState===1?'✓':reviewState===2?'✗':'';
+      reviewBox.classList.toggle('review-correct', reviewState===1);
+      reviewBox.classList.toggle('review-wrong', reviewState===2);
       reviewBox.title = reviewState===0
         ? 'Marcar revisão'
         : reviewState===1
           ? 'Revisado – certo'
           : 'Revisado – errado';
     };
-    const ensureReviewBox = ()=>{
-      if(reviewBox) return;
-      reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
-      reviewBox.onclick = ()=>{
-        reviewState = (reviewState+1)%3;
-        if(reviewState===0){
-          localStorage.removeItem(reviewKey);
-        }else{
-          localStorage.setItem(reviewKey,reviewState);
-        }
-        paintReview();
-        refreshStats();
-      };
+    reviewBox.onclick = ()=>{
+      reviewState = (reviewState+1)%3;
+      if(reviewState===0){
+        localStorage.removeItem(reviewKey);
+      }else{
+        localStorage.setItem(reviewKey,reviewState);
+      }
       paintReview();
-      row.appendChild(reviewBox);
+      refreshStats();
     };
-    if(item.type === 'wrong'){
-      ensureReviewBox();
-    }
+    paintReview();
+    controls.appendChild(reviewBox);
+
+    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+    let isHidden = !!item.hidden;
+    const hideBox = document.createElement('span');
+    hideBox.className = 'state-box action-box hide-box';
+    const paintHide = ()=>{
+      hideBox.textContent = isHidden ? '🚫' : '👁';
+      hideBox.classList.toggle('active', isHidden);
+      hideBox.title = isHidden ? 'Mostrar questão' : 'Ocultar questão';
+      row.classList.toggle('review-hidden', isHidden);
+    };
+    hideBox.onclick = ()=>{
+      isHidden = !isHidden;
+      item.hidden = isHidden;
+      if(isHidden){
+        localStorage.setItem(hiddenKey,'1');
+      }else{
+        localStorage.removeItem(hiddenKey);
+      }
+      paintHide();
+      if(!natReviewState.showHidden && isHidden){
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
+    };
+    paintHide();
+    controls.appendChild(hideBox);
+
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+    let isFavorite = !!item.favorite;
+    const favBox = document.createElement('span');
+    favBox.className = 'state-box action-box fav-box';
+    const paintFavorite = ()=>{
+      favBox.textContent = isFavorite ? '★' : '☆';
+      favBox.classList.toggle('active', isFavorite);
+      favBox.title = isFavorite ? 'Remover dos favoritos' : 'Favoritar questão';
+      row.classList.toggle('review-favorite', isFavorite);
+    };
+    favBox.onclick = ()=>{
+      isFavorite = !isFavorite;
+      item.favorite = isFavorite;
+      if(isFavorite){
+        localStorage.setItem(favoriteKey,'1');
+      }else{
+        localStorage.removeItem(favoriteKey);
+      }
+      paintFavorite();
+    };
+    paintFavorite();
+    controls.appendChild(favBox);
+
+    row.appendChild(controls);
 
     const cKey = `comment_${key}`;
     const editDiv=document.createElement('div');
