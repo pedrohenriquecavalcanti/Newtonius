@@ -2137,15 +2137,37 @@ function collectNatReviewItems(filter=null){
       if(!matchesFilter(disc,sub)) return;
       const key = qKey(disc,sub,q.label);
       const state = +localStorage.getItem(key) || 0;
+      const reviewKey = `natReview_${key}`;
       const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
       const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-      const isHidden = localStorage.getItem(hiddenKey) === '1';
+      const reviewState = +localStorage.getItem(reviewKey) || 0;
+      const manualHidden = localStorage.getItem(hiddenKey) === '1';
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
+      const autoHidden = reviewState === 1 && !isFavorite;
+      const pushItem = (type, hiddenOverride=null)=>{
+        combined.push({
+          exam,
+          disc,
+          sub,
+          q,
+          type,
+          state,
+          reviewState,
+          manualHidden,
+          favorite: isFavorite,
+          hidden: hiddenOverride===null
+            ? (manualHidden || autoHidden)
+            : hiddenOverride
+        });
+      };
       if((isEnem || isSas) && state === 2){
-        combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite});
+        pushItem('wrong');
       }
       if(isEnem && state === 0){
-        combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite});
+        pushItem('pending');
+      }
+      if((isEnem || isSas) && isFavorite && state === 1){
+        pushItem('favorite', manualHidden);
       }
     });
     visited.add(exam);
@@ -2375,8 +2397,9 @@ function showNatReview(filter=null){
   emptyMsg.className = 'review-empty';
 
   const ensureEmptyState = ()=>{
-    const hasRow = !!app.querySelector('.question-row');
-    if(hasRow){
+    const hasVisibleRow = Array.from(app.querySelectorAll('.question-row'))
+      .some(row => row.dataset.visible !== 'false');
+    if(hasVisibleRow){
       if(emptyMsg.isConnected) emptyMsg.remove();
     }else{
       let message = baseEmptyText;
@@ -2411,15 +2434,21 @@ function showNatReview(filter=null){
     const key = qKey(item.disc,item.sub,item.q.label);
     let st = +localStorage.getItem(key) || 0;
     const qualifies = ()=>{
+      if(item.type === 'favorite') return true;
       if(st === 2) return true;
       return item.type !== 'wrong' && st === 0;
     };
     if(!qualifies()) return;
 
+    const reviewKey = `natReview_${key}`;
+    let reviewState = +localStorage.getItem(reviewKey) || item.reviewState || 0;
+    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+    let manualHidden = localStorage.getItem(hiddenKey) === '1';
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+    let isFavorite = localStorage.getItem(favoriteKey) === '1';
+
     const row = document.createElement('div');
     row.className = 'question-row';
-    if(item.hidden) row.classList.add('review-hidden');
-    if(item.favorite) row.classList.add('review-favorite');
 
     const qBtn = document.createElement('button');
     qBtn.classList.add('btn','question-btn','two-line-btn');
@@ -2451,20 +2480,43 @@ function showNatReview(filter=null){
       onclick:()=>openGabarito(item.q)
     }));
 
-    const controls = document.createElement('div');
-    controls.className = 'review-state-grid';
+    const reviewControls = document.createElement('div');
+    reviewControls.className = 'review-state-grid';
 
-    const stateBox = document.createElement('span');
-    stateBox.className = 'state-box result-box';
-    stateBox.title = 'Marcar questão como certa ou errada';
-    const paintState = ()=>{
-      stateBox.textContent = st===1?'✓':st===2?'✗':'';
-      stateBox.classList.toggle('state-correct', st===1);
-      stateBox.classList.toggle('state-wrong', st===2);
-    };
-    stateBox.onclick = ()=>{
-      st = (st+1)%3;
-      localStorage.setItem(key,st);
+    const correctBtn = document.createElement('button');
+    correctBtn.type = 'button';
+    correctBtn.className = 'state-box review-choice review-choice-correct';
+    correctBtn.textContent = '✓';
+    correctBtn.setAttribute('aria-label','Marcar revisão como certa');
+
+    const wrongBtn = document.createElement('button');
+    wrongBtn.type = 'button';
+    wrongBtn.className = 'state-box review-choice review-choice-wrong';
+    wrongBtn.textContent = '✗';
+    wrongBtn.setAttribute('aria-label','Marcar revisão como errada');
+
+    reviewControls.appendChild(correctBtn);
+    reviewControls.appendChild(wrongBtn);
+    row.appendChild(reviewControls);
+
+    const actions = document.createElement('div');
+    actions.className = 'review-action-toggles';
+
+    const favoriteToggle = document.createElement('button');
+    favoriteToggle.type = 'button';
+    favoriteToggle.className = 'review-toggle favorite-toggle';
+    actions.appendChild(favoriteToggle);
+
+    const hideToggle = document.createElement('button');
+    hideToggle.type = 'button';
+    hideToggle.className = 'review-toggle hide-toggle';
+    actions.appendChild(hideToggle);
+
+    row.appendChild(actions);
+
+    const updateQuestionState = newState => {
+      st = newState;
+      localStorage.setItem(key, st);
       const today = getTodayStr();
       const logKey = `log_${today}_${key}`;
       if(!D1_DISCIPLINES.includes(item.disc)){
@@ -2474,95 +2526,105 @@ function showNatReview(filter=null){
           localStorage.removeItem(logKey);
         }
       }
-      if(st===2 && item.type !== 'wrong'){
-        item.type = 'wrong';
-      }
-      paintState();
-      ensureEmptyState();
-      refreshStats();
     };
-    paintState();
-    controls.appendChild(stateBox);
 
-    const reviewKey = `natReview_${key}`;
-    let reviewState = +localStorage.getItem(reviewKey) || 0;
-    const reviewBox = document.createElement('span');
-    reviewBox.className = 'state-box review-box';
-    const paintReview = ()=>{
-      reviewBox.textContent = reviewState===1?'✓':reviewState===2?'✗':'';
-      reviewBox.classList.toggle('review-correct', reviewState===1);
-      reviewBox.classList.toggle('review-wrong', reviewState===2);
-      reviewBox.title = reviewState===0
-        ? 'Marcar revisão'
-        : reviewState===1
-          ? 'Revisado – certo'
-          : 'Revisado – errado';
+    const updateReviewControls = ()=>{
+      const isCorrect = reviewState === 1;
+      const isWrong = reviewState === 2;
+      correctBtn.classList.toggle('active', isCorrect);
+      wrongBtn.classList.toggle('active', isWrong);
+      correctBtn.setAttribute('aria-pressed', isCorrect ? 'true' : 'false');
+      wrongBtn.setAttribute('aria-pressed', isWrong ? 'true' : 'false');
+      correctBtn.title = isCorrect
+        ? 'Revisado e acertado (clique para limpar)'
+        : 'Marcar como revisado e acertado';
+      wrongBtn.title = isWrong
+        ? 'Revisado e errado (clique para limpar)'
+        : 'Marcar como revisado e errado';
     };
-    reviewBox.onclick = ()=>{
-      reviewState = (reviewState+1)%3;
-      if(reviewState===0){
-        localStorage.removeItem(reviewKey);
-      }else{
-        localStorage.setItem(reviewKey,reviewState);
-      }
-      paintReview();
-      refreshStats();
-    };
-    paintReview();
-    controls.appendChild(reviewBox);
 
-    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-    let isHidden = !!item.hidden;
-    const hideBox = document.createElement('span');
-    hideBox.className = 'state-box action-box hide-box';
-    const paintHide = ()=>{
-      hideBox.textContent = isHidden ? '🚫' : '👁';
-      hideBox.classList.toggle('active', isHidden);
-      hideBox.title = isHidden ? 'Mostrar questão' : 'Ocultar questão';
-      row.classList.toggle('review-hidden', isHidden);
+    const updateFavoriteToggle = ()=>{
+      favoriteToggle.innerHTML = isFavorite ? '★' : '☆';
+      favoriteToggle.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+      favoriteToggle.title = isFavorite
+        ? 'Remover dos favoritos'
+        : 'Manter questão favorita na lista';
     };
-    hideBox.onclick = ()=>{
-      isHidden = !isHidden;
-      item.hidden = isHidden;
-      if(isHidden){
-        localStorage.setItem(hiddenKey,'1');
-      }else{
-        localStorage.removeItem(hiddenKey);
-      }
-      paintHide();
-      if(!natReviewState.showHidden && isHidden){
-        row.remove();
-      }
-      ensureEmptyState();
-      refreshStats();
-    };
-    paintHide();
-    controls.appendChild(hideBox);
 
-    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-    let isFavorite = !!item.favorite;
-    const favBox = document.createElement('span');
-    favBox.className = 'state-box action-box fav-box';
-    const paintFavorite = ()=>{
-      favBox.textContent = isFavorite ? '★' : '☆';
-      favBox.classList.toggle('active', isFavorite);
-      favBox.title = isFavorite ? 'Remover dos favoritos' : 'Favoritar questão';
+    const updateHideToggle = ()=>{
+      hideToggle.innerHTML = manualHidden ? '🙈' : '👁';
+      hideToggle.setAttribute('aria-pressed', manualHidden ? 'true' : 'false');
+      hideToggle.title = manualHidden ? 'Mostrar questão na lista' : 'Ocultar manualmente';
+    };
+
+    const updateVisibility = ()=>{
+      const autoHidden = reviewState === 1 && !isFavorite;
+      const effectiveHidden = manualHidden || autoHidden;
+      item.hidden = effectiveHidden;
+      item.favorite = isFavorite;
+      item.manualHidden = manualHidden;
+      item.reviewState = reviewState;
+      item.state = st;
+      const visible = !(effectiveHidden && !showHidden);
+      row.dataset.hidden = effectiveHidden ? 'true' : 'false';
+      row.dataset.visible = visible ? 'true' : 'false';
+      row.style.display = visible ? '' : 'none';
+      row.classList.toggle('review-hidden', effectiveHidden);
       row.classList.toggle('review-favorite', isFavorite);
     };
-    favBox.onclick = ()=>{
+
+    const setReviewState = next => {
+      if(reviewState === next){
+        reviewState = 0;
+        localStorage.removeItem(reviewKey);
+      }else{
+        reviewState = next;
+        localStorage.setItem(reviewKey, String(reviewState));
+        if(next === 1){
+          updateQuestionState(1);
+        }else if(next === 2){
+          updateQuestionState(2);
+        }
+      }
+      updateReviewControls();
+      updateVisibility();
+      ensureEmptyState();
+      refreshStats();
+    };
+
+    correctBtn.onclick = ()=> setReviewState(1);
+    wrongBtn.onclick = ()=> setReviewState(2);
+
+    favoriteToggle.onclick = ()=>{
       isFavorite = !isFavorite;
-      item.favorite = isFavorite;
       if(isFavorite){
         localStorage.setItem(favoriteKey,'1');
       }else{
         localStorage.removeItem(favoriteKey);
       }
-      paintFavorite();
+      updateFavoriteToggle();
+      updateVisibility();
+      ensureEmptyState();
+      refreshStats();
     };
-    paintFavorite();
-    controls.appendChild(favBox);
 
-    row.appendChild(controls);
+    hideToggle.onclick = ()=>{
+      manualHidden = !manualHidden;
+      if(manualHidden){
+        localStorage.setItem(hiddenKey,'1');
+      }else{
+        localStorage.removeItem(hiddenKey);
+      }
+      updateHideToggle();
+      updateVisibility();
+      ensureEmptyState();
+      refreshStats();
+    };
+
+    updateReviewControls();
+    updateFavoriteToggle();
+    updateHideToggle();
+    updateVisibility();
 
     const cKey = `comment_${key}`;
     const editDiv=document.createElement('div');
