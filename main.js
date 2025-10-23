@@ -4619,6 +4619,19 @@ if (pdfNextPageBtn) {
     navigatePdfPage(1);
   });
 }
+if (pdfPageIndicator) {
+  pdfPageIndicator.setAttribute('role', 'button');
+  pdfPageIndicator.setAttribute('tabindex', '0');
+  pdfPageIndicator.setAttribute('aria-label', 'Recolher navegação de páginas');
+  const closeMenu = () => setPdfPageMenuOpen(false);
+  pdfPageIndicator.addEventListener('click', closeMenu);
+  pdfPageIndicator.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeMenu();
+    }
+  });
+}
 if (pdfContainer) {
   pdfContainer.addEventListener('touchstart', handlePdfPinchStart, { passive: false });
   pdfContainer.addEventListener('touchmove', handlePdfPinchMove, { passive: false });

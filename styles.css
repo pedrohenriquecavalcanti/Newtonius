@@ -626,15 +626,22 @@ button:hover { filter: brightness(1.2); }
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: #fff;
+  color: #111;
 }
 .pdf-page-nav.open {
   display: flex;
 }
 .pdf-page-indicator {
-  min-width: 42px;
+  min-width: 32px;
+  padding: 0 4px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.pdf-page-indicator:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 .answer-letter{
   margin:40px;
