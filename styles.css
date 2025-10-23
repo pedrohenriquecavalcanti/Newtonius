@@ -327,6 +327,10 @@ button:hover { filter: brightness(1.2); }
   box-shadow: 0 0 0 2px rgba(255, 211, 107, 0.35);
 }
 
+.question-row.review-soon .question-btn {
+  box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.45);
+}
+
 .question-btn--with-menu {
   position: relative;
   padding-right: 44px;

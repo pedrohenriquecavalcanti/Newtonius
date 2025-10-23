@@ -239,7 +239,9 @@ const DISCIPLINES_BY_MODE = {
 const NAT_REVIEW_DISCIPLINES = DISCIPLINES_BY_MODE.nat || [];
 const REVIEW_ALL_DISC = '__review_all__';
 const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
+const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
+const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
 
 const DEFAULT_NAT_REVIEW_STATE = {
@@ -361,7 +363,7 @@ function ensureReviewSettingsUI() {
     });
     const pomodoroBtn = document.getElementById('pomodoroBtn');
     if (pomodoroBtn && pomodoroBtn.parentElement === headerEl) {
-      headerEl.insertBefore(reviewSettingsBtn, pomodoroBtn);
+      pomodoroBtn.insertAdjacentElement('afterend', reviewSettingsBtn);
     } else {
       headerEl.appendChild(reviewSettingsBtn);
     }
@@ -430,7 +432,7 @@ function renderReviewSettingsMenu() {
   hiddenBtn.className = 'review-menu-option review-menu-toggle';
   hiddenBtn.type = 'button';
   const showHidden = !!natReviewState.showHidden;
-  hiddenBtn.textContent = showHidden ? 'Ocultar ocultadas' : 'Exibir ocultadas';
+  hiddenBtn.textContent = showHidden ? 'Ocultar' : 'Exibir Ocultas';
   if (showHidden) hiddenBtn.classList.add('active');
   hiddenBtn.addEventListener('click', () => {
     setNatReviewState({ showHidden: !natReviewState.showHidden });
@@ -2138,14 +2140,18 @@ function collectNatReviewItems(filter=null){
       const key = qKey(disc,sub,q.label);
       const state = +localStorage.getItem(key) || 0;
       const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+      const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
       const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+      const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
       const isHidden = localStorage.getItem(hiddenKey) === '1';
+      const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
+      const isSoon = localStorage.getItem(soonKey) === '1';
       if((isEnem || isSas) && state === 2){
-        combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite});
+        combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
       if(isEnem && state === 0){
-        combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite});
+        combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
     });
     visited.add(exam);
@@ -2374,94 +2380,139 @@ function showNatReview(filter=null){
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
 
-  const ensureEmptyState = ()=>{
+  const ensureEmptyState = () => {
     const hasRow = !!app.querySelector('.question-row');
-    if(hasRow){
-      if(emptyMsg.isConnected) emptyMsg.remove();
-    }else{
+    if (hasRow) {
+      if (emptyMsg.isConnected) emptyMsg.remove();
+    } else {
       let message = baseEmptyText;
-      const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden));
-      const visibleSnapshot = computeNatReviewSnapshot(combined.filter(item => !item.hidden));
-      if(!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0){
-        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir ocultadas”.';
+      const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden && !item.favorite));
+      const visibleSnapshot = computeNatReviewSnapshot(combined.filter(item => !item.hidden || item.favorite));
+      if (!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0) {
+        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir Ocultas”.';
       }
       emptyMsg.textContent = message;
-      if(!emptyMsg.isConnected) app.appendChild(emptyMsg);
+      if (!emptyMsg.isConnected) app.appendChild(emptyMsg);
     }
   };
 
-  const refreshStats = ()=>{
-    const activeItems = showHidden ? combined : combined.filter(item => !item.hidden);
-    const snapshot = computeNatReviewSnapshot(activeItems);
-    const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden));
+  const refreshStats = () => {
+    const snapshot = computeNatReviewSnapshot(combined);
     const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
-    const hiddenRemaining = Math.max(hiddenSnapshot.totalCount - hiddenSnapshot.reviewedCount, 0);
-    let text = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
-    if(hiddenSnapshot.totalCount > 0){
-      text += ` | Ocultadas: ${hiddenRemaining}/${hiddenSnapshot.totalCount}`;
-    }
+    const text = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
     stats.textContent = text;
     stats.className = 'stat';
   };
 
   const fragment = document.createDocumentFragment();
-  const itemsToRender = showHidden ? combined : combined.filter(item => !item.hidden);
 
-  itemsToRender.forEach(item=>{
-    const key = qKey(item.disc,item.sub,item.q.label);
+  combined.forEach(item => {
+    const key = qKey(item.disc, item.sub, item.q.label);
     let st = +localStorage.getItem(key) || 0;
-    const qualifies = ()=>{
-      if(st === 2) return true;
+    const qualifies = () => {
+      if (st === 2) return true;
       return item.type !== 'wrong' && st === 0;
     };
-    if(!qualifies()) return;
+    if (!qualifies()) return;
+
+    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+    const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+    const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
+
+    let isHidden = !!item.hidden;
+    let autoHidden = localStorage.getItem(autoHiddenKey) === '1';
+    let isFavorite = !!item.favorite;
+    let isSoon = !!item.soon;
+
+    const reviewKey = `natReview_${key}`;
+    let reviewState = +localStorage.getItem(reviewKey) || 0;
+
+    const syncWithReviewState = () => {
+      if (reviewState === 1) {
+        if (isFavorite) {
+          if (isHidden) {
+            isHidden = false;
+            localStorage.removeItem(hiddenKey);
+          }
+          if (autoHidden) {
+            autoHidden = false;
+            localStorage.removeItem(autoHiddenKey);
+          }
+        } else {
+          if (!isHidden) {
+            isHidden = true;
+            localStorage.setItem(hiddenKey, '1');
+          }
+          if (!autoHidden) {
+            autoHidden = true;
+          }
+          localStorage.setItem(autoHiddenKey, '1');
+        }
+      } else if (autoHidden) {
+        autoHidden = false;
+        localStorage.removeItem(autoHiddenKey);
+        if (isHidden) {
+          isHidden = false;
+          localStorage.removeItem(hiddenKey);
+        }
+      }
+      item.hidden = isHidden;
+      item.autoHidden = autoHidden;
+    };
+
+    syncWithReviewState();
+
+    if (!natReviewState.showHidden && isHidden && !isFavorite) {
+      return;
+    }
+
+    item.hidden = isHidden;
+    item.favorite = isFavorite;
+    item.soon = isSoon;
 
     const row = document.createElement('div');
     row.className = 'question-row';
-    if(item.hidden) row.classList.add('review-hidden');
-    if(item.favorite) row.classList.add('review-favorite');
+    if (isHidden) row.classList.add('review-hidden');
+    if (isFavorite) row.classList.add('review-favorite');
+    if (isSoon) row.classList.add('review-soon');
 
     const qBtn = document.createElement('button');
-    qBtn.classList.add('btn','question-btn','two-line-btn','question-btn--with-menu');
+    qBtn.classList.add('btn', 'question-btn', 'two-line-btn', 'question-btn--with-menu');
     const examPrefix = `${item.exam}-`;
     const labelText = item.q.label.toUpperCase().startsWith(examPrefix.toUpperCase())
       ? item.q.label
       : `${item.exam} • ${item.q.label}`;
-    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
+    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc, item.sub)}</span><br>` +
       `<span class="ms-label">${labelText}</span>`;
     const topicSpan = qBtn.querySelector('.ms-topic');
     topicSpan.style.color = discColors[item.disc];
     const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
-    if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
-    qBtn.addEventListener('click',e=>{
-      if(e.target.closest('.ms-topic')){
+    if (m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
+    qBtn.addEventListener('click', e => {
+      if (e.target.closest('.ms-topic')) {
         currentDisc = item.disc;
         currentSub = item.sub;
         openSummary();
         e.stopPropagation();
-      }else{
-        openPdf(item.q.QPDFName,item.q.page);
+      } else {
+        openPdf(item.q.QPDFName, item.q.page);
       }
     });
     row.appendChild(qBtn);
 
-    row.appendChild(Object.assign(document.createElement('button'),{
-      textContent:'Gabarito',
-      className:'small-btn',
-      onclick:()=>openGabarito(item.q)
+    row.appendChild(Object.assign(document.createElement('button'), {
+      textContent: 'Gabarito',
+      className: 'small-btn',
+      onclick: () => openGabarito(item.q)
     }));
-
-    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-    let isHidden = !!item.hidden;
-    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-    let isFavorite = !!item.favorite;
 
     const menuToggle = document.createElement('span');
     menuToggle.className = 'question-menu-toggle';
     menuToggle.textContent = '▾';
     menuToggle.title = 'Ações da questão';
-    menuToggle.setAttribute('aria-haspopup','menu');
-    menuToggle.setAttribute('aria-expanded','false');
+    menuToggle.setAttribute('aria-haspopup', 'menu');
+    menuToggle.setAttribute('aria-expanded', 'false');
     qBtn.appendChild(menuToggle);
 
     const actionMenu = document.createElement('div');
@@ -2470,10 +2521,14 @@ function showNatReview(filter=null){
     const favoriteOption = document.createElement('button');
     favoriteOption.type = 'button';
     favoriteOption.className = 'question-action-option';
+    const soonOption = document.createElement('button');
+    soonOption.type = 'button';
+    soonOption.className = 'question-action-option';
     const hideOption = document.createElement('button');
     hideOption.type = 'button';
     hideOption.className = 'question-action-option';
     actionMenu.appendChild(favoriteOption);
+    actionMenu.appendChild(soonOption);
     actionMenu.appendChild(hideOption);
     row.appendChild(actionMenu);
 
@@ -2483,24 +2538,24 @@ function showNatReview(filter=null){
     const stateBox = document.createElement('span');
     stateBox.className = 'state-box result-box';
     stateBox.title = 'Marcar questão como certa ou errada';
-    const paintState = ()=>{
-      stateBox.textContent = st===1?'✓':st===2?'✗':'';
-      stateBox.classList.toggle('state-correct', st===1);
-      stateBox.classList.toggle('state-wrong', st===2);
+    const paintState = () => {
+      stateBox.textContent = st === 1 ? '✓' : st === 2 ? '✗' : '';
+      stateBox.classList.toggle('state-correct', st === 1);
+      stateBox.classList.toggle('state-wrong', st === 2);
     };
-    stateBox.onclick = ()=>{
-      st = (st+1)%3;
-      localStorage.setItem(key,st);
+    stateBox.onclick = () => {
+      st = (st + 1) % 3;
+      localStorage.setItem(key, st);
       const today = getTodayStr();
       const logKey = `log_${today}_${key}`;
-      if(!D1_DISCIPLINES.includes(item.disc)){
-        if(st===1||st===2){
-          localStorage.setItem(logKey,'1');
-        }else{
+      if (!D1_DISCIPLINES.includes(item.disc)) {
+        if (st === 1 || st === 2) {
+          localStorage.setItem(logKey, '1');
+        } else {
           localStorage.removeItem(logKey);
         }
       }
-      if(st===2 && item.type !== 'wrong'){
+      if (st === 2 && item.type !== 'wrong') {
         item.type = 'wrong';
       }
       paintState();
@@ -2510,68 +2565,79 @@ function showNatReview(filter=null){
     paintState();
     controls.appendChild(stateBox);
 
-    const reviewKey = `natReview_${key}`;
-    let reviewState = +localStorage.getItem(reviewKey) || 0;
     const reviewBox = document.createElement('span');
     reviewBox.className = 'state-box review-box';
-    const paintReview = ()=>{
-      reviewBox.textContent = reviewState===1?'✓':reviewState===2?'✗':'';
-      reviewBox.classList.toggle('review-correct', reviewState===1);
-      reviewBox.classList.toggle('review-wrong', reviewState===2);
-      reviewBox.title = reviewState===0
+    const paintReview = () => {
+      reviewBox.textContent = reviewState === 1 ? '✓' : reviewState === 2 ? '✗' : '';
+      reviewBox.classList.toggle('review-correct', reviewState === 1);
+      reviewBox.classList.toggle('review-wrong', reviewState === 2);
+      reviewBox.title = reviewState === 0
         ? 'Marcar revisão'
-        : reviewState===1
+        : reviewState === 1
           ? 'Revisado – certo'
           : 'Revisado – errado';
     };
-    reviewBox.onclick = ()=>{
-      reviewState = (reviewState+1)%3;
-      if(reviewState===0){
+    reviewBox.onclick = () => {
+      reviewState = (reviewState + 1) % 3;
+      if (reviewState === 0) {
         localStorage.removeItem(reviewKey);
-      }else{
-        localStorage.setItem(reviewKey,reviewState);
+      } else {
+        localStorage.setItem(reviewKey, reviewState);
       }
       paintReview();
+      syncWithReviewState();
+      paintHide();
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+        row.remove();
+      }
+      ensureEmptyState();
       refreshStats();
     };
     paintReview();
     controls.appendChild(reviewBox);
 
-    const updateMenuToggle = ()=>{
-      const hasState = isHidden || isFavorite;
+    const updateMenuToggle = () => {
+      const hasState = isHidden || isFavorite || isSoon;
       menuToggle.classList.toggle('menu-active', hasState);
     };
 
-    const paintHide = ()=>{
-      hideOption.textContent = isHidden ? 'Mostrar questão' : 'Ocultar questão';
+    const paintHide = () => {
+      hideOption.textContent = isHidden ? 'Exibir' : 'Ocultar';
       hideOption.classList.toggle('active', isHidden);
       row.classList.toggle('review-hidden', isHidden);
       updateMenuToggle();
     };
 
-    const paintFavorite = ()=>{
-      favoriteOption.textContent = isFavorite ? 'Remover dos favoritos' : 'Favoritar questão';
+    const paintFavorite = () => {
+      favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
       favoriteOption.classList.toggle('active', isFavorite);
       row.classList.toggle('review-favorite', isFavorite);
       updateMenuToggle();
     };
 
+    const paintSoon = () => {
+      soonOption.textContent = isSoon ? 'Remover Soon' : 'Soon';
+      soonOption.classList.toggle('active', isSoon);
+      row.classList.toggle('review-soon', isSoon);
+      updateMenuToggle();
+    };
+
     let menuOpen = false;
     const onOutsideClick = event => {
-      if(!row.contains(event.target)){
+      if (!row.contains(event.target)) {
         closeMenu();
       }
     };
-    const closeMenu = ()=>{
-      if(!menuOpen) return;
+    const closeMenu = () => {
+      if (!menuOpen) return;
       menuOpen = false;
       actionMenu.style.display = 'none';
       menuToggle.classList.remove('open');
-      menuToggle.setAttribute('aria-expanded','false');
+      menuToggle.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', onOutsideClick);
     };
-    const openMenu = ()=>{
-      if(menuOpen) return;
+    const openMenu = () => {
+      if (menuOpen) return;
       menuOpen = true;
       actionMenu.style.display = 'block';
       actionMenu.style.visibility = 'hidden';
@@ -2584,56 +2650,80 @@ function showNatReview(filter=null){
       actionMenu.style.top = `${toggleRect.bottom - rowRect.top + 4}px`;
       actionMenu.style.visibility = 'visible';
       menuToggle.classList.add('open');
-      menuToggle.setAttribute('aria-expanded','true');
+      menuToggle.setAttribute('aria-expanded', 'true');
       document.addEventListener('click', onOutsideClick);
     };
 
-    menuToggle.addEventListener('click', e=>{
+    menuToggle.addEventListener('click', e => {
       e.stopPropagation();
       e.preventDefault();
-      if(menuOpen){
+      if (menuOpen) {
         closeMenu();
-      }else{
+      } else {
         openMenu();
       }
     });
 
-    favoriteOption.addEventListener('click', e=>{
+    favoriteOption.addEventListener('click', e => {
       e.preventDefault();
       isFavorite = !isFavorite;
       item.favorite = isFavorite;
-      if(isFavorite){
-        localStorage.setItem(favoriteKey,'1');
-      }else{
+      if (isFavorite) {
+        localStorage.setItem(favoriteKey, '1');
+      } else {
         localStorage.removeItem(favoriteKey);
       }
       paintFavorite();
-      closeMenu();
-    });
-
-    hideOption.addEventListener('click', e=>{
-      e.preventDefault();
-      isHidden = !isHidden;
-      item.hidden = isHidden;
-      if(isHidden){
-        localStorage.setItem(hiddenKey,'1');
-      }else{
-        localStorage.removeItem(hiddenKey);
-      }
+      syncWithReviewState();
       paintHide();
-      closeMenu();
-      if(!natReviewState.showHidden && isHidden){
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
         row.remove();
       }
       ensureEmptyState();
       refreshStats();
+      closeMenu();
     });
 
-    qBtn.addEventListener('click', ()=>{
-      if(menuOpen) closeMenu();
+    soonOption.addEventListener('click', e => {
+      e.preventDefault();
+      isSoon = !isSoon;
+      item.soon = isSoon;
+      if (isSoon) {
+        localStorage.setItem(soonKey, '1');
+      } else {
+        localStorage.removeItem(soonKey);
+      }
+      paintSoon();
+      closeMenu();
+    });
+
+    hideOption.addEventListener('click', e => {
+      e.preventDefault();
+      isHidden = !isHidden;
+      item.hidden = isHidden;
+      if (isHidden) {
+        localStorage.setItem(hiddenKey, '1');
+      } else {
+        localStorage.removeItem(hiddenKey);
+      }
+      autoHidden = false;
+      localStorage.removeItem(autoHiddenKey);
+      paintHide();
+      syncWithReviewState();
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
+      closeMenu();
+    });
+
+    qBtn.addEventListener('click', () => {
+      if (menuOpen) closeMenu();
     });
 
     paintFavorite();
+    paintSoon();
     paintHide();
 
     row.appendChild(controls);
