@@ -608,8 +608,12 @@ button:hover { filter: brightness(1.2); }
   color: #ffecec;
 }
 .pdf-tool-btn--close:hover {
-  background: rgba(255, 80, 80, 0.46);
-  color: #ff4d4d;
+  background: rgba(255, 60, 60, 0.68);
+  color: #fff5f5;
+}
+.pdf-tool-btn--close:active {
+  background: rgba(255, 72, 72, 0.48);
+  color: #ffe3e3;
 }
 .pdf-tool-btn:disabled {
   opacity: 0.35;
