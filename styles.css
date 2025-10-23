@@ -553,7 +553,7 @@ button:hover { filter: brightness(1.2); }
   margin: 0 auto;
   width: fit-content;
   max-width: min(360px, calc(100% - 24px));
-  background: rgba(18, 18, 18, 0.02);
+  background: rgba(18, 18, 18, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   padding: 3px 8px;
