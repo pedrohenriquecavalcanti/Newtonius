@@ -243,6 +243,7 @@ const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
 const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
+const natReviewDeferredAutoHide = new Set();
 
 const DEFAULT_NAT_REVIEW_STATE = {
   disc: REVIEW_ALL_DISC,
@@ -2428,9 +2429,11 @@ function showNatReview(filter=null){
     const reviewKey = `natReview_${key}`;
     let reviewState = +localStorage.getItem(reviewKey) || 0;
 
-    const syncWithReviewState = () => {
+    const syncWithReviewState = ({ deferAutoHide = false } = {}) => {
+      const shouldDefer = deferAutoHide || natReviewDeferredAutoHide.has(key);
       if (reviewState === 1) {
         if (isFavorite) {
+          natReviewDeferredAutoHide.delete(key);
           if (isHidden) {
             isHidden = false;
             localStorage.removeItem(hiddenKey);
@@ -2440,21 +2443,35 @@ function showNatReview(filter=null){
             localStorage.removeItem(autoHiddenKey);
           }
         } else {
-          if (!isHidden) {
-            isHidden = true;
-            localStorage.setItem(hiddenKey, '1');
-          }
           if (!autoHidden) {
             autoHidden = true;
           }
           localStorage.setItem(autoHiddenKey, '1');
+          if (shouldDefer) {
+            natReviewDeferredAutoHide.add(key);
+            if (isHidden) {
+              isHidden = false;
+              localStorage.removeItem(hiddenKey);
+            }
+          } else {
+            natReviewDeferredAutoHide.delete(key);
+            if (!isHidden) {
+              isHidden = true;
+            }
+            localStorage.setItem(hiddenKey, '1');
+          }
         }
-      } else if (autoHidden) {
-        autoHidden = false;
-        localStorage.removeItem(autoHiddenKey);
-        if (isHidden) {
-          isHidden = false;
-          localStorage.removeItem(hiddenKey);
+      } else {
+        if (natReviewDeferredAutoHide.has(key)) {
+          natReviewDeferredAutoHide.delete(key);
+        }
+        if (autoHidden) {
+          autoHidden = false;
+          localStorage.removeItem(autoHiddenKey);
+          if (isHidden) {
+            isHidden = false;
+            localStorage.removeItem(hiddenKey);
+          }
         }
       }
       item.hidden = isHidden;
@@ -2585,7 +2602,7 @@ function showNatReview(filter=null){
         localStorage.setItem(reviewKey, reviewState);
       }
       paintReview();
-      syncWithReviewState();
+      syncWithReviewState({ deferAutoHide: reviewState === 1 });
       paintHide();
       if (!natReviewState.showHidden && isHidden && !isFavorite) {
         row.remove();
@@ -2616,7 +2633,7 @@ function showNatReview(filter=null){
     };
 
     const paintSoon = () => {
-      soonOption.textContent = isSoon ? 'Remover Soon' : 'Soon';
+      soonOption.textContent = isSoon ? 'Remover Em Breve' : 'Em Breve';
       soonOption.classList.toggle('active', isSoon);
       row.classList.toggle('review-soon', isSoon);
       updateMenuToggle();
@@ -2635,10 +2652,12 @@ function showNatReview(filter=null){
       menuToggle.classList.remove('open');
       menuToggle.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', onOutsideClick);
+      row.style.zIndex = '';
     };
     const openMenu = () => {
       if (menuOpen) return;
       menuOpen = true;
+      row.style.zIndex = '30';
       actionMenu.style.display = 'block';
       actionMenu.style.visibility = 'hidden';
       const toggleRect = menuToggle.getBoundingClientRect();
@@ -2708,6 +2727,7 @@ function showNatReview(filter=null){
       }
       autoHidden = false;
       localStorage.removeItem(autoHiddenKey);
+      natReviewDeferredAutoHide.delete(key);
       paintHide();
       syncWithReviewState();
       if (!natReviewState.showHidden && isHidden && !isFavorite) {
