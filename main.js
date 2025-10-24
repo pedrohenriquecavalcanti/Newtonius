@@ -5175,15 +5175,49 @@ importFile.addEventListener("change", ({ target }) => {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    // guarda o JSON bruto em sessionStorage
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem("__pendingImport__", e.target.result);
+    const raw = e.target.result;
+
+    let parsedBackup;
+    try {
+      parsedBackup = JSON.parse(raw);
+    } catch (err) {
+      console.error("Backup inválido:", err);
+      alert("Importação cancelada (arquivo corrompido).");
+      return;
     }
 
-    // libera espaço no localStorage para a próxima carga
-    localStorage.clear();
+    let storedInSession = false;
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        sessionStorage.setItem("__pendingImport__", raw);
+        storedInSession = true;
+      } catch (err) {
+        console.warn("sessionStorage indisponível; aplicando importação imediatamente.", err);
+      }
+    }
 
-    // recarrega a página; o passo 2 roda no boot
+    if (storedInSession) {
+      try {
+        localStorage.clear();
+      } catch (err) {
+        console.warn("Não foi possível limpar o localStorage antes do reload.", err);
+      }
+      location.reload();
+      return;
+    }
+
+    try {
+      localStorage.clear();
+      Object.entries(parsedBackup).forEach(([key, value]) => {
+        localStorage.setItem(key, value);
+      });
+    } catch (err) {
+      console.error("Falha ao restaurar backup diretamente:", err);
+      alert("Importação cancelada (armazenamento indisponível).");
+      return;
+    }
+
+    alert("Importação concluída! Recarregando página...");
     location.reload();
   };
   reader.readAsText(file);
@@ -5191,9 +5225,15 @@ importFile.addEventListener("change", ({ target }) => {
 
 /* 2 ───── Restauração automática logo no início do JS principal ───── */
 (() => {
-  const raw = (typeof sessionStorage !== 'undefined')
-    ? sessionStorage.getItem("__pendingImport__")
-    : null;
+  let raw = null;
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      raw = sessionStorage.getItem("__pendingImport__");
+    } catch (err) {
+      console.warn("Não foi possível acessar sessionStorage durante a restauração.", err);
+      raw = null;
+    }
+  }
   if (!raw) return;                           // nada pendente
 
   try {
@@ -5205,7 +5245,11 @@ importFile.addEventListener("change", ({ target }) => {
     alert("Importação cancelada (arquivo corrompido).");
   } finally {
     if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem("__pendingImport__"); // limpa a flag
+      try {
+        sessionStorage.removeItem("__pendingImport__"); // limpa a flag
+      } catch (err) {
+        console.warn("Não foi possível limpar a flag de importação do sessionStorage.", err);
+      }
     }
   }
 })();
@@ -5490,7 +5534,7 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
   /* ---------- Seletores ---------- */
   const xpModal      = document.getElementById('xpModal');
   const xpPrevWeek   = document.getElementById('xpPrevWeek');
-  const xpNextWeek = document.getElementById('xpNextWeek');   // NOVO
+  const xpNextWeek   = document.getElementById('xpNextWeek');
   const xpPeriod     = document.getElementById('xpPeriod');
   const xpEnem       = document.getElementById('xpEnem');
   const xpSummary    = document.getElementById('xpSummary');
@@ -5498,6 +5542,11 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
   // >>> acrescente aqui <<<
   const arcanoImg = document.querySelector('.intro-img');
   const introLeft = document.querySelector('.intro-left');
+
+  if (!xpModal || !xpPrevWeek || !xpNextWeek || !xpPeriod || !xpEnem || !xpSummary || !xpChartElm) {
+    console.warn('XP modal incompleto – recursos desativados.');
+    return;
+  }
 
   /* ---------- Utilidades de data ---------- */
   const DAY_MS = 24*60*60*1000;
@@ -5551,6 +5600,11 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
 
     if (typeof Chart === 'undefined') {
       console.warn('Chart.js não carregado – gráfico indisponível');
+      return;
+    }
+
+    if (!xpChartElm) {
+      console.warn('Canvas do gráfico semanal não encontrado – gráfico indisponível');
       return;
     }
 
