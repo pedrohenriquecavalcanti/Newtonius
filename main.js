@@ -245,6 +245,8 @@ const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
 const natReviewDeferredAutoHide = new Set();
 
+const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
+
 const DEFAULT_NAT_REVIEW_STATE = {
   disc: REVIEW_ALL_DISC,
   sub: null,
@@ -254,6 +256,8 @@ const DEFAULT_NAT_REVIEW_STATE = {
 let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
 let reviewSettingsBtn = null;
 let reviewSettingsMenu = null;
+
+let postReviewMode = localStorage.getItem(REVIEW_MODE_STORAGE_KEY) === '1';
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
@@ -298,6 +302,7 @@ const importBtn     = document.getElementById("importBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const reviewModeBtn = document.getElementById("reviewModeBtn");
 const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
@@ -467,6 +472,9 @@ let currentExam  = null; // nome do exame em exibicao
 let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
+
+let currentView = 'home';
+let currentMicroSimEntry = null;
 
 // Metadados do PDF aberto no modal
 let lastPdfName = null;
@@ -1090,12 +1098,104 @@ function updateStar(el, state) {
   img.src = `Stars/${PNG}`;
 }
 
+function getStoredQuestionState(disc, sub, label) {
+  return +localStorage.getItem(qKey(disc, sub, label)) || 0;
+}
+
+function getEffectiveStateFromKey(key, baseState) {
+  if (!postReviewMode || baseState !== 2) {
+    return baseState;
+  }
+  const reviewState = +localStorage.getItem(`natReview_${key}`) || 0;
+  return reviewState === 1 ? 1 : baseState;
+}
+
+function getEffectiveQuestionState(disc, sub, label) {
+  const key = qKey(disc, sub, label);
+  const baseState = getStoredQuestionState(disc, sub, label);
+  return getEffectiveStateFromKey(key, baseState);
+}
+
+function updateReviewModeButton() {
+  if (!reviewModeBtn) return;
+  reviewModeBtn.textContent = postReviewMode ? 'Pré-Revisão' : 'Pós-Revisão';
+}
+
+function refreshReviewModeUI() {
+  switch (currentView) {
+    case 'home':
+      showMenu();
+      break;
+    case 'subjects':
+      if (currentDisc) {
+        showSubjects(currentDisc);
+      } else {
+        showMenu();
+      }
+      break;
+    case 'questions':
+      if (currentDisc && currentSub) {
+        showQuestions(currentDisc, currentSub, false, trailReturnSub);
+      } else if (currentDisc) {
+        showSubjects(currentDisc);
+      } else {
+        showMenu();
+      }
+      break;
+    case 'trail':
+      showTrail(undefined, true);
+      break;
+    case 'examMenu':
+      showExamMenu();
+      break;
+    case 'examList':
+      if (currentExamMode) {
+        showExamList(currentExamMode);
+      } else {
+        showExamMenu();
+      }
+      break;
+    case 'exam':
+      if (currentExam) {
+        showExam(currentExam);
+      } else if (currentExamMode) {
+        showExamList(currentExamMode);
+      } else {
+        showExamMenu();
+      }
+      break;
+    case 'review':
+      showNatReview();
+      break;
+    case 'microSim':
+      if (currentMicroSimEntry) {
+        showMicroSim(currentMicroSimEntry);
+      } else {
+        showSubjects('Matemática');
+      }
+      break;
+    default:
+      showMenu();
+  }
+}
+
+function setPostReviewMode(enabled) {
+  postReviewMode = !!enabled;
+  if (postReviewMode) {
+    localStorage.setItem(REVIEW_MODE_STORAGE_KEY, '1');
+  } else {
+    localStorage.removeItem(REVIEW_MODE_STORAGE_KEY);
+  }
+  updateReviewModeButton();
+  refreshReviewModeUI();
+}
+
 // Calcula automaticamente a estrela de um assunto
 function calcStarState(disc, sub) {
   const qs = questoesData[disc][sub] || [];
   let correct = 0, answered = 0;
   qs.forEach(q => {
-    const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+    const st = getEffectiveQuestionState(disc, sub, q.label);
     if (st === 1) correct++;
     if (st === 1 || st === 2) answered++;
   });
@@ -1251,6 +1351,8 @@ if (typeof sessionStorage !== 'undefined' &&
 function showMenu () {
   examListOpen=false;
   currentExam=null;
+  currentView = 'home';
+  currentMicroSimEntry = null;
   /* 1 ▸ devolve o xpModal para <body> antes que clear() o remova        */
   const xpModalEl = document.getElementById('xpModal');
   if (xpModalEl && xpModalEl.parentElement !== document.body) {
@@ -1467,6 +1569,14 @@ natReviewBtn.onclick = () => {
   resetNatReviewState();
   showNatReview();
 };
+
+if (reviewModeBtn) {
+  updateReviewModeButton();
+  reviewModeBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    setPostReviewMode(!postReviewMode);
+  };
+}
 
 function updateD1Btn(){
   toggleD1Btn.textContent = d1Enabled ? 'Esconder - D1' : 'Exibir - D1';
@@ -1992,6 +2102,8 @@ function showTrail(expandDay, preserveScroll=false){
   currentDisc=currentSub=null;
   trailReturn=null;
   trailReturnSub=false;
+  currentView = 'trail';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Trilha Estratégica');
@@ -2030,7 +2142,7 @@ function computeExamStats(){
           Nat:{c:0,a:0,t:0},
           Mat:{c:0,a:0,t:0}
         };
-        const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
+        const st = getEffectiveQuestionState(disc, sub, q.label);
         const e=exams[exam][cat];
         e.t++; if(st===1) e.c++; if(st===1||st===2) e.a++;
       });
@@ -2139,7 +2251,8 @@ function collectNatReviewItems(filter=null){
     questions.forEach(({disc,sub,q})=>{
       if(!matchesFilter(disc,sub)) return;
       const key = qKey(disc,sub,q.label);
-      const state = +localStorage.getItem(key) || 0;
+      const state = getStoredQuestionState(disc, sub, q.label);
+      const effectiveState = getEffectiveStateFromKey(key, state);
       const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
       const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
       const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
@@ -2148,10 +2261,10 @@ function collectNatReviewItems(filter=null){
       const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
       const isSoon = localStorage.getItem(soonKey) === '1';
-      if((isEnem || isSas) && state === 2){
+      if((isEnem || isSas) && effectiveState === 2){
         combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
-      if(isEnem && state === 0){
+      if(isEnem && effectiveState === 0){
         combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
     });
@@ -2173,9 +2286,10 @@ function computeNatReviewSnapshot(items){
   let reviewedCount = 0;
   items.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const state = +localStorage.getItem(key) || 0;
+    const state = getStoredQuestionState(item.disc, item.sub, item.q.label);
+    const effectiveState = getEffectiveStateFromKey(key, state);
     const isWrongItem = item.type === 'wrong';
-    const qualifies = isWrongItem ? state === 2 : state === 0;
+    const qualifies = isWrongItem ? effectiveState === 2 : effectiveState === 0;
     if(!qualifies) return;
     if(isWrongItem){
       wrongCount += 1;
@@ -2206,6 +2320,8 @@ function showExamMenu(){
   currentExam=null;
   currentExamMode=null;
   examListOpen=true;
+  currentView = 'examMenu';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Provas e Simulados');
@@ -2221,6 +2337,8 @@ function showExamList(mode='nat'){
   currentExam=null;
   examListOpen=true;
   currentExamMode=mode;
+  currentView = 'examList';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
@@ -2244,6 +2362,8 @@ function showExamList(mode='nat'){
 function showExam(exam){
   examListOpen=false;
   currentExam=exam;
+  currentView = 'exam';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
@@ -2259,7 +2379,7 @@ function showExam(exam){
     let c=0,a=0;
     let bioErr=0,quiErr=0,fisErr=0;
     questions.forEach(({disc,sub,q})=>{
-      const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if(st===1) c++;
       if(st===1||st===2) a++;
       if(st===2){
@@ -2310,11 +2430,29 @@ function showExam(exam){
       className:'small-btn',
       onclick:()=>openGabarito(q)}));
     const key=qKey(disc,sub,q.label);
-    let st=+localStorage.getItem(key)||0;
+    let st=getStoredQuestionState(disc, sub, q.label);
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
-    const paint=()=>{box.textContent=st===1?'\u2713':st===2?'\u2717':'';box.style.color=st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';};
+    const paint=()=>{
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent=effective===1?'\u2713':effective===2?'\u2717':'';
+      box.style.color=effective===1?'#32cd32':effective===2?'#ff0000':'#f0f0f0';
+    };
     paint();
-    box.onclick=()=>{st=(st+1)%3;localStorage.setItem(key,st);const today=getTodayStr();const logKey=`log_${today}_${key}`;if(!D1_DISCIPLINES.includes(disc)){if(st===1||st===2){localStorage.setItem(logKey,'1');}else{localStorage.removeItem(logKey);}}paint();refresh();};
+    box.onclick=()=>{
+      st=(st+1)%3;
+      localStorage.setItem(key,st);
+      const today=getTodayStr();
+      const logKey=`log_${today}_${key}`;
+      if(!D1_DISCIPLINES.includes(disc)){
+        if(st===1||st===2){
+          localStorage.setItem(logKey,'1');
+        }else{
+          localStorage.removeItem(logKey);
+        }
+      }
+      paint();
+      refresh();
+    };
     const cKey=`comment_${key}`;
     const editDiv=document.createElement('div');
     editDiv.className='comment-edit';
@@ -2347,6 +2485,8 @@ function showNatReview(filter=null){
   currentExam = null;
   examListOpen = false;
   currentExamMode = 'nat';
+  currentView = 'review';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
@@ -2409,10 +2549,11 @@ function showNatReview(filter=null){
 
   combined.forEach(item => {
     const key = qKey(item.disc, item.sub, item.q.label);
-    let st = +localStorage.getItem(key) || 0;
+    let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
     const qualifies = () => {
-      if (st === 2) return true;
-      return item.type !== 'wrong' && st === 0;
+      const effective = getEffectiveStateFromKey(key, st);
+      if (item.type === 'wrong') return effective === 2;
+      return effective === 0;
     };
     if (!qualifies()) return;
 
@@ -2556,9 +2697,10 @@ function showNatReview(filter=null){
     stateBox.className = 'state-box result-box';
     stateBox.title = 'Marcar questão como certa ou errada';
     const paintState = () => {
-      stateBox.textContent = st === 1 ? '✓' : st === 2 ? '✗' : '';
-      stateBox.classList.toggle('state-correct', st === 1);
-      stateBox.classList.toggle('state-wrong', st === 2);
+      const effective = getEffectiveStateFromKey(key, st);
+      stateBox.textContent = effective === 1 ? '✓' : effective === 2 ? '✗' : '';
+      stateBox.classList.toggle('state-correct', effective === 1);
+      stateBox.classList.toggle('state-wrong', effective === 2);
     };
     stateBox.onclick = () => {
       st = (st + 1) % 3;
@@ -2776,6 +2918,8 @@ function showSubjects(disc) {
   currentDisc = disc;
   currentSub  = null;
   trailReturnSub = false;
+  currentView = 'subjects';
+  currentMicroSimEntry = null;
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
 
@@ -2825,7 +2969,7 @@ function showSubjects(disc) {
       const qs = questoesData[disc][sub];
       total += qs.length;
       qs.forEach(q => {
-        const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+        const st = getEffectiveQuestionState(disc, sub, q.label);
         if (st === 1) correct++;
         if (st === 1 || st === 2) answered++;
       });
@@ -2875,7 +3019,7 @@ function showSubjects(disc) {
     // faixa de cor de desempenho
     const qs = questoesData[disc][sub];
     const [c, a] = qs.reduce(([c, a], q) => {
-      const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       return [
         c + (st === 1 ? 1 : 0),
         a + ((st === 1 || st === 2) ? 1 : 0)
@@ -2899,6 +3043,8 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   trailReturnSub = fromTrailSub; // registra se veio direto da Trilha para um sub
   currentDisc = disc;
   currentSub  = sub;
+  currentView = 'questions';
+  currentMicroSimEntry = null;
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
   updateHeader(true, `${disc}: ${getFriendlyName(disc, sub)}`);
@@ -2920,7 +3066,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
     const qs = questoesData[disc][sub];
     let c = 0, a = 0;
     qs.forEach(q => {
-      const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if (st === 1) c++;
       if (st === 1 || st === 2) a++;
     });
@@ -2985,13 +3131,14 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
 
     /* Caixa ✓ / ✗ */
     const key    = qKey(disc, sub, q.label);          // estado ✓/✗
-    let st    = +localStorage.getItem(key) || 0;
+    let st    = getStoredQuestionState(disc, sub, q.label);
     const box = row.appendChild(Object.assign(
       document.createElement("span"), { className:"state-box" }));
 
     const paint = () => {
-      box.textContent = st===1 ? "✓" : st===2 ? "✗" : "";
-      box.style.color= st===1 ? "#32cd32" : st===2 ? "#ff0000" : "#f0f0f0";
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent = effective===1 ? "✓" : effective===2 ? "✗" : "";
+      box.style.color= effective===1 ? "#32cd32" : effective===2 ? "#ff0000" : "#f0f0f0";
     };
     paint();
     box.onclick = () => {
@@ -4665,6 +4812,8 @@ if (imgContainer) {
 function showMicroSim(entry) {
   currentDisc = 'Matemática';
   currentSub  = null;
+  currentView = 'microSim';
+  currentMicroSimEntry = null;
   // mantém trailReturn para voltar à trilha corretamente
   leaveHome();
   toggleSettingsVisibility(false);
@@ -4676,9 +4825,11 @@ function showMicroSim(entry) {
   clear();
   window.scrollTo(0,0);
 
+  let sourceEntry = null;
   let micro = [];
   if(entry && Array.isArray(entry.qs)) {
-    micro = entry.qs;
+    sourceEntry = { ...entry };
+    micro = entry.qs.slice();
   } else {
     const max = countRemainingQuestions('Matemática');
     if(max===0){
@@ -4692,6 +4843,7 @@ function showMicroSim(entry) {
     }
     const n = Math.max(1, Math.min(parseInt(inp,10)||0, max));
     micro = generateMicroQuestions(n);
+    sourceEntry = { disc: 'Matemática', sub: 'micro', qs: micro.slice() };
   }
   if(micro.length===0){
     app.textContent = 'Todas as questões de Matemática foram concluídas.';
@@ -4701,12 +4853,18 @@ function showMicroSim(entry) {
     const q = questoesData['Matemática'][sub].find(x => x.label===label);
     return q? {disc:'Matemática', sub, q}: null;
   }).filter(Boolean);
+  if (questions.length === 0) {
+    app.textContent = 'Todas as questões de Matemática foram concluídas.';
+    return;
+  }
+  const normalizedQs = questions.map(({sub, q}) => ({ sub, label: q.label }));
+  currentMicroSimEntry = { ...(sourceEntry || { disc: 'Matemática', sub: 'micro' }), qs: normalizedQs };
 
   const statDiv = document.getElementById('headerStats');
   function refreshStats(){
     let c=0,a=0;
     questions.forEach(({disc,sub,q})=>{
-      const st = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if(st===1) c++;
       if(st===1||st===2) a++;
     });
@@ -4744,12 +4902,13 @@ function showMicroSim(entry) {
         onclick:()=>openGabarito(q)}));
 
     const key = qKey(disc,sub,q.label);
-    let st = +localStorage.getItem(key)||0;
+    let st = getStoredQuestionState(disc, sub, q.label);
     const box = row.appendChild(Object.assign(
       document.createElement('span'),{className:'state-box'}));
     const paint=()=>{
-      box.textContent=st===1?'✓':st===2?'✗':'';
-      box.style.color=st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent=effective===1?'✓':effective===2?'✗':'';
+      box.style.color=effective===1?'#32cd32':effective===2?'#ff0000':'#f0f0f0';
     };
     paint();
     box.onclick=()=>{
