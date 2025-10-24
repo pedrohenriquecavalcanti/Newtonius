@@ -298,7 +298,9 @@ const summaryFrame     = document.getElementById("summaryFrame");
 const settingsBtn   = document.getElementById("settingsBtn");
 const settingsMenu  = document.getElementById("settingsMenu");
 const exportBtn     = document.getElementById("exportBtn");
+const exportHandBtn = document.getElementById("exportHandBtn");
 const importBtn     = document.getElementById("importBtn");
+const importHandBtn = document.getElementById("importHandBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
@@ -500,6 +502,7 @@ const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
 const PDF_DRAW_METADATA_VERSION = 3;
+const IMPORT_WRAPPER_TYPE = 'newtonius-import-v1';
 const PDF_AUTOSAVE_DELAY = 500;
 const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
@@ -912,11 +915,45 @@ function getExamCategory(disc){
   if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'Mat';
   return null;
 }
-async function doExport() {
+
+function isHandwritingStorageKey(key) {
+  return typeof key === 'string' && key.startsWith(PDF_DRAW_PREFIX);
+}
+
+function shouldIncludeKeyForExport(key, mode) {
+  const handwriting = isHandwritingStorageKey(key);
+  if (mode === 'handwriting') return handwriting;
+  return !handwriting;
+}
+
+function shouldIncludeKeyForImport(key, mode) {
+  return shouldIncludeKeyForExport(key, mode);
+}
+
+function removeHandwritingEntriesFromLocalStorage() {
+  if (typeof localStorage === 'undefined') return;
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (isHandwritingStorageKey(key)) {
+      toRemove.push(key);
+    }
+  }
+  toRemove.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+}
+
+function getExportFilenamePrefix(mode) {
+  return mode === 'handwriting' ? 'Newtonius_handwriting' : 'Newtonius';
+}
+
+async function doExport({ mode = 'general' } = {}) {
   /* 1 ▸ lê tudo do localStorage e joga num array  [key,value] */
   const pares = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
+    if (!shouldIncludeKeyForExport(k, mode)) continue;
     pares.push([k, localStorage.getItem(k)]);
   }
 
@@ -954,7 +991,7 @@ async function doExport() {
   }
   const stamp = `${dateMap.year}_${dateMap.month}_${dateMap.day}` +
                 `_${dateMap.hour}_${dateMap.minute}`;
-  const filename = `Newtonius_${stamp}.json`;
+  const filename = `${getExportFilenamePrefix(mode)}_${stamp}.json`;
 
   /* 6 ▸ tenta usar File System Access. Se falhar, baixa direto */
   let saved = false;
@@ -991,24 +1028,29 @@ async function doExport() {
 
 
 /** Faz backup do progresso (estrelas + status + comentários). */
-function exportData() {
+function exportData(mode = 'general') {
+  const normalizedMode = mode === 'handwriting' ? 'handwriting' : 'general';
 
   /* 1 ▸ força o iframe a descarregar para salvar o resumo */
   if (summaryContainer.style.display !== "none") {
     summaryFrame.src = "about:blank";      // dispara o unload do editor
   }
 
+  const flagKey = "__exportReady__";
+  const hasSession = typeof sessionStorage !== 'undefined';
+  const pending = hasSession ? sessionStorage.getItem(flagKey) : null;
+  const legacyMatch = normalizedMode === 'general' && pending === 'yes';
+
   /* 2 ▸ já estamos de volta do reload? */
-  if (typeof sessionStorage !== 'undefined' &&
-      sessionStorage.getItem("__exportReady__") === "yes") {
-    sessionStorage.removeItem("__exportReady__");
-    doExport();                            // faz o download
+  if (hasSession && (pending === normalizedMode || legacyMatch)) {
+    sessionStorage.removeItem(flagKey);
+    doExport({ mode: normalizedMode });     // faz o download
     return;
   }
 
   /* 3 ▸ primeira chamada: marca a flag, recarrega a página */
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem("__exportReady__","yes");
+  if (hasSession) {
+    sessionStorage.setItem(flagKey, normalizedMode);
     location.reload();                     // equivale ao F5
   }
 }
@@ -1358,9 +1400,12 @@ function getTotalQuestionsCount() {
     .flatMap(([, subs]) => Object.values(subs))
     .reduce((sum, arr) => sum + arr.length, 0);
 }
-if (typeof sessionStorage !== 'undefined' &&
-    sessionStorage.getItem("__exportReady__") === "yes") {
-  exportData();            // cai direto no ramo que baixa o arquivo
+if (typeof sessionStorage !== 'undefined') {
+  const pendingExport = sessionStorage.getItem("__exportReady__");
+  if (pendingExport) {
+    const mode = pendingExport === 'yes' ? 'general' : pendingExport;
+    exportData(mode);        // cai direto no ramo que baixa o arquivo
+  }
 }
 /* ---------------- MENU PRINCIPAL ---------------- */
 function showMenu () {
@@ -1485,12 +1530,28 @@ function toggleSettingsVisibility(showHome){
 
 exportBtn.onclick = () => {
   settingsMenu.style.display = "none";
-  exportData();
+  exportData('general');
 };
+if (exportHandBtn) {
+  exportHandBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    exportData('handwriting');
+  };
+}
 importBtn.onclick = () => {
   settingsMenu.style.display = "none";
+  importFile.value = '';
+  importFile.dataset.mode = 'general';
   importFile.click();
 };
+if (importHandBtn) {
+  importHandBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    importFile.value = '';
+    importFile.dataset.mode = 'handwriting';
+    importFile.click();
+  };
+}
 
 if (clearManuscriptsBtn) {
   clearManuscriptsBtn.onclick = () => {
@@ -5109,19 +5170,43 @@ window.closeSummary = closeSummary;           // para o iframe conseguir fechar
 /* 1 ───── Handler do botão “Importar” ───── */
 importFile.addEventListener("change", ({ target }) => {
   const file = target.files[0];
-  if (!file) return;
+  const mode = target.dataset.mode === 'handwriting' ? 'handwriting' : 'general';
+  if (!file) {
+    target.dataset.mode = '';
+    target.value = '';
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = (e) => {
     // guarda o JSON bruto em sessionStorage
     if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem("__pendingImport__", e.target.result);
+      const wrapper = {
+        __type: IMPORT_WRAPPER_TYPE,
+        mode,
+        data: e.target.result
+      };
+      try {
+        sessionStorage.setItem("__pendingImport__", JSON.stringify(wrapper));
+      } catch (err) {
+        console.error('Falha ao preparar importação', err);
+        alert('Não foi possível preparar a importação. Verifique o console para mais detalhes.');
+        target.dataset.mode = '';
+        target.value = '';
+        return;
+      }
     }
 
     // libera espaço no localStorage para a próxima carga
-    localStorage.clear();
+    if (mode === 'handwriting') {
+      removeHandwritingEntriesFromLocalStorage();
+    } else {
+      localStorage.clear();
+    }
 
     // recarrega a página; o passo 2 roda no boot
+    target.dataset.mode = '';
+    target.value = '';
     location.reload();
   };
   reader.readAsText(file);
@@ -5129,20 +5214,57 @@ importFile.addEventListener("change", ({ target }) => {
 
 /* 2 ───── Restauração automática logo no início do JS principal ───── */
 (() => {
-  const raw = (typeof sessionStorage !== 'undefined')
-    ? sessionStorage.getItem("__pendingImport__")
-    : null;
+  const hasSession = typeof sessionStorage !== 'undefined';
+  const raw = hasSession ? sessionStorage.getItem("__pendingImport__") : null;
   if (!raw) return;                           // nada pendente
 
+  let mode = 'general';
+  let parsedData = null;
+
   try {
-    const obj = JSON.parse(raw);              // texto → objeto
-    localStorage.clear();                     // garante que está limpo
-    Object.entries(obj).forEach(([k, v]) => localStorage.setItem(k, v));
+    const maybeWrapper = JSON.parse(raw);
+    if (maybeWrapper && typeof maybeWrapper === 'object' && !Array.isArray(maybeWrapper) && maybeWrapper.__type === IMPORT_WRAPPER_TYPE) {
+      mode = maybeWrapper.mode === 'handwriting' ? 'handwriting' : 'general';
+      if (typeof maybeWrapper.data !== 'string') {
+        throw new Error('Wrapper de importação inválido');
+      }
+      parsedData = JSON.parse(maybeWrapper.data);
+    } else {
+      parsedData = maybeWrapper;
+    }
+  } catch (err) {
+    console.error("Falha ao processar backup:", err);
+    alert("Importação cancelada (arquivo corrompido).");
+    if (hasSession) {
+      sessionStorage.removeItem("__pendingImport__");
+    }
+    return;
+  }
+
+  if (!parsedData || typeof parsedData !== 'object' || Array.isArray(parsedData)) {
+    console.error('Falha ao processar backup: formato inesperado.');
+    alert("Importação cancelada (arquivo corrompido).");
+    if (hasSession) {
+      sessionStorage.removeItem("__pendingImport__");
+    }
+    return;
+  }
+
+  try {
+    if (mode === 'handwriting') {
+      removeHandwritingEntriesFromLocalStorage();
+    } else {
+      localStorage.clear();
+    }
+    Object.entries(parsedData).forEach(([k, v]) => {
+      if (!shouldIncludeKeyForImport(k, mode)) return;
+      localStorage.setItem(k, v);
+    });
   } catch (err) {
     console.error("Falha ao processar backup:", err);
     alert("Importação cancelada (arquivo corrompido).");
   } finally {
-    if (typeof sessionStorage !== 'undefined') {
+    if (hasSession) {
       sessionStorage.removeItem("__pendingImport__"); // limpa a flag
     }
   }
