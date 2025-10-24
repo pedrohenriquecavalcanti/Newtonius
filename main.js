@@ -1118,7 +1118,7 @@ function getEffectiveQuestionState(disc, sub, label) {
 
 function updateReviewModeButton() {
   if (!reviewModeBtn) return;
-  reviewModeBtn.textContent = postReviewMode ? 'Pós-Revisão' : 'Pré-Revisão';
+  reviewModeBtn.textContent = postReviewMode ? 'Pré-Revisão' : 'Pós-Revisão';
 }
 
 function refreshReviewModeUI() {
