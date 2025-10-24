@@ -490,8 +490,9 @@ const PDF_DEFAULT_ZOOM = 1.75;
 const PDF_MIN_ZOOM = 0.75;
 const PDF_MAX_ZOOM = 3;
 const PDF_PEN_COLOR = '#000000';
-const PDF_PEN_WIDTH = 4;
-const PDF_PEN_WIDTH_STYLUS = 7;
+const PDF_PEN_REFERENCE_WIDTH = 7; // espessura real (em pixels do canvas) no zoom padrão em um iPad (≈ DPR 2)
+const PDF_PEN_WIDTH = PDF_PEN_REFERENCE_WIDTH;
+const PDF_REFERENCE_DEVICE_PIXEL_RATIO = 2; // usado para normalizar a espessura entre dispositivos
 const PDF_ERASER_WIDTH = 7;
 const PDF_ERASER_HIGHLIGHT_COLOR = 'rgba(168, 168, 168, 0.9)';
 const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
@@ -534,6 +535,15 @@ function smoothPdfPoint(target, previous, rawPrevious) {
   };
 }
 
+function getPdfEffectivePenWidth(zoom = currentPdfZoom) {
+  const activeZoom = Number.isFinite(zoom) ? zoom : PDF_DEFAULT_ZOOM;
+  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
+  const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
+  const cssWidth = desiredCssWidth * (activeZoom / PDF_DEFAULT_ZOOM);
+  return cssWidth * PDF_RENDER_QUALITY * effectiveDpr;
+}
+
 function getPdfCanvasState(canvas) {
   if (!(canvas instanceof HTMLCanvasElement)) return null;
   if (!canvas._pdfState) {
@@ -555,12 +565,12 @@ function renderPdfStroke(ctx, stroke, highlight = false) {
   if (!points.length) return;
 
   const color = highlight ? PDF_ERASER_HIGHLIGHT_COLOR : (stroke.color || PDF_PEN_COLOR);
-  const baseWidth = Number.isFinite(stroke.baseWidth)
-    ? stroke.baseWidth
-    : Number.isFinite(stroke.width)
-      ? stroke.width
-      : PDF_PEN_WIDTH;
-  const width = Number.isFinite(baseWidth) ? baseWidth : PDF_PEN_WIDTH;
+  const baseWidth = Number.isFinite(stroke.width)
+    ? stroke.width
+    : Number.isFinite(stroke.baseWidth)
+      ? stroke.baseWidth
+      : PDF_PEN_REFERENCE_WIDTH;
+  const width = Number.isFinite(baseWidth) ? baseWidth : PDF_PEN_REFERENCE_WIDTH;
 
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -621,6 +631,8 @@ function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
   const shouldScale = Math.abs(sx - 1) >= 0.001 || Math.abs(sy - 1) >= 0.001;
 
   if (shouldScale && Array.isArray(state.strokes)) {
+    const widthScaleRaw = (Math.abs(sx) + Math.abs(sy)) / 2;
+    const widthScale = Number.isFinite(widthScaleRaw) && widthScaleRaw > 0 ? widthScaleRaw : 1;
     state.strokes.forEach(stroke => {
       if (!stroke) return;
       if (Array.isArray(stroke.points)) {
@@ -630,13 +642,16 @@ function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
           point.y *= sy;
         });
       }
-      const originalWidth = Number.isFinite(stroke.baseWidth)
-        ? stroke.baseWidth
-        : Number.isFinite(stroke.width)
-          ? stroke.width
-          : PDF_PEN_WIDTH;
-      stroke.baseWidth = Number.isFinite(originalWidth) ? originalWidth : PDF_PEN_WIDTH;
-      stroke.width = stroke.baseWidth;
+      const previousWidth = Number.isFinite(stroke.width)
+        ? stroke.width
+        : Number.isFinite(stroke.baseWidth)
+          ? stroke.baseWidth
+          : PDF_PEN_REFERENCE_WIDTH;
+      const scaledWidth = Number.isFinite(previousWidth) ? previousWidth * widthScale : PDF_PEN_REFERENCE_WIDTH * widthScale;
+      stroke.width = scaledWidth;
+      stroke.baseWidth = Number.isFinite(stroke.baseWidth)
+        ? stroke.baseWidth * widthScale
+        : scaledWidth;
     });
   }
 
@@ -660,16 +675,16 @@ function serializePdfStrokes(strokes, metadata = {}) {
     const payload = {
       v: 2,
       strokes: (strokes || []).map((stroke, index) => {
-        const width = Number.isFinite(stroke?.baseWidth)
-          ? stroke.baseWidth
-          : Number.isFinite(stroke?.width)
-            ? stroke.width
-            : PDF_PEN_WIDTH;
+        const width = Number.isFinite(stroke?.width)
+          ? stroke.width
+          : Number.isFinite(stroke?.baseWidth)
+            ? stroke.baseWidth
+            : PDF_PEN_REFERENCE_WIDTH;
         return {
           id: Number.isFinite(stroke?.id) ? stroke.id : index + 1,
           t: stroke?.type || 'pen',
           c: stroke?.color || PDF_PEN_COLOR,
-          w: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
+          w: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
           pts: Array.isArray(stroke?.points)
             ? stroke.points.map(pt => [Number(pt?.x ?? 0), Number(pt?.y ?? 0)])
             : []
@@ -708,13 +723,13 @@ function deserializePdfStrokes(serialized) {
             return null;
           })
           .filter(Boolean);
-        const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_WIDTH;
+        const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_REFERENCE_WIDTH;
         return {
           id: Number.isFinite(item?.id) ? item.id : index + 1,
           type: item?.t || 'pen',
           color: item?.c || PDF_PEN_COLOR,
           width,
-          baseWidth: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
+          baseWidth: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
           points
         };
       })
@@ -4156,7 +4171,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
     if (activeTool === 'pen') {
       state.selectedStrokeIds.clear();
-      const width = pointerType === 'pen' ? PDF_PEN_WIDTH_STYLUS : PDF_PEN_WIDTH;
+      const width = getPdfEffectivePenWidth(currentPdfZoom);
       activeStroke = {
         id: state.nextId++,
         type: 'pen',
