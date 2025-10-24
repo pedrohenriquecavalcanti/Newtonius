@@ -540,10 +540,11 @@ function smoothPdfPoint(target, previous, rawPrevious) {
 }
 
 function getPdfEffectivePenWidth() {
-  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
   const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
-  return desiredCssWidth * PDF_RENDER_QUALITY * effectiveDpr;
+  if (!Number.isFinite(desiredCssWidth) || desiredCssWidth <= 0) {
+    return PDF_PEN_REFERENCE_WIDTH / Math.max(1, PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
+  }
+  return desiredCssWidth;
 }
 
 function getPdfCanvasState(canvas) {
