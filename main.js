@@ -5490,7 +5490,7 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
   /* ---------- Seletores ---------- */
   const xpModal      = document.getElementById('xpModal');
   const xpPrevWeek   = document.getElementById('xpPrevWeek');
-  const xpNextWeek = document.getElementById('xpNextWeek');   // NOVO
+  const xpNextWeek   = document.getElementById('xpNextWeek');
   const xpPeriod     = document.getElementById('xpPeriod');
   const xpEnem       = document.getElementById('xpEnem');
   const xpSummary    = document.getElementById('xpSummary');
@@ -5498,6 +5498,11 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
   // >>> acrescente aqui <<<
   const arcanoImg = document.querySelector('.intro-img');
   const introLeft = document.querySelector('.intro-left');
+
+  if (!xpModal || !xpPrevWeek || !xpNextWeek || !xpPeriod || !xpEnem || !xpSummary || !xpChartElm) {
+    console.warn('XP modal incompleto – recursos desativados.');
+    return;
+  }
 
   /* ---------- Utilidades de data ---------- */
   const DAY_MS = 24*60*60*1000;
@@ -5551,6 +5556,11 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
 
     if (typeof Chart === 'undefined') {
       console.warn('Chart.js não carregado – gráfico indisponível');
+      return;
+    }
+
+    if (!xpChartElm) {
+      console.warn('Canvas do gráfico semanal não encontrado – gráfico indisponível');
       return;
     }
 
