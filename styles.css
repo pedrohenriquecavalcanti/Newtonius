@@ -652,7 +652,7 @@ button:hover { filter: brightness(1.2); }
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas {
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas:active {
   cursor: grabbing;
