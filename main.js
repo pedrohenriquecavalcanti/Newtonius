@@ -512,6 +512,8 @@ const PDF_STROKE_SMOOTHING_DISTANCE_SCALE = 10;
 let currentPdfZoom = PDF_DEFAULT_ZOOM;
 let lastPdfRenderedPages = [];
 let pdfPinchState = null;
+let pdfPinchPreviewFrame = null;
+let pdfPinchPreviewScale = 1;
 let currentPdfDocument = null;
 let currentPdfDocumentName = null;
 let pdfAutosaveTimeout = null;
@@ -4316,10 +4318,13 @@ async function handlePdfKeydown(event) {
 
 function capturePdfViewportState() {
   const scope = pdfPagesWrapper || pdfContainer;
-  if (!scope) return null;
+  if (!scope || !pdfContainer) return null;
   const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
   if (!wrappers.length) return null;
   const scrollTop = pdfContainer.scrollTop;
+  const scrollLeft = pdfContainer.scrollLeft;
+  const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+  const scrollLeftRatio = maxScrollLeft > 0 ? Math.min(1, Math.max(0, scrollLeft / maxScrollLeft)) : 0;
   const firstVisible = wrappers.find(wrapper => scrollTop < wrapper.offsetTop + wrapper.offsetHeight);
   if (!firstVisible) return null;
   const pageNumber = Number(firstVisible.dataset.pageNumber);
@@ -4327,12 +4332,18 @@ function capturePdfViewportState() {
   const offsetWithinPage = Math.max(0, scrollTop - firstVisible.offsetTop);
   const pageHeight = firstVisible.offsetHeight || 0;
   const offsetRatio = pageHeight > 0 ? Math.min(1, Math.max(0, offsetWithinPage / pageHeight)) : null;
-  return { pageNumber, offsetWithinPage, offsetRatio };
+  return {
+    pageNumber,
+    offsetWithinPage,
+    offsetRatio,
+    scrollLeft,
+    scrollLeftRatio
+  };
 }
 
 function restorePdfViewportState(state) {
   const scope = pdfPagesWrapper || pdfContainer;
-  if (!state || !scope) return;
+  if (!state || !scope || !pdfContainer) return;
   const wrapper = scope.querySelector(`.pdf-page-wrapper[data-page-number="${state.pageNumber}"]`);
   if (!wrapper) return;
   let offset = Number.isFinite(state.offsetWithinPage) ? state.offsetWithinPage : 0;
@@ -4341,6 +4352,30 @@ function restorePdfViewportState(state) {
   }
   const targetScroll = wrapper.offsetTop + Math.max(0, offset || 0);
   pdfContainer.scrollTop = Math.max(0, targetScroll);
+
+  const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+  if (state.horizontalOffsetRatio != null) {
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const containerRect = pdfContainer?.getBoundingClientRect
+      ? pdfContainer.getBoundingClientRect()
+      : { left: 0, width: pdfContainer?.clientWidth || 0 };
+    const containerLeft = containerRect?.left ?? 0;
+    const containerWidth = containerRect?.width ?? pdfContainer?.clientWidth ?? 0;
+    const focusOffset = Number.isFinite(state.viewportFocusOffsetX)
+      ? state.viewportFocusOffsetX
+      : containerWidth / 2;
+    const desiredX = containerLeft + focusOffset;
+    const targetX = wrapperRect.left + wrapperRect.width * state.horizontalOffsetRatio;
+    const delta = targetX - desiredX;
+    const nextScrollLeft = Math.max(0, Math.min(maxScrollLeft, pdfContainer.scrollLeft + delta));
+    pdfContainer.scrollLeft = nextScrollLeft;
+  } else if (Number.isFinite(state.scrollLeft)) {
+    const clampedLeft = Math.max(0, Math.min(maxScrollLeft, state.scrollLeft));
+    pdfContainer.scrollLeft = clampedLeft;
+  } else if (state.scrollLeftRatio != null) {
+    const ratio = Math.min(1, Math.max(0, state.scrollLeftRatio));
+    pdfContainer.scrollLeft = maxScrollLeft * ratio;
+  }
 }
 
 function getPdfViewportFocusFromPoint(clientX, clientY) {
@@ -4357,7 +4392,27 @@ function getPdfViewportFocusFromPoint(clientX, clientY) {
       if (!Number.isFinite(pageNumber)) continue;
       const offsetWithinPage = Math.max(0, clientY - rect.top);
       const offsetRatio = rect.height > 0 ? Math.min(1, Math.max(0, offsetWithinPage / rect.height)) : null;
-      return { pageNumber, offsetWithinPage, offsetRatio };
+      const horizontalOffset = Math.max(0, clientX - rect.left);
+      const horizontalOffsetRatio = rect.width > 0
+        ? Math.min(1, Math.max(0, horizontalOffset / rect.width))
+        : null;
+      const containerRect = pdfContainer?.getBoundingClientRect
+        ? pdfContainer.getBoundingClientRect()
+        : null;
+      const viewportFocusOffsetX = containerRect ? clientX - containerRect.left : null;
+      const scrollLeft = pdfContainer?.scrollLeft ?? 0;
+      const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+      const scrollLeftRatio = maxScrollLeft > 0 ? Math.min(1, Math.max(0, scrollLeft / maxScrollLeft)) : 0;
+      return {
+        pageNumber,
+        offsetWithinPage,
+        offsetRatio,
+        horizontalOffset,
+        horizontalOffsetRatio,
+        viewportFocusOffsetX,
+        scrollLeft,
+        scrollLeftRatio
+      };
     }
   }
   return null;
@@ -4494,10 +4549,16 @@ function getPdfTouchCenter(touches) {
 }
 
 function resetPdfPinchPreview() {
+  if (pdfPinchPreviewFrame) {
+    cancelAnimationFrame(pdfPinchPreviewFrame);
+    pdfPinchPreviewFrame = null;
+  }
+  pdfPinchPreviewScale = 1;
   const wrapper = pdfPagesWrapper || pdfContainer;
   if (!wrapper) return;
   wrapper.style.transform = '';
   wrapper.style.transformOrigin = '';
+  wrapper.style.willChange = '';
 }
 
 function releaseCurrentPdfDocument() {
@@ -4550,7 +4611,13 @@ function handlePdfPinchStart(event) {
   if (wrapper) {
     const rect = wrapper.getBoundingClientRect();
     wrapper.style.transformOrigin = `${center.x - rect.left}px ${center.y - rect.top}px`;
+    wrapper.style.willChange = 'transform';
   }
+  if (pdfPinchPreviewFrame) {
+    cancelAnimationFrame(pdfPinchPreviewFrame);
+    pdfPinchPreviewFrame = null;
+  }
+  pdfPinchPreviewScale = 1;
   pdfPinchState = {
     startDistance: distance,
     startZoom: Number.isFinite(currentPdfZoom) ? currentPdfZoom : PDF_DEFAULT_ZOOM,
@@ -4572,7 +4639,19 @@ function handlePdfPinchMove(event) {
   if (wrapper) {
     const baseZoom = Number.isFinite(currentPdfZoom) ? currentPdfZoom : PDF_DEFAULT_ZOOM;
     const previewScale = baseZoom ? targetZoom / baseZoom : 1;
-    wrapper.style.transform = `scale(${previewScale})`;
+    pdfPinchPreviewScale = previewScale;
+    if (pdfPinchState) {
+      pdfPinchState.previewScale = previewScale;
+    }
+    if (!pdfPinchPreviewFrame) {
+      pdfPinchPreviewFrame = requestAnimationFrame(() => {
+        pdfPinchPreviewFrame = null;
+        const targetWrapper = pdfPagesWrapper || pdfContainer;
+        if (!targetWrapper) return;
+        const scaleValue = pdfPinchState?.previewScale ?? pdfPinchPreviewScale ?? 1;
+        targetWrapper.style.transform = `scale(${scaleValue})`;
+      });
+    }
   }
   event.preventDefault();
 }
