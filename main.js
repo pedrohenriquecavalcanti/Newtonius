@@ -489,6 +489,8 @@ const PDF_RENDER_QUALITY = 2;
 const PDF_DEFAULT_ZOOM = 1.75;
 const PDF_MIN_ZOOM = 0.75;
 const PDF_MAX_ZOOM = 3;
+const PDF_MAX_RENDER_DIMENSION = 6144;
+const PDF_MAX_RENDER_PIXELS = PDF_MAX_RENDER_DIMENSION * PDF_MAX_RENDER_DIMENSION;
 const PDF_PEN_COLOR = '#000000';
 const PDF_PEN_REFERENCE_WIDTH = 7; // espessura real (em pixels do canvas) no zoom padrão em um iPad (≈ DPR 2)
 const PDF_REFERENCE_DEVICE_PIXEL_RATIO = 2; // usado para normalizar a espessura entre dispositivos
@@ -3380,6 +3382,7 @@ function clearPdfViewerContent() {
   lastPdfRenderedPages = [];
   if (pdfPagesWrapper) {
     pdfPagesWrapper.innerHTML = '';
+    pdfPagesWrapper.style.width = '';
   } else if (pdfContainer) {
     pdfContainer.querySelectorAll('canvas, .answer-letter, .pdf-page-wrapper').forEach(el => el.remove());
   }
@@ -4378,10 +4381,15 @@ async function handlePdfKeydown(event) {
 
 function capturePdfViewportState() {
   const scope = pdfPagesWrapper || pdfContainer;
-  if (!scope) return null;
+  if (!scope || !pdfContainer) return null;
   const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
   if (!wrappers.length) return null;
   const scrollTop = pdfContainer.scrollTop;
+  const scrollLeft = pdfContainer.scrollLeft;
+  const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+  const scrollRatio = maxScrollLeft > 0
+    ? Math.min(1, Math.max(0, scrollLeft / maxScrollLeft))
+    : 0;
   const firstVisible = wrappers.find(wrapper => scrollTop < wrapper.offsetTop + wrapper.offsetHeight);
   if (!firstVisible) return null;
   const pageNumber = Number(firstVisible.dataset.pageNumber);
@@ -4389,26 +4397,79 @@ function capturePdfViewportState() {
   const offsetWithinPage = Math.max(0, scrollTop - firstVisible.offsetTop);
   const pageHeight = firstVisible.offsetHeight || 0;
   const offsetRatio = pageHeight > 0 ? Math.min(1, Math.max(0, offsetWithinPage / pageHeight)) : null;
-  return { pageNumber, offsetWithinPage, offsetRatio };
+  const pageWidth = firstVisible.offsetWidth || 0;
+  const horizontalOffsetWithinPage = scrollLeft - firstVisible.offsetLeft;
+  const clampedHorizontalOffset = Math.max(0, horizontalOffsetWithinPage);
+  const horizontalRatio = pageWidth > 0
+    ? Math.min(1, Math.max(0, clampedHorizontalOffset / pageWidth))
+    : null;
+  return {
+    pageNumber,
+    offsetWithinPage,
+    offsetRatio,
+    horizontalOffsetWithinPage,
+    horizontalRatio,
+    scrollLeft,
+    scrollRatio
+  };
 }
 
 function restorePdfViewportState(state) {
   const scope = pdfPagesWrapper || pdfContainer;
-  if (!state || !scope) return;
+  if (!state || !scope || !pdfContainer) return;
   const wrapper = scope.querySelector(`.pdf-page-wrapper[data-page-number="${state.pageNumber}"]`);
   if (!wrapper) return;
   let offset = Number.isFinite(state.offsetWithinPage) ? state.offsetWithinPage : 0;
   if (state.offsetRatio != null && wrapper.offsetHeight > 0) {
     offset = wrapper.offsetHeight * state.offsetRatio;
   }
-  const targetScroll = wrapper.offsetTop + Math.max(0, offset || 0);
-  pdfContainer.scrollTop = Math.max(0, targetScroll);
+  const targetScrollTop = wrapper.offsetTop + Math.max(0, offset || 0);
+
+  let targetScrollLeft = null;
+  let usedHorizontalFocus = false;
+  if (Number.isFinite(state.horizontalOffsetWithinPage)) {
+    targetScrollLeft = wrapper.offsetLeft + state.horizontalOffsetWithinPage;
+    usedHorizontalFocus = true;
+  } else if (state.horizontalRatio != null && wrapper.offsetWidth > 0) {
+    const horizontalOffset = wrapper.offsetWidth * state.horizontalRatio;
+    targetScrollLeft = wrapper.offsetLeft + Math.max(0, horizontalOffset || 0);
+    usedHorizontalFocus = true;
+  }
+
+  const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+  const ratioTarget = state.scrollRatio != null
+    ? (maxScrollLeft > 0
+        ? maxScrollLeft * Math.min(1, Math.max(0, state.scrollRatio))
+        : 0)
+    : null;
+
+  if (targetScrollLeft == null) {
+    if (ratioTarget != null && Number.isFinite(ratioTarget)) {
+      targetScrollLeft = ratioTarget;
+    } else if (Number.isFinite(state.scrollLeft)) {
+      targetScrollLeft = state.scrollLeft;
+    } else {
+      targetScrollLeft = pdfContainer.scrollLeft;
+    }
+  } else if (!usedHorizontalFocus && ratioTarget != null && Number.isFinite(ratioTarget)) {
+    targetScrollLeft = ratioTarget;
+  }
+
+  targetScrollLeft = Math.min(maxScrollLeft, Math.max(0, Number.isFinite(targetScrollLeft) ? targetScrollLeft : 0));
+
+  pdfContainer.scrollTop = Math.max(0, targetScrollTop);
+  pdfContainer.scrollLeft = targetScrollLeft;
 }
 
 function getPdfViewportFocusFromPoint(clientX, clientY) {
   const scope = pdfPagesWrapper || pdfContainer;
-  if (!scope) return null;
+  if (!scope || !pdfContainer) return null;
   const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
+  const scrollLeft = pdfContainer.scrollLeft;
+  const maxScrollLeft = Math.max(0, pdfContainer.scrollWidth - pdfContainer.clientWidth);
+  const scrollRatio = maxScrollLeft > 0
+    ? Math.min(1, Math.max(0, scrollLeft / maxScrollLeft))
+    : 0;
   for (const wrapper of wrappers) {
     const rect = wrapper.getBoundingClientRect();
     if (
@@ -4419,7 +4480,19 @@ function getPdfViewportFocusFromPoint(clientX, clientY) {
       if (!Number.isFinite(pageNumber)) continue;
       const offsetWithinPage = Math.max(0, clientY - rect.top);
       const offsetRatio = rect.height > 0 ? Math.min(1, Math.max(0, offsetWithinPage / rect.height)) : null;
-      return { pageNumber, offsetWithinPage, offsetRatio };
+      const horizontalOffsetWithinPage = Math.max(0, clientX - rect.left);
+      const horizontalRatio = rect.width > 0
+        ? Math.min(1, Math.max(0, horizontalOffsetWithinPage / rect.width))
+        : null;
+      return {
+        pageNumber,
+        offsetWithinPage,
+        offsetRatio,
+        horizontalOffsetWithinPage,
+        horizontalRatio,
+        scrollLeft,
+        scrollRatio
+      };
     }
   }
   return null;
@@ -4431,6 +4504,58 @@ function clampPdfZoom(value) {
     return Number.isFinite(currentPdfZoom) ? currentPdfZoom : PDF_DEFAULT_ZOOM;
   }
   return Math.min(PDF_MAX_ZOOM, Math.max(PDF_MIN_ZOOM, target));
+}
+
+function formatCssPx(value) {
+  if (!Number.isFinite(value)) {
+    return '0px';
+  }
+  const rounded = Math.round(value * 100) / 100;
+  return `${rounded}px`;
+}
+
+function limitPdfRenderDimensions(width, height) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return { scale: 1 };
+  }
+
+  let scale = 1;
+  if (Number.isFinite(PDF_MAX_RENDER_DIMENSION) && PDF_MAX_RENDER_DIMENSION > 0) {
+    const largestSide = Math.max(width, height);
+    if (largestSide > PDF_MAX_RENDER_DIMENSION) {
+      scale = Math.min(scale, PDF_MAX_RENDER_DIMENSION / largestSide);
+    }
+  }
+
+  if (Number.isFinite(PDF_MAX_RENDER_PIXELS) && PDF_MAX_RENDER_PIXELS > 0) {
+    const totalPixels = width * height;
+    if (totalPixels > PDF_MAX_RENDER_PIXELS) {
+      scale = Math.min(scale, Math.sqrt(PDF_MAX_RENDER_PIXELS / totalPixels));
+    }
+  }
+
+  if (!Number.isFinite(scale) || scale <= 0) {
+    return { scale: 1 };
+  }
+
+  return { scale };
+}
+
+function getPdfPageViewports(page, zoom, quality, dpr) {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : PDF_DEFAULT_ZOOM;
+  const safeQuality = Number.isFinite(quality) && quality > 0 ? quality : 1;
+  const safeDpr = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
+
+  const displayViewport = page.getViewport({ scale: safeZoom });
+  let renderScale = safeZoom * safeQuality * safeDpr;
+  let renderViewport = page.getViewport({ scale: renderScale });
+  const { scale } = limitPdfRenderDimensions(renderViewport.width, renderViewport.height);
+  if (scale < 1) {
+    renderScale *= scale;
+    renderViewport = page.getViewport({ scale: renderScale });
+  }
+
+  return { displayViewport, renderViewport };
 }
 
 async function setPdfZoom(targetZoom, { viewportState } = {}) {
@@ -4476,8 +4601,8 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
 
   const dpr = window.devicePixelRatio || 1;
   const quality = PDF_RENDER_QUALITY;
-  const renderScale = quality * dpr * clampedZoom;
   const updatedPages = [];
+  let maxDisplayWidth = 0;
 
   for (const wrapper of wrappers) {
     const pageNumber = Number(wrapper.dataset.pageNumber);
@@ -4491,16 +4616,17 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
 
     try {
       const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: renderScale });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = `${viewport.width / (quality * dpr)}px`;
-      canvas.style.height = `${viewport.height / (quality * dpr)}px`;
-      canvas.style.maxWidth = '100%';
+      const { displayViewport, renderViewport } = getPdfPageViewports(page, clampedZoom, quality, dpr);
+      if (displayViewport && Number.isFinite(displayViewport.width)) {
+        maxDisplayWidth = Math.max(maxDisplayWidth, displayViewport.width);
+      }
+      canvas.width = renderViewport.width;
+      canvas.height = renderViewport.height;
+      canvas.style.width = formatCssPx(displayViewport.width);
+      canvas.style.height = formatCssPx(displayViewport.height);
       wrapper.style.width = canvas.style.width;
-      wrapper.style.maxWidth = '100%';
 
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
 
       if (drawingLayer instanceof HTMLCanvasElement) {
         const scaleX = previousWidth ? canvas.width / previousWidth : 1;
@@ -4526,6 +4652,13 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
     lastPdfRenderedPages = updatedPages;
   }
   currentPdfZoom = clampedZoom;
+  if (pdfPagesWrapper && maxDisplayWidth > 0) {
+    const baseWidth = pdfContainer && Number.isFinite(pdfContainer.clientWidth)
+      ? pdfContainer.clientWidth
+      : 0;
+    const targetWidth = Math.max(baseWidth, maxDisplayWidth);
+    pdfPagesWrapper.style.width = formatCssPx(targetWidth);
+  }
   if (state) {
     await waitNextFrame();
     restorePdfViewportState(state);
@@ -4726,33 +4859,42 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   updatePdfNavigationState();
 
   const dpr   = window.devicePixelRatio || 1;
-  const scale = quality * dpr * effectiveZoom;
 
   const targetContainer = pdfPagesWrapper || pdfContainer;
 
   lastPdfRenderedPages = pagesToRender.slice();
 
+  let maxDisplayWidth = 0;
+
   for (const num of pagesToRender) {
-    const page     = await pdf.getPage(num);
-    const viewport = page.getViewport({ scale });
-    const canvas   = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    const page   = await pdf.getPage(num);
+    const { displayViewport, renderViewport } = getPdfPageViewports(page, effectiveZoom, quality, dpr);
+    if (displayViewport && Number.isFinite(displayViewport.width)) {
+      maxDisplayWidth = Math.max(maxDisplayWidth, displayViewport.width);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = renderViewport.width;
+    canvas.height = renderViewport.height;
     canvas.dataset.pageNumber = String(num);
-    canvas.style.width = `${viewport.width/(quality*dpr)}px`;
-    canvas.style.height = `${viewport.height/(quality*dpr)}px`;
-    canvas.style.maxWidth = '100%';
+    canvas.style.width = formatCssPx(displayViewport.width);
+    canvas.style.height = formatCssPx(displayViewport.height);
     const wrapper = document.createElement('div');
     wrapper.className = 'pdf-page-wrapper';
     wrapper.dataset.pageNumber = String(num);
     wrapper.style.width = canvas.style.width;
-    wrapper.style.maxWidth = '100%';
     wrapper.appendChild(canvas);
     const drawingLayer = createDrawingLayer(canvas, pdfName, num);
     wrapper.appendChild(drawingLayer);
     targetContainer.appendChild(wrapper);
-    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport: renderViewport }).promise;
     restorePdfDrawingLayer(pdfName, num, drawingLayer);
+  }
+  if (pdfPagesWrapper && maxDisplayWidth > 0) {
+    const baseWidth = pdfContainer && Number.isFinite(pdfContainer.clientWidth)
+      ? pdfContainer.clientWidth
+      : 0;
+    const targetWidth = Math.max(baseWidth, maxDisplayWidth);
+    pdfPagesWrapper.style.width = formatCssPx(targetWidth);
   }
   setPdfDrawingTool(pdfDrawingTool);
   return true;
