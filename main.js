@@ -4397,9 +4397,10 @@ function capturePdfViewportState() {
   const pageHeight = firstVisible.offsetHeight || 0;
   const offsetRatio = pageHeight > 0 ? Math.min(1, Math.max(0, offsetWithinPage / pageHeight)) : null;
   const pageWidth = firstVisible.offsetWidth || 0;
-  const horizontalOffsetWithinPage = Math.max(0, scrollLeft - firstVisible.offsetLeft);
+  const horizontalOffsetWithinPage = scrollLeft - firstVisible.offsetLeft;
+  const clampedHorizontalOffset = Math.max(0, horizontalOffsetWithinPage);
   const horizontalRatio = pageWidth > 0
-    ? Math.min(1, Math.max(0, horizontalOffsetWithinPage / pageWidth))
+    ? Math.min(1, Math.max(0, clampedHorizontalOffset / pageWidth))
     : null;
   return {
     pageNumber,
@@ -4425,12 +4426,12 @@ function restorePdfViewportState(state) {
 
   let targetScrollLeft = null;
   let usedHorizontalFocus = false;
-  if (state.horizontalRatio != null && wrapper.offsetWidth > 0) {
+  if (Number.isFinite(state.horizontalOffsetWithinPage)) {
+    targetScrollLeft = wrapper.offsetLeft + state.horizontalOffsetWithinPage;
+    usedHorizontalFocus = true;
+  } else if (state.horizontalRatio != null && wrapper.offsetWidth > 0) {
     const horizontalOffset = wrapper.offsetWidth * state.horizontalRatio;
     targetScrollLeft = wrapper.offsetLeft + Math.max(0, horizontalOffset || 0);
-    usedHorizontalFocus = true;
-  } else if (Number.isFinite(state.horizontalOffsetWithinPage)) {
-    targetScrollLeft = wrapper.offsetLeft + Math.max(0, state.horizontalOffsetWithinPage || 0);
     usedHorizontalFocus = true;
   }
 
