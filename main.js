@@ -539,13 +539,11 @@ function smoothPdfPoint(target, previous, rawPrevious) {
   };
 }
 
-function getPdfEffectivePenWidth(zoom = currentPdfZoom) {
-  const activeZoom = Number.isFinite(zoom) ? zoom : PDF_DEFAULT_ZOOM;
+function getPdfEffectivePenWidth() {
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
   const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
   const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
-  const cssWidth = desiredCssWidth * (activeZoom / PDF_DEFAULT_ZOOM);
-  return cssWidth * PDF_RENDER_QUALITY * effectiveDpr;
+  return desiredCssWidth * PDF_RENDER_QUALITY * effectiveDpr;
 }
 
 function getPdfCanvasState(canvas) {
@@ -557,10 +555,70 @@ function getPdfCanvasState(canvas) {
       nextId: 1,
       backgroundImage: null,
       canvasWidth: Number.isFinite(canvas?.width) ? canvas.width : null,
-      canvasHeight: Number.isFinite(canvas?.height) ? canvas.height : null
+      canvasHeight: Number.isFinite(canvas?.height) ? canvas.height : null,
+      displayWidth: null,
+      displayHeight: null
     };
   }
   return canvas._pdfState;
+}
+
+function parseCssPixelValue(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.endsWith('%')) return null;
+  const parsed = Number.parseFloat(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getPdfCanvasDisplaySize(canvas) {
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    return { width: null, height: null };
+  }
+
+  const wrapper = canvas.parentElement instanceof HTMLElement ? canvas.parentElement : null;
+
+  const widthCandidates = [
+    parseCssPixelValue(wrapper?.style?.width),
+    parseCssPixelValue(canvas.style?.width)
+  ];
+  const heightCandidates = [
+    parseCssPixelValue(wrapper?.style?.height),
+    parseCssPixelValue(canvas.style?.height)
+  ];
+
+  let width = widthCandidates.find(value => Number.isFinite(value) && value > 0) ?? null;
+  let height = heightCandidates.find(value => Number.isFinite(value) && value > 0) ?? null;
+
+  if ((!Number.isFinite(width) || width <= 0) || (!Number.isFinite(height) || height <= 0)) {
+    const rect = typeof canvas.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : null;
+    if (rect) {
+      if ((!Number.isFinite(width) || width <= 0) && Number.isFinite(rect.width) && rect.width > 0) {
+        width = rect.width;
+      }
+      if ((!Number.isFinite(height) || height <= 0) && Number.isFinite(rect.height) && rect.height > 0) {
+        height = rect.height;
+      }
+    }
+  }
+
+  if (!Number.isFinite(width) || width <= 0) {
+    width = Number.isFinite(canvas.width) && canvas.width > 0 ? canvas.width : null;
+  }
+  if (!Number.isFinite(height) || height <= 0) {
+    height = Number.isFinite(canvas.height) && canvas.height > 0 ? canvas.height : null;
+  }
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : null,
+    height: Number.isFinite(height) && height > 0 ? height : null
+  };
 }
 
 function renderPdfStroke(ctx, stroke, highlight = false) {
@@ -630,45 +688,132 @@ function renderPdfCanvas(canvas) {
 
 function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
   if (!state || (!Number.isFinite(scaleX) && !Number.isFinite(scaleY))) return;
+  const prevCanvasWidth = Number.isFinite(state.canvasWidth) && state.canvasWidth > 0 ? state.canvasWidth : null;
+  const prevCanvasHeight = Number.isFinite(state.canvasHeight) && state.canvasHeight > 0 ? state.canvasHeight : null;
+  const prevDisplayWidth = Number.isFinite(state.displayWidth) && state.displayWidth > 0 ? state.displayWidth : null;
+  const prevDisplayHeight = Number.isFinite(state.displayHeight) && state.displayHeight > 0 ? state.displayHeight : null;
+
   const sx = Number.isFinite(scaleX) ? scaleX : 1;
   const sy = Number.isFinite(scaleY) ? scaleY : 1;
-  const shouldScale = Math.abs(sx - 1) >= 0.001 || Math.abs(sy - 1) >= 0.001;
 
-  if (shouldScale && Array.isArray(state.strokes)) {
-    const widthScaleRaw = (Math.abs(sx) + Math.abs(sy)) / 2;
-    const widthScale = Number.isFinite(widthScaleRaw) && widthScaleRaw > 0 ? widthScaleRaw : 1;
+  const nextCanvasWidth = Number.isFinite(newSize?.width) && newSize.width > 0
+    ? newSize.width
+    : (prevCanvasWidth != null && Number.isFinite(scaleX) ? prevCanvasWidth * sx : prevCanvasWidth);
+  const nextCanvasHeight = Number.isFinite(newSize?.height) && newSize.height > 0
+    ? newSize.height
+    : (prevCanvasHeight != null && Number.isFinite(scaleY) ? prevCanvasHeight * sy : prevCanvasHeight);
+
+  const nextDisplayWidth = Number.isFinite(newSize?.displayWidth) && newSize.displayWidth > 0
+    ? newSize.displayWidth
+    : (prevDisplayWidth != null && Number.isFinite(scaleX) ? prevDisplayWidth * sx : prevDisplayWidth);
+  const nextDisplayHeight = Number.isFinite(newSize?.displayHeight) && newSize.displayHeight > 0
+    ? newSize.displayHeight
+    : (prevDisplayHeight != null && Number.isFinite(scaleY) ? prevDisplayHeight * sy : prevDisplayHeight);
+
+  const canvasScaleX = prevCanvasWidth != null && Number.isFinite(nextCanvasWidth) && nextCanvasWidth > 0
+    ? nextCanvasWidth / prevCanvasWidth
+    : sx;
+  const canvasScaleY = prevCanvasHeight != null && Number.isFinite(nextCanvasHeight) && nextCanvasHeight > 0
+    ? nextCanvasHeight / prevCanvasHeight
+    : sy;
+
+  const displayScaleX = prevDisplayWidth != null && Number.isFinite(nextDisplayWidth) && nextDisplayWidth > 0
+    ? nextDisplayWidth / prevDisplayWidth
+    : 1;
+  const displayScaleY = prevDisplayHeight != null && Number.isFinite(nextDisplayHeight) && nextDisplayHeight > 0
+    ? nextDisplayHeight / prevDisplayHeight
+    : 1;
+
+  const prevCssScaleFactors = [];
+  if (prevCanvasWidth != null && prevDisplayWidth != null && prevDisplayWidth > 0) {
+    prevCssScaleFactors.push(prevCanvasWidth / prevDisplayWidth);
+  }
+  if (prevCanvasHeight != null && prevDisplayHeight != null && prevDisplayHeight > 0) {
+    prevCssScaleFactors.push(prevCanvasHeight / prevDisplayHeight);
+  }
+  const prevCssToCanvas = prevCssScaleFactors.length
+    ? prevCssScaleFactors.reduce((sum, value) => sum + value, 0) / prevCssScaleFactors.length
+    : null;
+
+  const nextCssScaleFactors = [];
+  if (Number.isFinite(nextCanvasWidth) && Number.isFinite(nextDisplayWidth) && nextDisplayWidth > 0) {
+    nextCssScaleFactors.push(nextCanvasWidth / nextDisplayWidth);
+  }
+  if (Number.isFinite(nextCanvasHeight) && Number.isFinite(nextDisplayHeight) && nextDisplayHeight > 0) {
+    nextCssScaleFactors.push(nextCanvasHeight / nextDisplayHeight);
+  }
+  const nextCssToCanvas = nextCssScaleFactors.length
+    ? nextCssScaleFactors.reduce((sum, value) => sum + value, 0) / nextCssScaleFactors.length
+    : null;
+
+  let widthScale = 1;
+  if (Number.isFinite(prevCssToCanvas) && prevCssToCanvas > 0 && Number.isFinite(nextCssToCanvas) && nextCssToCanvas > 0) {
+    widthScale = nextCssToCanvas / prevCssToCanvas;
+  } else {
+    const fallback = [];
+    if (Number.isFinite(canvasScaleX)) fallback.push(Math.abs(canvasScaleX));
+    if (Number.isFinite(canvasScaleY)) fallback.push(Math.abs(canvasScaleY));
+    widthScale = fallback.length
+      ? fallback.reduce((sum, value) => sum + value, 0) / fallback.length
+      : 1;
+  }
+
+  const shouldScalePoints = Math.abs(canvasScaleX - 1) >= 0.001 || Math.abs(canvasScaleY - 1) >= 0.001;
+  const shouldAdjustWidth = Math.abs(widthScale - 1) >= 0.001;
+
+  if ((shouldScalePoints || shouldAdjustWidth) && Array.isArray(state.strokes)) {
     state.strokes.forEach(stroke => {
       if (!stroke) return;
-      if (Array.isArray(stroke.points)) {
+      if (shouldScalePoints && Array.isArray(stroke.points)) {
         stroke.points.forEach(point => {
           if (!point) return;
-          point.x *= sx;
-          point.y *= sy;
+          point.x *= canvasScaleX;
+          point.y *= canvasScaleY;
         });
       }
+
       const previousWidth = Number.isFinite(stroke.width)
         ? stroke.width
         : Number.isFinite(stroke.baseWidth)
           ? stroke.baseWidth
           : PDF_PEN_REFERENCE_WIDTH;
-      const scaledWidth = Number.isFinite(previousWidth) ? previousWidth * widthScale : PDF_PEN_REFERENCE_WIDTH * widthScale;
-      stroke.width = scaledWidth;
-      stroke.baseWidth = Number.isFinite(stroke.baseWidth)
-        ? stroke.baseWidth * widthScale
-        : scaledWidth;
+
+      if (!Number.isFinite(stroke.cssWidth) && Number.isFinite(prevCssToCanvas) && prevCssToCanvas > 0) {
+        stroke.cssWidth = Number.isFinite(previousWidth) ? previousWidth / prevCssToCanvas : null;
+      }
+
+      if (shouldAdjustWidth) {
+        const cssWidth = Number.isFinite(stroke.cssWidth) ? stroke.cssWidth : null;
+        const targetWidth = cssWidth != null && Number.isFinite(nextCssToCanvas) && nextCssToCanvas > 0
+          ? cssWidth * nextCssToCanvas
+          : Number.isFinite(previousWidth)
+            ? previousWidth * widthScale
+            : previousWidth;
+        if (Number.isFinite(targetWidth)) {
+          stroke.width = targetWidth;
+          stroke.baseWidth = targetWidth;
+        }
+      }
     });
   }
 
-  if (Number.isFinite(newSize?.width)) {
-    state.canvasWidth = newSize.width;
-  } else if (shouldScale && Number.isFinite(state.canvasWidth)) {
-    state.canvasWidth *= sx;
+  if (Number.isFinite(nextCanvasWidth) && nextCanvasWidth > 0) {
+    state.canvasWidth = nextCanvasWidth;
+  } else if (shouldScalePoints && Number.isFinite(state.canvasWidth)) {
+    state.canvasWidth *= canvasScaleX;
   }
 
-  if (Number.isFinite(newSize?.height)) {
-    state.canvasHeight = newSize.height;
-  } else if (shouldScale && Number.isFinite(state.canvasHeight)) {
-    state.canvasHeight *= sy;
+  if (Number.isFinite(nextCanvasHeight) && nextCanvasHeight > 0) {
+    state.canvasHeight = nextCanvasHeight;
+  } else if (shouldScalePoints && Number.isFinite(state.canvasHeight)) {
+    state.canvasHeight *= canvasScaleY;
+  }
+
+  if (Number.isFinite(nextDisplayWidth) && nextDisplayWidth > 0) {
+    state.displayWidth = nextDisplayWidth;
+  }
+  if (Number.isFinite(nextDisplayHeight) && nextDisplayHeight > 0) {
+    state.displayHeight = nextDisplayHeight;
   }
 }
 
@@ -676,6 +821,8 @@ function serializePdfStrokes(strokes, metadata = {}) {
   try {
     const storedWidth = Number.isFinite(metadata?.width) ? metadata.width : null;
     const storedHeight = Number.isFinite(metadata?.height) ? metadata.height : null;
+    const storedDisplayWidth = Number.isFinite(metadata?.displayWidth) ? metadata.displayWidth : null;
+    const storedDisplayHeight = Number.isFinite(metadata?.displayHeight) ? metadata.displayHeight : null;
     const payload = {
       v: 2,
       strokes: (strokes || []).map((stroke, index) => {
@@ -684,11 +831,17 @@ function serializePdfStrokes(strokes, metadata = {}) {
           : Number.isFinite(stroke?.baseWidth)
             ? stroke.baseWidth
             : PDF_PEN_REFERENCE_WIDTH;
+        const cssWidth = Number.isFinite(stroke?.cssWidth)
+          ? stroke.cssWidth
+          : Number.isFinite(width)
+            ? width
+            : null;
         return {
           id: Number.isFinite(stroke?.id) ? stroke.id : index + 1,
           t: stroke?.type || 'pen',
           c: stroke?.color || PDF_PEN_COLOR,
           w: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
+          ...(Number.isFinite(cssWidth) ? { cw: cssWidth } : {}),
           pts: Array.isArray(stroke?.points)
             ? stroke.points.map(pt => [Number(pt?.x ?? 0), Number(pt?.y ?? 0)])
             : []
@@ -701,6 +854,12 @@ function serializePdfStrokes(strokes, metadata = {}) {
     if (Number.isFinite(storedHeight)) {
       payload.h = storedHeight;
     }
+    if (Number.isFinite(storedDisplayWidth)) {
+      payload.dw = storedDisplayWidth;
+    }
+    if (Number.isFinite(storedDisplayHeight)) {
+      payload.dh = storedDisplayHeight;
+    }
     return JSON.stringify(payload);
   } catch (err) {
     console.error('Falha ao serializar anotações do PDF', err);
@@ -709,7 +868,7 @@ function serializePdfStrokes(strokes, metadata = {}) {
 }
 
 function deserializePdfStrokes(serialized) {
-  if (!serialized) return { strokes: [], width: null, height: null };
+  if (!serialized) return { strokes: [], width: null, height: null, displayWidth: null, displayHeight: null };
   try {
     const data = JSON.parse(serialized);
     const list = Array.isArray(data?.strokes) ? data.strokes : [];
@@ -728,12 +887,14 @@ function deserializePdfStrokes(serialized) {
           })
           .filter(Boolean);
         const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_REFERENCE_WIDTH;
+        const cssWidth = Number.isFinite(item?.cw) ? item.cw : width;
         return {
           id: Number.isFinite(item?.id) ? item.id : index + 1,
           type: item?.t || 'pen',
           color: item?.c || PDF_PEN_COLOR,
           width,
           baseWidth: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
+          cssWidth: Number.isFinite(cssWidth) ? cssWidth : width,
           points
         };
       })
@@ -748,10 +909,26 @@ function deserializePdfStrokes(serialized) {
       : Number.isFinite(data?.height)
         ? data.height
         : null;
-    return { strokes, width: storedWidth, height: storedHeight };
+    const storedDisplayWidth = Number.isFinite(data?.dw)
+      ? data.dw
+      : Number.isFinite(data?.displayWidth)
+        ? data.displayWidth
+        : null;
+    const storedDisplayHeight = Number.isFinite(data?.dh)
+      ? data.dh
+      : Number.isFinite(data?.displayHeight)
+        ? data.displayHeight
+        : null;
+    return {
+      strokes,
+      width: storedWidth,
+      height: storedHeight,
+      displayWidth: storedDisplayWidth,
+      displayHeight: storedDisplayHeight
+    };
   } catch (err) {
     console.error('Falha ao desserializar anotações do PDF', err);
-    return { strokes: [], width: null, height: null };
+    return { strokes: [], width: null, height: null, displayWidth: null, displayHeight: null };
   }
 }
 
@@ -3582,13 +3759,22 @@ function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
   if (state) {
     state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
     state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+    const displaySize = getPdfCanvasDisplaySize(canvas);
+    if (Number.isFinite(displaySize.width)) {
+      state.displayWidth = displaySize.width;
+    }
+    if (Number.isFinite(displaySize.height)) {
+      state.displayHeight = displaySize.height;
+    }
   }
 
   let serialized = null;
   if (strokeCount > 0) {
     serialized = serializePdfStrokes(strokes, {
       width: state?.canvasWidth,
-      height: state?.canvasHeight
+      height: state?.canvasHeight,
+      displayWidth: state?.displayWidth,
+      displayHeight: state?.displayHeight
     });
   }
 
@@ -3682,7 +3868,13 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     state.lastSavedAt = metadata?.timestamp || null;
   }
   if (serialized && state) {
-    const { strokes, width: storedWidth, height: storedHeight } = deserializePdfStrokes(serialized);
+    const {
+      strokes,
+      width: storedWidth,
+      height: storedHeight,
+      displayWidth: storedDisplayWidth,
+      displayHeight: storedDisplayHeight
+    } = deserializePdfStrokes(serialized);
     state.strokes = strokes;
     state.backgroundImage = null;
     const maxId = strokes.reduce((max, stroke) => Math.max(max, Number(stroke.id) || 0), 0);
@@ -3690,15 +3882,31 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     if (Number.isFinite(storedWidth) && Number.isFinite(storedHeight) && storedWidth > 0 && storedHeight > 0) {
       state.canvasWidth = storedWidth;
       state.canvasHeight = storedHeight;
-      const scaleX = canvas.width / storedWidth;
-      const scaleY = canvas.height / storedHeight;
+      if (Number.isFinite(storedDisplayWidth) && storedDisplayWidth > 0) {
+        state.displayWidth = storedDisplayWidth;
+      }
+      if (Number.isFinite(storedDisplayHeight) && storedDisplayHeight > 0) {
+        state.displayHeight = storedDisplayHeight;
+      }
+      const scaleX = storedWidth > 0 ? canvas.width / storedWidth : 1;
+      const scaleY = storedHeight > 0 ? canvas.height / storedHeight : 1;
+      const displaySize = getPdfCanvasDisplaySize(canvas);
       scalePdfDrawingState(state, scaleX, scaleY, {
         width: canvas.width,
-        height: canvas.height
+        height: canvas.height,
+        displayWidth: Number.isFinite(displaySize.width) ? displaySize.width : storedDisplayWidth,
+        displayHeight: Number.isFinite(displaySize.height) ? displaySize.height : storedDisplayHeight
       });
     } else {
       state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
       state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+      const displaySize = getPdfCanvasDisplaySize(canvas);
+      if (Number.isFinite(displaySize.width)) {
+        state.displayWidth = displaySize.width;
+      }
+      if (Number.isFinite(displaySize.height)) {
+        state.displayHeight = displaySize.height;
+      }
       if (stored) {
         const fallbackImage = new Image();
         fallbackImage.onload = () => {
@@ -3710,7 +3918,9 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
           if (Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) return;
           scalePdfDrawingState(state, sx, sy, {
             width: canvas.width,
-            height: canvas.height
+            height: canvas.height,
+            displayWidth: Number.isFinite(displaySize.width) ? displaySize.width : null,
+            displayHeight: Number.isFinite(displaySize.height) ? displaySize.height : null
           });
           renderPdfCanvas(canvas);
         };
@@ -4175,13 +4385,32 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
     if (activeTool === 'pen') {
       state.selectedStrokeIds.clear();
-      const width = getPdfEffectivePenWidth(currentPdfZoom);
+      const penCssWidth = getPdfEffectivePenWidth();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect && Number.isFinite(rect.width) && rect.width > 0
+        ? canvas.width / rect.width
+        : 1;
+      const scaleY = rect && Number.isFinite(rect.height) && rect.height > 0
+        ? canvas.height / rect.height
+        : 1;
+      const normalizedScaleX = Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1;
+      const normalizedScaleY = Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1;
+      const widthScale = (normalizedScaleX + normalizedScaleY) / 2;
+      const width = penCssWidth * widthScale;
+      const displaySize = getPdfCanvasDisplaySize(canvas);
+      if (Number.isFinite(displaySize.width)) {
+        state.displayWidth = displaySize.width;
+      }
+      if (Number.isFinite(displaySize.height)) {
+        state.displayHeight = displaySize.height;
+      }
       activeStroke = {
         id: state.nextId++,
         type: 'pen',
         color: PDF_PEN_COLOR,
         width,
         baseWidth: width,
+        cssWidth: penCssWidth,
         points: [point]
       };
       state.strokes.push(activeStroke);
@@ -4253,6 +4482,9 @@ function createDrawingLayer(baseCanvas, pdfName, pageNumber) {
     state.backgroundImage = null;
     state.canvasWidth = drawingCanvas.width;
     state.canvasHeight = drawingCanvas.height;
+    const displaySize = getPdfCanvasDisplaySize(baseCanvas);
+    state.displayWidth = Number.isFinite(displaySize.width) ? displaySize.width : Number.isFinite(state.displayWidth) ? state.displayWidth : null;
+    state.displayHeight = Number.isFinite(displaySize.height) ? displaySize.height : Number.isFinite(state.displayHeight) ? state.displayHeight : null;
   }
   attachDrawingEvents(drawingCanvas, pdfName, pageNumber);
   applyPdfToolToLayer(drawingCanvas);
@@ -4593,9 +4825,17 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
         drawingLayer.style.width = '100%';
         drawingLayer.style.height = '100%';
         const stateRef = getPdfCanvasState(drawingLayer);
+        const displayWidth = Number.isFinite(metrics.displayWidth)
+          ? metrics.displayWidth
+          : parseCssPixelValue(canvas.style.width);
+        const displayHeight = Number.isFinite(metrics.displayHeight)
+          ? metrics.displayHeight
+          : parseCssPixelValue(canvas.style.height);
         scalePdfDrawingState(stateRef, scaleX, scaleY, {
           width: canvas.width,
-          height: canvas.height
+          height: canvas.height,
+          displayWidth,
+          displayHeight
         });
         renderPdfCanvas(drawingLayer);
         applyPdfToolToLayer(drawingLayer);
