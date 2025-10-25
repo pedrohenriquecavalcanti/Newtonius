@@ -36,6 +36,18 @@
   --c-reda:  #EB3324;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* =====================================================================================
    ESTILOS GERAIS
    =====================================================================================*/
@@ -552,14 +564,14 @@ button:hover { filter: brightness(1.2); }
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0px;
+  gap: 4px;
   margin: 0 auto;
   width: fit-content;
-  max-width: min(360px, calc(100% - 24px));
+  max-width: min(640px, calc(100% - 24px));
   background: rgba(18, 18, 18, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   backdrop-filter: blur(1px) saturate(140%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   z-index: 1500;
@@ -568,6 +580,62 @@ button:hover { filter: brightness(1.2); }
   -ms-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+#pdfToolbar.pdf-toolbar--expanded {
+  gap: 6px;
+  padding: 6px 14px;
+  max-width: min(720px, calc(100% - 24px));
+  background: rgba(18, 18, 18, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.pdf-toolbar__extra {
+  display: none;
+}
+#pdfToolbar.pdf-toolbar--expanded .pdf-toolbar__extra {
+  display: flex;
+  align-items: center;
+}
+.pdf-toolbar__extra--hidden {
+  display: none !important;
+}
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 2px 8px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.pdf-zoom-level {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  min-width: 48px;
+}
+.pdf-zoom-input {
+  width: 44px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: none;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.pdf-zoom-input::-webkit-outer-spin-button,
+.pdf-zoom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pdf-zoom-suffix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.6);
 }
 .pdf-tool-btn {
   width: 28px;
@@ -586,6 +654,27 @@ button:hover { filter: brightness(1.2); }
   -webkit-tap-highlight-color: transparent;
   font-size: 0.85rem;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.pdf-tool-btn--mini {
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+}
+.pdf-tool-btn--highlight-green,
+.pdf-tool-btn--highlight-green i {
+  color: #5bff9e;
+}
+.pdf-tool-btn--highlight-green.active,
+.pdf-tool-btn--highlight-green.active i {
+  color: #1fa86c;
+}
+.pdf-tool-btn--highlight-red,
+.pdf-tool-btn--highlight-red i {
+  color: #ff7b7b;
+}
+.pdf-tool-btn--highlight-red.active,
+.pdf-tool-btn--highlight-red.active i {
+  color: #e94a4a;
 }
 .pdf-tool-btn--hidden {
   display: none !important;
@@ -619,29 +708,62 @@ button:hover { filter: brightness(1.2); }
   opacity: 0.35;
   cursor: not-allowed;
 }
+#pdfToolbar:not(.pdf-toolbar--expanded) .pdf-toolbar__extra {
+  display: none !important;
+}
+#pdfToolbar:not(.pdf-toolbar--expanded) [data-role="expand"] {
+  order: 3;
+}
+#pdfToolbar:not(.pdf-toolbar--expanded) [data-role="close"] {
+  order: 4;
+}
+#pdfToolbar:not(.pdf-toolbar--expanded) [data-role="eraser"] {
+  order: 2;
+}
+#pdfToolbar:not(.pdf-toolbar--expanded) [data-role="pen"] {
+  order: 1;
+}
+#pdfToolbar.pdf-toolbar--expanded [data-role="expand"] {
+  display: none !important;
+}
+#pdfToolbar.pdf-toolbar--expanded [data-role="pen"] { order: 1; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="highlight-green"] { order: 2; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="highlight-red"] { order: 3; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="eraser"] { order: 4; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="undo"] { order: 5; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="redo"] { order: 6; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="zoom"] { order: 7; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="pagination"] { order: 8; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="close"] { order: 9; }
 .pdf-page-nav {
   display: none;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: #111;
+  color: rgba(255, 255, 255, 0.92);
 }
 .pdf-page-nav.open {
   display: flex;
 }
 .pdf-page-indicator {
-  min-width: 32px;
-  padding: 0 4px;
+  min-width: 92px;
+  padding: 0 6px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+  color: rgba(255, 255, 255, 0.92);
 }
 .pdf-page-indicator:focus-visible {
   outline: 2px solid #111;
   outline-offset: 2px;
   border-radius: 6px;
+}
+.pdf-toolbar--expanded .pdf-page-indicator {
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 4px 10px;
 }
 .answer-letter{
   margin:40px;

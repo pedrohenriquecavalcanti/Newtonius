@@ -96,34 +96,107 @@
        ===================================================================== -->
   <div id="pdfViewerContainer">
     <div id="pdfToolbar" aria-label="Ferramentas do PDF">
-      <button id="pdfPenBtn" class="pdf-tool-btn" title="Caneta">
+      <button id="pdfPenBtn" class="pdf-tool-btn" data-role="pen" title="Caneta" aria-label="Caneta">
         <i class="fas fa-pen"></i>
       </button>
-      <button id="pdfEraserBtn" class="pdf-tool-btn" title="Borracha">
+      <button
+        id="pdfHighlighterGreenBtn"
+        class="pdf-tool-btn pdf-toolbar__extra pdf-tool-btn--highlight-green"
+        data-role="highlight-green"
+        title="Marca texto verde"
+        aria-label="Marca texto verde"
+      >
+        <i class="fas fa-highlighter"></i>
+      </button>
+      <button
+        id="pdfHighlighterRedBtn"
+        class="pdf-tool-btn pdf-toolbar__extra pdf-tool-btn--highlight-red"
+        data-role="highlight-red"
+        title="Marca texto vermelho"
+        aria-label="Marca texto vermelho"
+      >
+        <i class="fas fa-highlighter"></i>
+      </button>
+      <button id="pdfEraserBtn" class="pdf-tool-btn" data-role="eraser" title="Borracha" aria-label="Borracha">
         <i class="fas fa-eraser"></i>
+      </button>
+      <button
+        id="pdfUndoBtn"
+        class="pdf-tool-btn pdf-toolbar__extra"
+        data-role="undo"
+        title="Desfazer"
+        aria-label="Desfazer"
+        disabled
+      >
+        <i class="fas fa-rotate-left"></i>
+      </button>
+      <button
+        id="pdfRedoBtn"
+        class="pdf-tool-btn pdf-toolbar__extra"
+        data-role="redo"
+        title="Refazer"
+        aria-label="Refazer"
+        disabled
+      >
+        <i class="fas fa-rotate-right"></i>
+      </button>
+      <div
+        id="pdfZoomControls"
+        class="pdf-zoom-controls pdf-toolbar__extra"
+        aria-hidden="true"
+        data-role="zoom"
+      >
+        <button id="pdfZoomOutBtn" class="pdf-tool-btn pdf-tool-btn--mini" title="Diminuir zoom" aria-label="Diminuir zoom">
+          <i class="fas fa-search-minus"></i>
+        </button>
+        <label for="pdfZoomLevel" class="sr-only">Nível de zoom</label>
+        <div class="pdf-zoom-level" aria-live="polite">
+          <input
+            id="pdfZoomLevel"
+            class="pdf-zoom-input"
+            type="number"
+            inputmode="numeric"
+            min="25"
+            max="400"
+            step="5"
+            value="100"
+            aria-label="Nível de zoom em porcentagem"
+          />
+          <span class="pdf-zoom-suffix" aria-hidden="true">%</span>
+        </div>
+        <button id="pdfZoomInBtn" class="pdf-tool-btn pdf-tool-btn--mini" title="Aumentar zoom" aria-label="Aumentar zoom">
+          <i class="fas fa-search-plus"></i>
+        </button>
+      </div>
+      <div
+        id="pdfPageNav"
+        class="pdf-page-nav pdf-toolbar__extra"
+        aria-live="polite"
+        aria-hidden="true"
+        data-role="pagination"
+      >
+        <button id="pdfPrevPageBtn" class="pdf-tool-btn" title="Página anterior" aria-label="Página anterior">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span id="pdfPageIndicator" class="pdf-page-indicator">Página --/--</span>
+        <button id="pdfNextPageBtn" class="pdf-tool-btn" title="Próxima página" aria-label="Próxima página">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+      <button id="closePdfBtn" class="pdf-tool-btn pdf-tool-btn--close" data-role="close" title="Fechar PDF" aria-label="Fechar PDF">
+        <i class="fas fa-times"></i>
       </button>
       <button
         id="pdfPageMenuToggleBtn"
         class="pdf-tool-btn"
-        title="Páginas"
-        aria-label="Abrir navegação de páginas"
+        data-role="expand"
+        title="Mais ferramentas"
+        aria-label="Mais ferramentas"
         aria-haspopup="true"
         aria-expanded="false"
         aria-controls="pdfPageNav"
       >
         <i class="fas fa-plus"></i>
-      </button>
-      <div id="pdfPageNav" class="pdf-page-nav" aria-live="polite" aria-hidden="true">
-        <button id="pdfPrevPageBtn" class="pdf-tool-btn" title="Página anterior" aria-label="Página anterior">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <span id="pdfPageIndicator" class="pdf-page-indicator">--/--</span>
-        <button id="pdfNextPageBtn" class="pdf-tool-btn" title="Próxima página" aria-label="Próxima página">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-      <button id="closePdfBtn" class="pdf-tool-btn pdf-tool-btn--close" title="Fechar PDF" aria-label="Fechar PDF">
-        <i class="fas fa-times"></i>
       </button>
     </div>
     <div id="pdfPagesWrapper"></div>
