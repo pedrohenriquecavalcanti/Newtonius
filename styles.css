@@ -36,6 +36,18 @@
   --c-reda:  #EB3324;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* =====================================================================================
    ESTILOS GERAIS
    =====================================================================================*/
@@ -513,12 +525,6 @@ button:hover { filter: brightness(1.2); }
 #pdfViewerContainer.ipad-mode .pdf-page-wrapper {
   touch-action: pan-y;
 }
-#pdfViewerContainer.pdf-fullscreen {
-  padding: 0 8px 16px;
-}
-#pdfViewerContainer.pdf-fullscreen-portrait .pdf-page-wrapper {
-  margin: 12px 0;
-}
 #pdfPagesWrapper {
   width: 100%;
   display: flex;
@@ -602,12 +608,34 @@ button:hover { filter: brightness(1.2); }
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 .pdf-zoom-level {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
   min-width: 48px;
+}
+.pdf-zoom-input {
+  width: 44px;
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: none;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.pdf-zoom-input::-webkit-outer-spin-button,
+.pdf-zoom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pdf-zoom-suffix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.6);
 }
 .pdf-tool-btn {
   width: 28px;
@@ -702,12 +730,11 @@ button:hover { filter: brightness(1.2); }
 #pdfToolbar.pdf-toolbar--expanded [data-role="highlight-green"] { order: 2; }
 #pdfToolbar.pdf-toolbar--expanded [data-role="highlight-red"] { order: 3; }
 #pdfToolbar.pdf-toolbar--expanded [data-role="eraser"] { order: 4; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="lasso"] { order: 5; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="undo"] { order: 6; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="redo"] { order: 7; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="zoom"] { order: 8; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="pagination"] { order: 9; }
-#pdfToolbar.pdf-toolbar--expanded [data-role="close"] { order: 10; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="undo"] { order: 5; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="redo"] { order: 6; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="zoom"] { order: 7; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="pagination"] { order: 8; }
+#pdfToolbar.pdf-toolbar--expanded [data-role="close"] { order: 9; }
 .pdf-page-nav {
   display: none;
   align-items: center;

@@ -121,15 +121,6 @@
         <i class="fas fa-eraser"></i>
       </button>
       <button
-        id="pdfLassoBtn"
-        class="pdf-tool-btn pdf-toolbar__extra"
-        data-role="lasso"
-        title="Lasso Tool"
-        aria-label="Lasso Tool"
-      >
-        <i class="fas fa-object-ungroup"></i>
-      </button>
-      <button
         id="pdfUndoBtn"
         class="pdf-tool-btn pdf-toolbar__extra"
         data-role="undo"
@@ -158,18 +149,23 @@
         <button id="pdfZoomOutBtn" class="pdf-tool-btn pdf-tool-btn--mini" title="Diminuir zoom" aria-label="Diminuir zoom">
           <i class="fas fa-search-minus"></i>
         </button>
-        <span id="pdfZoomLevel" class="pdf-zoom-level" aria-live="polite">100%</span>
+        <label for="pdfZoomLevel" class="sr-only">Nível de zoom</label>
+        <div class="pdf-zoom-level" aria-live="polite">
+          <input
+            id="pdfZoomLevel"
+            class="pdf-zoom-input"
+            type="number"
+            inputmode="numeric"
+            min="25"
+            max="400"
+            step="5"
+            value="100"
+            aria-label="Nível de zoom em porcentagem"
+          />
+          <span class="pdf-zoom-suffix" aria-hidden="true">%</span>
+        </div>
         <button id="pdfZoomInBtn" class="pdf-tool-btn pdf-tool-btn--mini" title="Aumentar zoom" aria-label="Aumentar zoom">
           <i class="fas fa-search-plus"></i>
-        </button>
-        <button
-          id="pdfFullscreenBtn"
-          class="pdf-tool-btn pdf-tool-btn--mini"
-          title="Tela cheia"
-          aria-label="Alternar modo tela cheia"
-          aria-pressed="false"
-        >
-          <i class="fas fa-expand"></i>
         </button>
       </div>
       <div
