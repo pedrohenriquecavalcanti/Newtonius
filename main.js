@@ -327,6 +327,49 @@ const searchResultsList = document.getElementById("searchResults");
 const searchFeedbackEl  = document.getElementById("searchFeedback");
 const searchCloseBtn = document.getElementById("searchCloseBtn");
 
+const DEFAULT_SEARCH_MESSAGE = 'Digite um termo para buscar em comentários e resumos.';
+
+function createEmptySearchSnapshot(){
+  return {
+    term: '',
+    results: [],
+    scrollTop: 0,
+    activeId: null,
+    feedback: { message: DEFAULT_SEARCH_MESSAGE, isError: false }
+  };
+}
+
+function buildSearchResultId(result){
+  if(result.id) return result.id;
+  if(result.type === 'comment'){
+    return `comment|${result.key}`;
+  }
+  const subPart = result.sub != null ? result.sub : '';
+  return `summary|${result.disc}|${subPart}`;
+}
+
+function cloneSearchResult(result){
+  const copy = { ...result };
+  copy.id = buildSearchResultId(copy);
+  return copy;
+}
+
+function cloneSearchState(state){
+  const base = state || {};
+  return {
+    term: base.term || '',
+    results: (base.results || []).map(cloneSearchResult),
+    scrollTop: typeof base.scrollTop === 'number' ? base.scrollTop : 0,
+    activeId: base.activeId || null,
+    feedback: base.feedback
+      ? { message: base.feedback.message || DEFAULT_SEARCH_MESSAGE, isError: !!base.feedback.isError }
+      : { message: DEFAULT_SEARCH_MESSAGE, isError: false }
+  };
+}
+
+let searchSnapshot = createEmptySearchSnapshot();
+const searchReturnStack = [];
+
 function setNatReviewState(partial = {}) {
   const next = { ...natReviewState };
   if (partial.disc !== undefined) {
@@ -1604,13 +1647,29 @@ function isSearchOverlayOpen(){
   return !!(searchOverlay && searchOverlay.classList.contains('open'));
 }
 
-function openSearchOverlay(){
+function openSearchOverlay(restoreState = null){
   if(!searchOverlay || !searchInput || !searchResultsList) return;
   searchOverlay.classList.add('open');
   searchOverlay.setAttribute('aria-hidden', 'false');
   setBodyScrollLocked(true);
+  if(restoreState){
+    searchSnapshot = cloneSearchState(restoreState);
+    searchInput.value = searchSnapshot.term;
+    renderSearchResults(searchSnapshot.results, searchSnapshot.activeId);
+    updateSearchFeedback(searchSnapshot.feedback.message, searchSnapshot.feedback.isError);
+    requestAnimationFrame(() => {
+      searchResultsList.scrollTop = searchSnapshot.scrollTop || 0;
+      searchInput.focus();
+      searchInput.select();
+    });
+    return;
+  }
+
+  searchReturnStack.length = 0;
+  searchSnapshot = createEmptySearchSnapshot();
   searchResultsList.innerHTML = '';
-  updateSearchFeedback('Digite um termo para buscar em comentários e resumos.');
+  searchInput.value = '';
+  updateSearchFeedback(DEFAULT_SEARCH_MESSAGE);
   requestAnimationFrame(() => {
     searchInput.focus();
     searchInput.select();
@@ -1619,6 +1678,9 @@ function openSearchOverlay(){
 
 function closeSearchOverlay(){
   if(!searchOverlay) return;
+  if(searchResultsList){
+    searchSnapshot.scrollTop = searchResultsList.scrollTop;
+  }
   searchOverlay.classList.remove('open');
   searchOverlay.setAttribute('aria-hidden', 'true');
   const pdfOpen = pdfContainer && pdfContainer.style.display === 'flex';
@@ -1632,6 +1694,7 @@ function updateSearchFeedback(message, isError = false){
   if(!searchFeedbackEl) return;
   searchFeedbackEl.textContent = message;
   searchFeedbackEl.classList.toggle('search-feedback--error', !!isError);
+  searchSnapshot.feedback = { message, isError: !!isError };
 }
 
 function focusQuestionFromSearch(match){
@@ -1642,7 +1705,8 @@ function focusQuestionFromSearch(match){
   const comment = row.querySelector('.comment-edit');
   row.classList.add('search-hit');
   if(comment) comment.classList.add('search-hit');
-  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const targetEl = comment || row;
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(() => {
     row.classList.remove('search-hit');
     if(comment) comment.classList.remove('search-hit');
@@ -1662,13 +1726,20 @@ function navigateToQuestionFromSearch(disc, sub, label){
 function performSearch(rawTerm){
   if(!searchResultsList) return;
   const term = (rawTerm || '').trim();
+  searchSnapshot.term = term;
   if(!term){
     searchResultsList.innerHTML = '';
-    updateSearchFeedback('Digite um termo para buscar em comentários e resumos.');
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
+    updateSearchFeedback(DEFAULT_SEARCH_MESSAGE);
     return;
   }
   if(term.length < 2){
     searchResultsList.innerHTML = '';
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
     updateSearchFeedback('Digite pelo menos 2 caracteres.', true);
     return;
   }
@@ -1689,14 +1760,16 @@ function performSearch(rawTerm){
       const lower = text.toLocaleLowerCase('pt-BR');
       const idx = lower.indexOf(normalized);
       if(idx === -1) continue;
-      results.push({
+      const commentResult = {
         type: 'comment',
         disc: parsed.disc,
         sub: parsed.sub,
         label: parsed.label,
         key: qKey(parsed.disc, parsed.sub, parsed.label),
         excerpt: buildSearchExcerpt(text, idx, term.length)
-      });
+      };
+      commentResult.id = buildSearchResultId(commentResult);
+      results.push(commentResult);
     } else if(key.startsWith('summary_')){
       const parsed = parseSummaryKey(key);
       if(!parsed) continue;
@@ -1706,12 +1779,14 @@ function performSearch(rawTerm){
       const lower = text.toLocaleLowerCase('pt-BR');
       const idx = lower.indexOf(normalized);
       if(idx === -1) continue;
-      results.push({
+      const summaryResult = {
         type: 'summary',
         disc: parsed.disc,
         sub: parsed.sub,
         excerpt: buildSearchExcerpt(text, idx, term.length)
-      });
+      };
+      summaryResult.id = buildSearchResultId(summaryResult);
+      results.push(summaryResult);
     }
   }
 
@@ -1731,20 +1806,42 @@ function performSearch(rawTerm){
 
   if(results.length === 0){
     searchResultsList.innerHTML = '';
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
     updateSearchFeedback('Nenhum resultado encontrado.', true);
     return;
   }
 
   updateSearchFeedback(`${results.length} resultado${results.length>1?'s':''} encontrado${results.length>1?'s':''}.`);
+  searchSnapshot.scrollTop = 0;
   renderSearchResults(results);
+  searchResultsList.scrollTop = 0;
 }
 
-function renderSearchResults(results){
+function renderSearchResults(results, activeId = null){
   if(!searchResultsList) return;
   searchResultsList.innerHTML = '';
-  results.forEach(result => {
+  const normalized = results.map(result => {
+    const normalizedResult = { ...result };
+    normalizedResult.id = buildSearchResultId(normalizedResult);
+    return normalizedResult;
+  });
+
+  searchSnapshot.results = normalized.map(cloneSearchResult);
+  searchSnapshot.activeId = activeId || null;
+
+  normalized.forEach(result => {
     const item = document.createElement('li');
     item.className = 'search-result';
+    item.dataset.resultId = result.id;
+
+    if(searchSnapshot.activeId && result.id === searchSnapshot.activeId){
+      item.classList.add('search-result--active');
+      item.setAttribute('aria-current', 'true');
+    } else {
+      item.setAttribute('aria-current', 'false');
+    }
 
     const main = document.createElement('button');
     main.type = 'button';
@@ -1781,6 +1878,12 @@ function renderSearchResults(results){
     main.appendChild(excerpt);
 
     main.addEventListener('click', () => {
+      if(searchResultsList){
+        searchSnapshot.scrollTop = searchResultsList.scrollTop;
+      }
+      searchSnapshot.activeId = result.id;
+      const snapshotCopy = cloneSearchState(searchSnapshot);
+      searchReturnStack.push(snapshotCopy);
       closeSearchOverlay();
       if(result.type === 'comment'){
         navigateToQuestionFromSearch(result.disc, result.sub, result.label);
@@ -1799,6 +1902,13 @@ function renderSearchResults(results){
   });
 }
 
+function tryRestoreSearchOverlay(){
+  if(searchReturnStack.length === 0) return false;
+  const snapshot = cloneSearchState(searchReturnStack.pop());
+  openSearchOverlay(snapshot);
+  return true;
+}
+
 if(searchNotesBtn){
   searchNotesBtn.onclick = () => {
     settingsMenu.style.display = 'none';
@@ -1815,6 +1925,18 @@ if(searchOverlay){
     if(e.target === searchOverlay){
       closeSearchOverlay();
     }
+  });
+}
+
+if(searchInput){
+  searchInput.addEventListener('input', () => {
+    searchSnapshot.term = searchInput.value;
+  });
+}
+
+if(searchResultsList){
+  searchResultsList.addEventListener('scroll', () => {
+    searchSnapshot.scrollTop = searchResultsList.scrollTop;
   });
 }
 
@@ -5594,6 +5716,9 @@ importFile.addEventListener("change", ({ target }) => {
 
 /* Botão Voltar → decide se volta à lista de assuntos, trilha ou menu */
 backBtn.onclick = () => {
+  if(tryRestoreSearchOverlay()){
+    return;
+  }
   if(currentExam){
     if(trailReturn){
       const d=trailReturn;
