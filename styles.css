@@ -34,6 +34,7 @@
   --c-geo-soc: #009900;
   --c-his-fil: #E6C200;
   --c-reda:  #EB3324;
+  --c-sem-assunto: #888888;
 }
 
 /* =====================================================================================
@@ -238,6 +239,10 @@ button:hover { filter: brightness(1.2); }
 .disc-btn.geografia-sociologia { background: var(--c-geo-soc); }
 .disc-btn.historia-filosofia   { background: var(--c-his-fil); }
 .disc-btn.redacao              { background: var(--c-reda); }
+.disc-btn.sem-assunto-nat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.disc-btn.sem-assunto-lin      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.disc-btn.sem-assunto-hum      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.disc-btn.sem-assunto-mat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 
 /* =====================================================================================
    ESTRELAS DE PROGRESSO
@@ -1212,6 +1217,10 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.geografia-sociologia { background: var(--c-geo-soc); }
 .trail-subject.historia-filosofia   { background: var(--c-his-fil); }
 .trail-subject.redacao              { background: var(--c-reda); }
+.trail-subject.sem-assunto-nat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.trail-subject.sem-assunto-lin      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.trail-subject.sem-assunto-hum      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
+.trail-subject.sem-assunto-mat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 .trail-subject.trail-review         { background: #9fe3b1; color: #0a3a1f; }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }

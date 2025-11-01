@@ -212,6 +212,10 @@ const discClasses = {
   'Geografia e Sociologia': "geografia-sociologia",
   'História e Filosofia': "historia-filosofia",
   'Redação': "redacao",
+  'Sem Assunto (Natureza)': 'sem-assunto-nat',
+  'Sem Assunto (Linguagens)': 'sem-assunto-lin',
+  'Sem Assunto (Humanas)': 'sem-assunto-hum',
+  'Sem Assunto (Matemática)': 'sem-assunto-mat',
 };
 const discColors = {
   Biologia: "var(--c-bio)",
@@ -222,21 +226,34 @@ const discColors = {
   'Geografia e Sociologia': "var(--c-geo-soc)",
   'História e Filosofia': "var(--c-his-fil)",
   'Redação': "var(--c-reda)",
+  'Sem Assunto (Natureza)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Linguagens)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Humanas)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Matemática)': 'var(--c-sem-assunto)',
 };
 
 // Valor especial usado para representar a disciplina inteira
 const ALL_SUB = '__all__';
+const UNCLASSIFIED_SUBJECT_CODE = '__sem_assunto__';
 
-const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação'];
+const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação','Sem Assunto (Linguagens)','Sem Assunto (Humanas)'];
 
 const DISCIPLINES_BY_MODE = {
-  lin: ['Linguagens', 'Redação'],
-  hum: ['Geografia e Sociologia', 'História e Filosofia'],
-  nat: ['Biologia', 'Química', 'Física'],
-  mat: ['Matemática']
+  lin: ['Linguagens', 'Redação', 'Sem Assunto (Linguagens)'],
+  hum: ['Geografia e Sociologia', 'História e Filosofia', 'Sem Assunto (Humanas)'],
+  nat: ['Biologia', 'Química', 'Física', 'Sem Assunto (Natureza)'],
+  mat: ['Matemática', 'Sem Assunto (Matemática)']
 };
 
-const NAT_REVIEW_DISCIPLINES = DISCIPLINES_BY_MODE.nat || [];
+const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
+  lin: 'Sem Assunto (Linguagens)',
+  hum: 'Sem Assunto (Humanas)',
+  nat: 'Sem Assunto (Natureza)',
+  mat: 'Sem Assunto (Matemática)'
+};
+
+const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
+const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
 const REVIEW_ALL_DISC = '__review_all__';
 const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
 const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
@@ -248,6 +265,7 @@ const natReviewDeferredAutoHide = new Set();
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
 
 const DEFAULT_NAT_REVIEW_STATE = {
+  mode: 'nat',
   disc: REVIEW_ALL_DISC,
   sub: null,
   showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
@@ -329,6 +347,11 @@ const searchCloseBtn = document.getElementById("searchCloseBtn");
 
 function setNatReviewState(partial = {}) {
   const next = { ...natReviewState };
+  if (partial.mode !== undefined && partial.mode !== next.mode) {
+    next.mode = partial.mode;
+    next.disc = REVIEW_ALL_DISC;
+    next.sub = null;
+  }
   if (partial.disc !== undefined) {
     next.disc = partial.disc;
     if (partial.disc === REVIEW_ALL_DISC) {
@@ -343,6 +366,9 @@ function setNatReviewState(partial = {}) {
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
+  if (!next.mode) {
+    next.mode = 'nat';
+  }
   natReviewState = next;
   localStorage.setItem(
     NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
@@ -352,7 +378,7 @@ function setNatReviewState(partial = {}) {
 }
 
 function resetNatReviewState() {
-  setNatReviewState({ disc: REVIEW_ALL_DISC, sub: null });
+  setNatReviewState({ mode: 'nat', disc: REVIEW_ALL_DISC, sub: null });
 }
 
 function ensureReviewSettingsUI() {
@@ -417,14 +443,39 @@ function renderReviewSettingsMenu() {
   title.textContent = 'Área';
   reviewSettingsMenu.appendChild(title);
 
-  const optionsWrap = document.createElement('div');
-  optionsWrap.className = 'review-menu-options';
-  const areaOptions = [REVIEW_ALL_DISC, ...NAT_REVIEW_DISCIPLINES];
-  areaOptions.forEach(value => {
+  const areaWrap = document.createElement('div');
+  areaWrap.className = 'review-menu-options';
+  const currentMode = natReviewState.mode || 'nat';
+  REVIEW_MODES.forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
-    btn.textContent = value === REVIEW_ALL_DISC ? 'Natureza' : value;
+    btn.textContent = REVIEW_MODE_LABELS[mode] || mode;
+    if (mode === currentMode) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      setNatReviewState({ mode, disc: REVIEW_ALL_DISC, sub: null });
+      reviewSettingsMenu.style.display = 'none';
+      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      showNatReview();
+    });
+    areaWrap.appendChild(btn);
+  });
+  reviewSettingsMenu.appendChild(areaWrap);
+
+  const discTitle = document.createElement('p');
+  discTitle.className = 'review-menu-title';
+  discTitle.textContent = 'Disciplina';
+  reviewSettingsMenu.appendChild(discTitle);
+
+  const optionsWrap = document.createElement('div');
+  optionsWrap.className = 'review-menu-options';
+  const areaLabel = REVIEW_MODE_LABELS[currentMode] || 'Área';
+  const disciplineOptions = [REVIEW_ALL_DISC, ...(DISCIPLINES_BY_MODE[currentMode] || [])];
+  disciplineOptions.forEach(value => {
+    const btn = document.createElement('button');
+    btn.className = 'review-menu-option';
+    btn.type = 'button';
+    btn.textContent = value === REVIEW_ALL_DISC ? areaLabel : value;
     const isSelected =
       (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
       natReviewState.disc === value;
@@ -817,24 +868,18 @@ let pdfPersistListenersAttached = false;
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
   ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
+  ...(window.listaQuestoesD1 || []),
+  ...(window.listaQuestoesNaoClassificadas || [])
 ]);
-const { map: examsDataLin, order: examOrderLin } = buildExamMap([
+const allQuestoes = [
   ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'lin');
-const { map: examsDataHum, order: examOrderHum } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'hum');
-const { map: examsDataNat, order: examOrderNat } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'nat');
-const { map: examsDataMat, order: examOrderMat } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'mat');
+  ...(window.listaQuestoesD1 || []),
+  ...(window.listaQuestoesNaoClassificadas || [])
+];
+const { map: examsDataLin, order: examOrderLin } = buildExamMap(allQuestoes, 'lin');
+const { map: examsDataHum, order: examOrderHum } = buildExamMap(allQuestoes, 'hum');
+const { map: examsDataNat, order: examOrderNat } = buildExamMap(allQuestoes, 'nat');
+const { map: examsDataMat, order: examOrderMat } = buildExamMap(allQuestoes, 'mat');
 
 const examsDataByMode = {
   lin: examsDataLin,
@@ -856,6 +901,9 @@ const examOrderByMode = {
 
 /** Retorna o nome legível do assunto ou fallback. */
 function getFriendlyName(disc, sub) {
+  if (sub === UNCLASSIFIED_SUBJECT_CODE || sub === null || sub === undefined) {
+    return 'Sem assunto';
+  }
   const list = SUBJECT_NAMES[disc] || [];
   const idx  = parseInt(sub, 10) - 1;   // "01" -> 0
   return list[idx] ?? `Assunto ${sub}`;
@@ -881,28 +929,75 @@ function buildBancoQuestoes(listaFlat) {
   return banco;
 }
 
+function getModeFromDiscName(disc){
+  if (!disc) return null;
+  if (DISCIPLINES_BY_MODE.lin.includes(disc)) return 'lin';
+  if (DISCIPLINES_BY_MODE.hum.includes(disc)) return 'hum';
+  if (DISCIPLINES_BY_MODE.nat.includes(disc)) return 'nat';
+  if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'mat';
+  return null;
+}
+
+function getModeFromQuestionNumber(number){
+  if (!Number.isFinite(number)) return null;
+  if (number >= 1 && number <= 45) return 'lin';
+  if (number >= 46 && number <= 90) return 'hum';
+  if (number >= 91 && number <= 135) return 'nat';
+  if (number >= 136 && number <= 180) return 'mat';
+  return null;
+}
+
 function buildExamMap(list, mode='nat'){
   const exams = {};
   const order = [];
   const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
   list.forEach(item => {
+    if(!item || !item.label) return;
     const m = item.label.match(/^(.*)-Q-(\d+)/);
-    if (!m || (allowed.size && !allowed.has(item.Disciplina))) return;
+    if (!m) return;
     const exam = m[1];
+    const questionNumber = parseInt(m[2], 10);
+    const inferredModeFromDisc = getModeFromDiscName(item.Disciplina);
+    const inferredModeFromNumber = Number.isFinite(questionNumber)
+      ? getModeFromQuestionNumber(questionNumber)
+      : null;
+    const itemMode = item.area || item.mode || inferredModeFromDisc || inferredModeFromNumber || mode;
+    if (itemMode && itemMode !== mode) {
+      if (allowed.size && allowed.has(item.Disciplina)) {
+        // disciplina pertence a outra área mas faz parte do modo atual
+      } else {
+        return;
+      }
+    }
+    let disc = item.Disciplina;
+    let sub = item.Assunto;
+    if (!disc || (allowed.size && !allowed.has(disc))) {
+      const fallbackDisc = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
+      if (!fallbackDisc || (allowed.size && !allowed.has(fallbackDisc))) {
+        return;
+      }
+      disc = fallbackDisc;
+      sub = UNCLASSIFIED_SUBJECT_CODE;
+    }
+    if (!sub) {
+      sub = UNCLASSIFIED_SUBJECT_CODE;
+    }
     if (!exams[exam]) {
       exams[exam] = [];
       order.push(exam);
     }
     exams[exam].push({
-      disc: item.Disciplina,
-      sub: item.Assunto,
+      disc,
+      sub,
       q: {
         label: item.label,
         QPDFName: item.QPDFName,
         page: item.page,
         GPDFName: item.GPDFName,
         gabaritoPage: item.gabaritoPage,
-        gabaritoAnswer: item.gabaritoAnswer
+        gabaritoAnswer: item.gabaritoAnswer,
+        area: mode,
+        unclassified: sub === UNCLASSIFIED_SUBJECT_CODE
       }
     });
   });
@@ -917,10 +1012,12 @@ function buildExamMap(list, mode='nat'){
 }
 
 function getExamCategory(disc){
-  if (DISCIPLINES_BY_MODE.lin.includes(disc)) return 'Lin';
-  if (DISCIPLINES_BY_MODE.hum.includes(disc)) return 'Hum';
-  if (DISCIPLINES_BY_MODE.nat.includes(disc)) return 'Nat';
-  if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'Mat';
+  const mode = getModeFromDiscName(disc);
+  if (!mode) return null;
+  if (mode === 'lin') return 'Lin';
+  if (mode === 'hum') return 'Hum';
+  if (mode === 'nat') return 'Nat';
+  if (mode === 'mat') return 'Mat';
   return null;
 }
 
@@ -2129,11 +2226,13 @@ function openPicker(callback){
       pickerReviewDisc.style.display='';
       pickerSub.style.display='';
       pickerReviewDisc.innerHTML='';
+      const reviewMode = natReviewState.mode || 'nat';
+      const reviewAreaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Área';
       const optAllDisc=document.createElement('option');
       optAllDisc.value=REVIEW_ALL_DISC;
-      optAllDisc.textContent='Revisão: Natureza';
+      optAllDisc.textContent=`Revisão: ${reviewAreaLabel}`;
       pickerReviewDisc.appendChild(optAllDisc);
-      NAT_REVIEW_DISCIPLINES.forEach(disc=>{
+      (DISCIPLINES_BY_MODE[reviewMode] || []).forEach(disc=>{
         const opt=document.createElement('option');
         opt.value=disc;
         opt.textContent=disc;
@@ -2158,7 +2257,7 @@ function openPicker(callback){
         if(isAll){
           const opt=document.createElement('option');
           opt.value=ALL_SUB;
-          opt.textContent='Revisão: Natureza';
+          opt.textContent=`Revisão: ${reviewAreaLabel}`;
           pickerSub.appendChild(opt);
           pickerSub.value=ALL_SUB;
           return;
@@ -2211,7 +2310,7 @@ function openPicker(callback){
         alert('Selecione uma disciplina para revisar.');
         return;
       }
-      callback({review:true, disc: reviewDisc, sub: pickerSub.value});
+      callback({review:true, mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -2359,8 +2458,10 @@ function renderTrailDay(day,expand){
         const isAllDisc = s.disc === REVIEW_ALL_DISC;
         const hasAll = isAllDisc || s.sub === ALL_SUB;
         const labelParts = ['Revisão'];
+        const mode = s.mode || natReviewState.mode || 'nat';
+        const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
         if(isAllDisc){
-          labelParts.push('Natureza');
+          labelParts.push(areaLabel);
         }else{
           labelParts.push(s.disc);
           if(!hasAll){
@@ -2372,13 +2473,13 @@ function renderTrailDay(day,expand){
           trailReturn=dayStr;
           trailReturnSub=false;
           const filter = isAllDisc
-            ? {disc:REVIEW_ALL_DISC}
-            : {disc:s.disc, sub:s.sub};
+            ? {mode, disc:REVIEW_ALL_DISC}
+            : {mode, disc:s.disc, sub:s.sub};
           showNatReview(filter);
         };
         const count=document.createElement('span');
         count.className='trail-count';
-        const countFilter = isAllDisc ? null : {disc:s.disc, sub:s.sub};
+        const countFilter = isAllDisc ? { mode } : { mode, disc:s.disc, sub:s.sub };
         count.textContent=countNatReviewItems(countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
@@ -2609,11 +2710,19 @@ function renderExamSummary(){
 }
 
 function collectNatReviewItems(filter=null){
-  const normalizedFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
-  const natData = examsDataByMode.nat || {};
-  const examOrder = examOrderNat || [];
+  const mode = filter?.mode || natReviewState.mode || 'nat';
+  const normalizedFilter = (() => {
+    if (!filter) return null;
+    const { disc, sub } = filter.disc === REVIEW_ALL_DISC ? { disc: null, sub: null } : filter;
+    return {
+      disc: disc ?? null,
+      sub: sub ?? null
+    };
+  })();
+  const areaData = examsDataByMode[mode] || {};
+  const examOrder = examOrderByMode[mode] || [];
   const visited = new Set();
-  const allowed = new Set(NAT_REVIEW_DISCIPLINES);
+  const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
   const matchesFilter = (disc, sub) => {
     if(!allowed.has(disc)) return false;
     if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
@@ -2622,7 +2731,7 @@ function collectNatReviewItems(filter=null){
   };
   const combined = [];
   const pushQuestionsFromExam = exam => {
-    const questions = natData[exam] || [];
+    const questions = areaData[exam] || [];
     const upper = exam.toUpperCase();
     const isEnem = upper.includes('ENEM');
     const isSas  = upper.includes('SAS');
@@ -2641,16 +2750,16 @@ function collectNatReviewItems(filter=null){
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
       const isSoon = localStorage.getItem(soonKey) === '1';
       if((isEnem || isSas) && effectiveState === 2){
-        combined.push({exam,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+        combined.push({exam,mode,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
       if(isEnem && effectiveState === 0){
-        combined.push({exam,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+        combined.push({exam,mode,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
     });
     visited.add(exam);
   };
   examOrder.forEach(exam => pushQuestionsFromExam(exam));
-  Object.keys(natData).forEach(exam => {
+  Object.keys(areaData).forEach(exam => {
     if(!visited.has(exam)) pushQuestionsFromExam(exam);
   });
   return combined;
@@ -2686,7 +2795,14 @@ function computeNatReviewSnapshot(items){
 }
 
 function countNatReviewItems(filter=null){
-  const effectiveFilter = filter?.disc === REVIEW_ALL_DISC ? null : filter;
+  const effectiveFilter = (() => {
+    if (!filter) return null;
+    const next = { ...filter };
+    if (next.disc === REVIEW_ALL_DISC) {
+      delete next.disc;
+    }
+    return next;
+  })();
   const combined = collectNatReviewItems(effectiveFilter);
   const visibleItems = combined.filter(item => !item.hidden);
   const snapshot = computeNatReviewSnapshot(visibleItems);
@@ -2790,14 +2906,16 @@ function showExam(exam){
     qBtn.innerHTML=`<span class="ms-topic">${getFriendlyName(disc,sub)}</span><br><span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
     const topicSpan=qBtn.querySelector('.ms-topic');
-    topicSpan.style.color=discColors[disc];
+    topicSpan.style.color=discColors[disc] || 'var(--c-text-muted)';
     const m=q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
     qBtn.addEventListener('click',e=>{
       if(e.target.closest('.ms-topic')){
-        currentDisc=disc;
-        currentSub=sub;
-        openSummary();
+        if(sub !== UNCLASSIFIED_SUBJECT_CODE){
+          currentDisc=disc;
+          currentSub=sub;
+          openSummary();
+        }
         e.stopPropagation();
       }else{
         openPdf(q.QPDFName,q.page);
@@ -2856,28 +2974,31 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { disc, sub, showHidden } = natReviewState;
+  const { mode: reviewMode = 'nat', disc, sub, showHidden } = natReviewState;
   const isAll = disc === REVIEW_ALL_DISC;
-  const effectiveFilter = isAll ? null : { disc, sub };
+  const effectiveFilter = isAll
+    ? { mode: reviewMode }
+    : { mode: reviewMode, disc, sub };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
   examListOpen = false;
-  currentExamMode = 'nat';
+  currentExamMode = reviewMode;
   currentView = 'review';
   currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
   renderReviewSettingsMenu();
-  let headerLabel = 'Revisão';
-  if(isAll){
-    headerLabel = 'Revisão: Natureza';
-  }else{
+  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Revisão';
+  let headerLabel = `Revisão: ${areaLabel}`;
+  if(!isAll){
     headerLabel = `Revisão: ${disc}`;
     if(sub && sub !== ALL_SUB){
       headerLabel += `: ${getFriendlyName(disc, sub)}`;
     }
+  }else{
+    headerLabel = `Revisão: ${areaLabel}`;
   }
   updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
@@ -3023,14 +3144,16 @@ function showNatReview(filter=null){
     qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc, item.sub)}</span><br>` +
       `<span class="ms-label">${labelText}</span>`;
     const topicSpan = qBtn.querySelector('.ms-topic');
-    topicSpan.style.color = discColors[item.disc];
+    topicSpan.style.color = discColors[item.disc] || 'var(--c-text-muted)';
     const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if (m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
     qBtn.addEventListener('click', e => {
       if (e.target.closest('.ms-topic')) {
-        currentDisc = item.disc;
-        currentSub = item.sub;
-        openSummary();
+        if (item.sub !== UNCLASSIFIED_SUBJECT_CODE) {
+          currentDisc = item.disc;
+          currentSub = item.sub;
+          openSummary();
+        }
         e.stopPropagation();
       } else {
         openPdf(item.q.QPDFName, item.q.page);
@@ -4884,7 +5007,7 @@ async function loadPdfDocument(pdfName) {
 
   releaseCurrentPdfDocument();
 
-  const sources = [`PDFs/${pdfName}`, `PDFsD1/${pdfName}`];
+  const sources = [`PDFs/${pdfName}`, `PDFsD1/${pdfName}`, `PDFs_Não_Classificados/${pdfName}`];
   let lastError = null;
   for (const src of sources) {
     try {
@@ -5266,7 +5389,7 @@ function showMicroSim(entry) {
       <span class="ms-topic">${getFriendlyName(disc,sub)}</span><br>
       <span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
-    qBtn.querySelector('.ms-topic').style.color = discColors[disc];
+    qBtn.querySelector('.ms-topic').style.color = discColors[disc] || 'var(--c-text-muted)';
     const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if(m){
       const exam = m[0].toLowerCase();
