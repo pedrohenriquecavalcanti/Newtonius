@@ -252,6 +252,12 @@ const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
   mat: 'Sem Assunto (Matemática)'
 };
 
+function getReviewDisciplineOptions(mode){
+  const list = DISCIPLINES_BY_MODE[mode] || [];
+  const unclassified = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
+  return unclassified ? list.filter(disc => disc !== unclassified) : list.slice();
+}
+
 const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
 const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
 const REVIEW_ALL_DISC = '__review_all__';
@@ -260,6 +266,7 @@ const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
 const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
+const NAT_REVIEW_SHOW_PENDING_STORAGE_KEY = 'natReviewShowPending';
 const natReviewDeferredAutoHide = new Set();
 
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
@@ -269,6 +276,7 @@ const DEFAULT_NAT_REVIEW_STATE = {
   disc: REVIEW_ALL_DISC,
   sub: null,
   showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
+  showPending: localStorage.getItem(NAT_REVIEW_SHOW_PENDING_STORAGE_KEY) === '1',
 };
 
 let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
@@ -366,6 +374,9 @@ function setNatReviewState(partial = {}) {
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
+  if (partial.showPending !== undefined) {
+    next.showPending = !!partial.showPending;
+  }
   if (!next.mode) {
     next.mode = 'nat';
   }
@@ -373,6 +384,10 @@ function setNatReviewState(partial = {}) {
   localStorage.setItem(
     NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
     natReviewState.showHidden ? '1' : '0'
+  );
+  localStorage.setItem(
+    NAT_REVIEW_SHOW_PENDING_STORAGE_KEY,
+    natReviewState.showPending ? '1' : '0'
   );
   return natReviewState;
 }
@@ -470,7 +485,7 @@ function renderReviewSettingsMenu() {
   const optionsWrap = document.createElement('div');
   optionsWrap.className = 'review-menu-options';
   const areaLabel = REVIEW_MODE_LABELS[currentMode] || 'Área';
-  const disciplineOptions = [REVIEW_ALL_DISC, ...(DISCIPLINES_BY_MODE[currentMode] || [])];
+  const disciplineOptions = [REVIEW_ALL_DISC, ...getReviewDisciplineOptions(currentMode)];
   disciplineOptions.forEach(value => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
@@ -507,6 +522,20 @@ function renderReviewSettingsMenu() {
     showNatReview();
   });
   reviewSettingsMenu.appendChild(hiddenBtn);
+
+  const pendingBtn = document.createElement('button');
+  pendingBtn.className = 'review-menu-option review-menu-toggle';
+  pendingBtn.type = 'button';
+  const showPending = !!natReviewState.showPending;
+  pendingBtn.textContent = showPending ? 'Ocultar Não Feitas' : 'Exibir Não Feitas';
+  if (showPending) pendingBtn.classList.add('active');
+  pendingBtn.addEventListener('click', () => {
+    setNatReviewState({ showPending: !natReviewState.showPending });
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    showNatReview();
+  });
+  reviewSettingsMenu.appendChild(pendingBtn);
 
   if (wasOpen) {
     reviewSettingsMenu.style.display = 'flex';
@@ -2232,7 +2261,7 @@ function openPicker(callback){
       optAllDisc.value=REVIEW_ALL_DISC;
       optAllDisc.textContent=`Revisão: ${reviewAreaLabel}`;
       pickerReviewDisc.appendChild(optAllDisc);
-      (DISCIPLINES_BY_MODE[reviewMode] || []).forEach(disc=>{
+      getReviewDisciplineOptions(reviewMode).forEach(disc=>{
         const opt=document.createElement('option');
         opt.value=disc;
         opt.textContent=disc;
@@ -2735,7 +2764,6 @@ function collectNatReviewItems(filter=null){
     const upper = exam.toUpperCase();
     const isEnem = upper.includes('ENEM');
     const isSas  = upper.includes('SAS');
-    if(!isEnem && !isSas) return;
     questions.forEach(({disc,sub,q})=>{
       if(!matchesFilter(disc,sub)) return;
       const key = qKey(disc,sub,q.label);
@@ -2749,7 +2777,7 @@ function collectNatReviewItems(filter=null){
       const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
       const isSoon = localStorage.getItem(soonKey) === '1';
-      if((isEnem || isSas) && effectiveState === 2){
+      if(effectiveState === 2){
         combined.push({exam,mode,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
       }
       if(isEnem && effectiveState === 0){
@@ -2804,7 +2832,9 @@ function countNatReviewItems(filter=null){
     return next;
   })();
   const combined = collectNatReviewItems(effectiveFilter);
-  const visibleItems = combined.filter(item => !item.hidden);
+  const showPending = natReviewState.showPending;
+  const filteredItems = combined.filter(item => showPending || item.type !== 'pending');
+  const visibleItems = filteredItems.filter(item => !item.hidden);
   const snapshot = computeNatReviewSnapshot(visibleItems);
   return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
@@ -2974,7 +3004,7 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = 'nat', disc, sub, showHidden } = natReviewState;
+  const { mode: reviewMode = 'nat', disc, sub, showHidden, showPending } = natReviewState;
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
     ? { mode: reviewMode }
@@ -3014,9 +3044,11 @@ function showNatReview(filter=null){
   window.scrollTo(0,0);
 
   const combined = collectNatReviewItems(effectiveFilter);
+  const itemsForView = combined.filter(item => showPending || item.type !== 'pending');
+  const pendingFilteredOut = !showPending && combined.some(item => item.type === 'pending');
   const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
     ? 'Nenhuma questão para revisar no filtro escolhido.'
-    : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
+    : 'Nenhuma questão errada ou pendente encontrada nos simulados.';
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
@@ -3027,10 +3059,12 @@ function showNatReview(filter=null){
       if (emptyMsg.isConnected) emptyMsg.remove();
     } else {
       let message = baseEmptyText;
-      const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden && !item.favorite));
-      const visibleSnapshot = computeNatReviewSnapshot(combined.filter(item => !item.hidden || item.favorite));
+      const hiddenSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => item.hidden && !item.favorite));
+      const visibleSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => !item.hidden || item.favorite));
       if (!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0) {
         message = 'Todas as questões deste filtro estão ocultas. Use “Exibir Ocultas”.';
+      } else if (pendingFilteredOut) {
+        message = 'Ative “Exibir Não Feitas” para ver as questões pendentes.';
       }
       emptyMsg.textContent = message;
       if (!emptyMsg.isConnected) app.appendChild(emptyMsg);
@@ -3038,16 +3072,16 @@ function showNatReview(filter=null){
   };
 
   const refreshStats = () => {
-    const snapshot = computeNatReviewSnapshot(combined);
+    const snapshot = computeNatReviewSnapshot(itemsForView);
     const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
-    const text = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
+    const text = `Erradas (todos os simulados): ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total visível: ${reviewedCount}/${totalCount}`;
     stats.textContent = text;
     stats.className = 'stat';
   };
 
   const fragment = document.createDocumentFragment();
 
-  combined.forEach(item => {
+  itemsForView.forEach(item => {
     const key = qKey(item.disc, item.sub, item.q.label);
     let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
     const qualifies = () => {
