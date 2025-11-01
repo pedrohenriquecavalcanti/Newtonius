@@ -63,9 +63,14 @@
       <button id="trilhaBtn">Trilha Estratégica</button>
       <button id="examsBtn">Provas e Simulados</button>
       <button id="natReviewBtn">Revisão</button>
+      <button id="reviewModeBtn">Pós-Revisão</button>
+      <button id="searchNotesBtn">Buscar anotações</button>
       <button id="toggleD1Btn">Exibir - D1</button>
       <button id="importBtn">Importar</button>
       <button id="exportBtn">Exportar</button>
+      <button id="importHandBtn">Handwriting - Importar</button>
+      <button id="exportHandBtn">Handwriting - Exportar</button>
+      <button id="clearManuscriptsBtn" title="Apaga todas as anotações feitas nos PDFs.">Limpar manuscritos</button>
       <button id="clearCacheBtn" title="Força o navegador a baixar os arquivos mais recentes sem apagar seu progresso.">Limpar Cache</button>
     </div>
     <div class="header-top">
@@ -140,6 +145,25 @@
   <div id="summaryContainer" style="position:fixed;inset:0;background:#121212;display:none;flex-direction:column;z-index:2000;">
     <iframe id="summaryFrame" style="border:none;width:100%;height:100%;"></iframe>
   </div>
+  <div id="searchOverlay" aria-hidden="true">
+    <div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+      <div class="search-header">
+        <h2 id="searchTitle">Buscar anotações</h2>
+        <button id="searchCloseBtn" aria-label="Fechar busca">&times;</button>
+      </div>
+      <form id="searchForm">
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Digite um termo para buscar"
+          autocomplete="off"
+        />
+        <button type="submit">Buscar</button>
+      </form>
+      <p id="searchFeedback" class="search-feedback">Digite um termo para buscar em comentários e resumos.</p>
+      <ul id="searchResults" class="search-results" aria-live="polite"></ul>
+    </div>
+  </div>
   <!-- =====================================================================
        MODAL DE XP (gráfico semanal)
        ===================================================================== -->
@@ -159,6 +183,7 @@
        ===================================================================== -->
   <script src="data.js"></script>
   <script src="dataD1.js"></script>
+  <script src="data_naoclassificadas.js"></script>
 
   <!-- =====================================================================
        JAVASCRIPT PRINCIPAL
@@ -190,6 +215,7 @@
       <h3>Selecionar Assunto</h3>
       <div class="picker-row">
         <select id="pickerDisc"></select>
+        <select id="pickerReviewDisc" style="display:none;"></select>
         <select id="pickerSub"></select>
         <select id="pickerExamMode" style="display:none;"></select>
         <select id="pickerExam" style="display:none;"></select>

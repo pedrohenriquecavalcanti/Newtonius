@@ -212,6 +212,10 @@ const discClasses = {
   'Geografia e Sociologia': "geografia-sociologia",
   'História e Filosofia': "historia-filosofia",
   'Redação': "redacao",
+  'Sem Assunto (Natureza)': 'sem-assunto-nat',
+  'Sem Assunto (Linguagens)': 'sem-assunto-lin',
+  'Sem Assunto (Humanas)': 'sem-assunto-hum',
+  'Sem Assunto (Matemática)': 'sem-assunto-mat',
 };
 const discColors = {
   Biologia: "var(--c-bio)",
@@ -222,19 +226,56 @@ const discColors = {
   'Geografia e Sociologia': "var(--c-geo-soc)",
   'História e Filosofia': "var(--c-his-fil)",
   'Redação': "var(--c-reda)",
+  'Sem Assunto (Natureza)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Linguagens)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Humanas)': 'var(--c-sem-assunto)',
+  'Sem Assunto (Matemática)': 'var(--c-sem-assunto)',
 };
 
 // Valor especial usado para representar a disciplina inteira
 const ALL_SUB = '__all__';
+const UNCLASSIFIED_SUBJECT_CODE = '__sem_assunto__';
 
-const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação'];
+const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação','Sem Assunto (Linguagens)','Sem Assunto (Humanas)'];
 
 const DISCIPLINES_BY_MODE = {
-  lin: ['Linguagens', 'Redação'],
-  hum: ['Geografia e Sociologia', 'História e Filosofia'],
-  nat: ['Biologia', 'Química', 'Física'],
-  mat: ['Matemática']
+  lin: ['Linguagens', 'Redação', 'Sem Assunto (Linguagens)'],
+  hum: ['Geografia e Sociologia', 'História e Filosofia', 'Sem Assunto (Humanas)'],
+  nat: ['Biologia', 'Química', 'Física', 'Sem Assunto (Natureza)'],
+  mat: ['Matemática', 'Sem Assunto (Matemática)']
 };
+
+const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
+  lin: 'Sem Assunto (Linguagens)',
+  hum: 'Sem Assunto (Humanas)',
+  nat: 'Sem Assunto (Natureza)',
+  mat: 'Sem Assunto (Matemática)'
+};
+
+const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
+const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
+const REVIEW_ALL_DISC = '__review_all__';
+const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
+const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
+const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
+const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
+const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
+const natReviewDeferredAutoHide = new Set();
+
+const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
+
+const DEFAULT_NAT_REVIEW_STATE = {
+  mode: 'nat',
+  disc: REVIEW_ALL_DISC,
+  sub: null,
+  showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
+};
+
+let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
+let reviewSettingsBtn = null;
+let reviewSettingsMenu = null;
+
+let postReviewMode = localStorage.getItem(REVIEW_MODE_STORAGE_KEY) === '1';
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
@@ -275,13 +316,18 @@ const summaryFrame     = document.getElementById("summaryFrame");
 const settingsBtn   = document.getElementById("settingsBtn");
 const settingsMenu  = document.getElementById("settingsMenu");
 const exportBtn     = document.getElementById("exportBtn");
+const exportHandBtn = document.getElementById("exportHandBtn");
 const importBtn     = document.getElementById("importBtn");
+const importHandBtn = document.getElementById("importHandBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const reviewModeBtn = document.getElementById("reviewModeBtn");
+const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
+const pickerReviewDisc = document.getElementById("pickerReviewDisc");
 const pickerSub     = document.getElementById("pickerSub");
 const pickerExamMode= document.getElementById("pickerExamMode");
 const pickerExam    = document.getElementById("pickerExam");
@@ -291,6 +337,185 @@ const pickerMicro   = document.getElementById("pickerMicro");
 const pickerCancel  = document.getElementById("pickerCancel");
 const orderHint     = document.getElementById("orderHint");
 const toggleD1Btn   = document.getElementById("toggleD1Btn");
+const searchNotesBtn = document.getElementById("searchNotesBtn");
+const searchOverlay  = document.getElementById("searchOverlay");
+const searchForm     = document.getElementById("searchForm");
+const searchInput    = document.getElementById("searchInput");
+const searchResultsList = document.getElementById("searchResults");
+const searchFeedbackEl  = document.getElementById("searchFeedback");
+const searchCloseBtn = document.getElementById("searchCloseBtn");
+
+function setNatReviewState(partial = {}) {
+  const next = { ...natReviewState };
+  if (partial.mode !== undefined && partial.mode !== next.mode) {
+    next.mode = partial.mode;
+    next.disc = REVIEW_ALL_DISC;
+    next.sub = null;
+  }
+  if (partial.disc !== undefined) {
+    next.disc = partial.disc;
+    if (partial.disc === REVIEW_ALL_DISC) {
+      next.sub = null;
+    } else if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
+      next.sub = null;
+    }
+  }
+  if (partial.sub !== undefined) {
+    next.sub = partial.sub;
+  }
+  if (partial.showHidden !== undefined) {
+    next.showHidden = !!partial.showHidden;
+  }
+  if (!next.mode) {
+    next.mode = 'nat';
+  }
+  natReviewState = next;
+  localStorage.setItem(
+    NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
+    natReviewState.showHidden ? '1' : '0'
+  );
+  return natReviewState;
+}
+
+function resetNatReviewState() {
+  setNatReviewState({ mode: 'nat', disc: REVIEW_ALL_DISC, sub: null });
+}
+
+function ensureReviewSettingsUI() {
+  if (reviewSettingsBtn && reviewSettingsMenu) return;
+  const headerEl = header;
+  if (!headerEl) return;
+
+  if (!reviewSettingsBtn) {
+    reviewSettingsBtn = document.createElement('button');
+    reviewSettingsBtn.id = 'reviewSettingsBtn';
+    reviewSettingsBtn.type = 'button';
+    reviewSettingsBtn.setAttribute('aria-label', 'Filtros da revisão');
+    reviewSettingsBtn.setAttribute('aria-haspopup', 'true');
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    reviewSettingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
+    reviewSettingsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      ensureReviewSettingsUI();
+      if (!reviewSettingsMenu) return;
+      const isOpen = reviewSettingsMenu.style.display === 'flex';
+      reviewSettingsMenu.style.display = isOpen ? 'none' : 'flex';
+      reviewSettingsBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    });
+    const pomodoroBtn = document.getElementById('pomodoroBtn');
+    if (pomodoroBtn && pomodoroBtn.parentElement === headerEl) {
+      pomodoroBtn.insertAdjacentElement('afterend', reviewSettingsBtn);
+    } else {
+      headerEl.appendChild(reviewSettingsBtn);
+    }
+  }
+
+  if (!reviewSettingsMenu) {
+    reviewSettingsMenu = document.createElement('div');
+    reviewSettingsMenu.id = 'reviewSettingsMenu';
+    reviewSettingsMenu.className = 'review-menu';
+    reviewSettingsMenu.setAttribute('role', 'menu');
+    reviewSettingsMenu.style.display = 'none';
+    headerEl.appendChild(reviewSettingsMenu);
+  }
+}
+
+function toggleReviewSettingsVisibility(show) {
+  ensureReviewSettingsUI();
+  if (!reviewSettingsBtn || !reviewSettingsMenu) return;
+  reviewSettingsBtn.style.display = show ? 'flex' : 'none';
+  if (show) {
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  } else {
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function renderReviewSettingsMenu() {
+  ensureReviewSettingsUI();
+  if (!reviewSettingsMenu || !reviewSettingsBtn) return;
+  const wasOpen = reviewSettingsMenu.style.display === 'flex';
+  reviewSettingsMenu.innerHTML = '';
+
+  const title = document.createElement('p');
+  title.className = 'review-menu-title';
+  title.textContent = 'Área';
+  reviewSettingsMenu.appendChild(title);
+
+  const areaWrap = document.createElement('div');
+  areaWrap.className = 'review-menu-options';
+  const currentMode = natReviewState.mode || 'nat';
+  REVIEW_MODES.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.className = 'review-menu-option';
+    btn.type = 'button';
+    btn.textContent = REVIEW_MODE_LABELS[mode] || mode;
+    if (mode === currentMode) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      setNatReviewState({ mode, disc: REVIEW_ALL_DISC, sub: null });
+      reviewSettingsMenu.style.display = 'none';
+      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      showNatReview();
+    });
+    areaWrap.appendChild(btn);
+  });
+  reviewSettingsMenu.appendChild(areaWrap);
+
+  const discTitle = document.createElement('p');
+  discTitle.className = 'review-menu-title';
+  discTitle.textContent = 'Disciplina';
+  reviewSettingsMenu.appendChild(discTitle);
+
+  const optionsWrap = document.createElement('div');
+  optionsWrap.className = 'review-menu-options';
+  const areaLabel = REVIEW_MODE_LABELS[currentMode] || 'Área';
+  const disciplineOptions = [REVIEW_ALL_DISC, ...(DISCIPLINES_BY_MODE[currentMode] || [])];
+  disciplineOptions.forEach(value => {
+    const btn = document.createElement('button');
+    btn.className = 'review-menu-option';
+    btn.type = 'button';
+    btn.textContent = value === REVIEW_ALL_DISC ? areaLabel : value;
+    const isSelected =
+      (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
+      natReviewState.disc === value;
+    if (isSelected) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      setNatReviewState({ disc: value, sub: null });
+      reviewSettingsMenu.style.display = 'none';
+      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      showNatReview();
+    });
+    optionsWrap.appendChild(btn);
+  });
+  reviewSettingsMenu.appendChild(optionsWrap);
+
+  const divider = document.createElement('div');
+  divider.className = 'review-menu-divider';
+  reviewSettingsMenu.appendChild(divider);
+
+  const hiddenBtn = document.createElement('button');
+  hiddenBtn.className = 'review-menu-option review-menu-toggle';
+  hiddenBtn.type = 'button';
+  const showHidden = !!natReviewState.showHidden;
+  hiddenBtn.textContent = showHidden ? 'Ocultar' : 'Exibir Ocultas';
+  if (showHidden) hiddenBtn.classList.add('active');
+  hiddenBtn.addEventListener('click', () => {
+    setNatReviewState({ showHidden: !natReviewState.showHidden });
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    showNatReview();
+  });
+  reviewSettingsMenu.appendChild(hiddenBtn);
+
+  if (wasOpen) {
+    reviewSettingsMenu.style.display = 'flex';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'true');
+  } else {
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
+}
 
 /* ================================================================
    3. ESTADO MUTÁVEL
@@ -308,6 +533,10 @@ let currentExamMode = 'nat'; // 'lin', 'hum', 'nat' ou 'mat'
 let openTrailDays = new Set(); // dias abertos na Trilha Estratégica
 const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
 
+let currentView = 'home';
+let currentMicroSimEntry = null;
+let pendingSearchFocus = null;
+
 // Metadados do PDF aberto no modal
 let lastPdfName = null;
 let lastPdfTotalPages = 0;
@@ -322,14 +551,18 @@ const PDF_DEFAULT_ZOOM = 1.75;
 const PDF_MIN_ZOOM = 0.75;
 const PDF_MAX_ZOOM = 3;
 const PDF_PEN_COLOR = '#000000';
-const PDF_PEN_WIDTH = 4;
-const PDF_PEN_WIDTH_STYLUS = 7;
+const PDF_PEN_REFERENCE_WIDTH = 7; // espessura real (em pixels do canvas) no zoom padrão em um iPad (≈ DPR 2)
+const PDF_PEN_WIDTH = PDF_PEN_REFERENCE_WIDTH;
+const PDF_REFERENCE_DEVICE_PIXEL_RATIO = 2; // usado para normalizar a espessura entre dispositivos
 const PDF_ERASER_WIDTH = 7;
 const PDF_ERASER_HIGHLIGHT_COLOR = 'rgba(168, 168, 168, 0.9)';
 const PDF_ERASER_HIT_RADIUS = PDF_ERASER_WIDTH * 0.65;
 const PDF_DRAW_PREFIX = 'pdfDraw::';
 const PDF_DRAW_LAST_CLEAN_KEY = `${PDF_DRAW_PREFIX}lastCleanupDate`;
 const PDF_DRAW_STROKES_SUFFIX = '::strokes';
+const PDF_DRAW_METADATA_VERSION = 3;
+const IMPORT_WRAPPER_TYPE = 'newtonius-import-v1';
+const PDF_AUTOSAVE_DELAY = 500;
 const PDF_DRAW_LEGACY_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const STYLUS_TAP_TIMEOUT = 600;
 const STYLUS_TAP_DISTANCE = 36;
@@ -343,6 +576,8 @@ let lastPdfRenderedPages = [];
 let pdfPinchState = null;
 let currentPdfDocument = null;
 let currentPdfDocumentName = null;
+let pdfAutosaveTimeout = null;
+let pdfStorageQuotaAlertShown = false;
 
 function smoothPdfPoint(target, previous, rawPrevious) {
   if (!target) return previous || rawPrevious || null;
@@ -360,6 +595,15 @@ function smoothPdfPoint(target, previous, rawPrevious) {
     x: previous.x + (target.x - previous.x) * smoothingFactor,
     y: previous.y + (target.y - previous.y) * smoothingFactor
   };
+}
+
+function getPdfEffectivePenWidth(zoom = currentPdfZoom) {
+  const activeZoom = Number.isFinite(zoom) ? zoom : PDF_DEFAULT_ZOOM;
+  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
+  const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
+  const cssWidth = desiredCssWidth * (activeZoom / PDF_DEFAULT_ZOOM);
+  return cssWidth * PDF_RENDER_QUALITY * effectiveDpr;
 }
 
 function getPdfCanvasState(canvas) {
@@ -383,12 +627,12 @@ function renderPdfStroke(ctx, stroke, highlight = false) {
   if (!points.length) return;
 
   const color = highlight ? PDF_ERASER_HIGHLIGHT_COLOR : (stroke.color || PDF_PEN_COLOR);
-  const baseWidth = Number.isFinite(stroke.baseWidth)
-    ? stroke.baseWidth
-    : Number.isFinite(stroke.width)
-      ? stroke.width
-      : PDF_PEN_WIDTH;
-  const width = Number.isFinite(baseWidth) ? baseWidth : PDF_PEN_WIDTH;
+  const baseWidth = Number.isFinite(stroke.width)
+    ? stroke.width
+    : Number.isFinite(stroke.baseWidth)
+      ? stroke.baseWidth
+      : PDF_PEN_REFERENCE_WIDTH;
+  const width = Number.isFinite(baseWidth) ? baseWidth : PDF_PEN_REFERENCE_WIDTH;
 
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -449,6 +693,8 @@ function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
   const shouldScale = Math.abs(sx - 1) >= 0.001 || Math.abs(sy - 1) >= 0.001;
 
   if (shouldScale && Array.isArray(state.strokes)) {
+    const widthScaleRaw = (Math.abs(sx) + Math.abs(sy)) / 2;
+    const widthScale = Number.isFinite(widthScaleRaw) && widthScaleRaw > 0 ? widthScaleRaw : 1;
     state.strokes.forEach(stroke => {
       if (!stroke) return;
       if (Array.isArray(stroke.points)) {
@@ -458,13 +704,16 @@ function scalePdfDrawingState(state, scaleX, scaleY, newSize = {}) {
           point.y *= sy;
         });
       }
-      const originalWidth = Number.isFinite(stroke.baseWidth)
-        ? stroke.baseWidth
-        : Number.isFinite(stroke.width)
-          ? stroke.width
-          : PDF_PEN_WIDTH;
-      stroke.baseWidth = Number.isFinite(originalWidth) ? originalWidth : PDF_PEN_WIDTH;
-      stroke.width = stroke.baseWidth;
+      const previousWidth = Number.isFinite(stroke.width)
+        ? stroke.width
+        : Number.isFinite(stroke.baseWidth)
+          ? stroke.baseWidth
+          : PDF_PEN_REFERENCE_WIDTH;
+      const scaledWidth = Number.isFinite(previousWidth) ? previousWidth * widthScale : PDF_PEN_REFERENCE_WIDTH * widthScale;
+      stroke.width = scaledWidth;
+      stroke.baseWidth = Number.isFinite(stroke.baseWidth)
+        ? stroke.baseWidth * widthScale
+        : scaledWidth;
     });
   }
 
@@ -488,16 +737,16 @@ function serializePdfStrokes(strokes, metadata = {}) {
     const payload = {
       v: 2,
       strokes: (strokes || []).map((stroke, index) => {
-        const width = Number.isFinite(stroke?.baseWidth)
-          ? stroke.baseWidth
-          : Number.isFinite(stroke?.width)
-            ? stroke.width
-            : PDF_PEN_WIDTH;
+        const width = Number.isFinite(stroke?.width)
+          ? stroke.width
+          : Number.isFinite(stroke?.baseWidth)
+            ? stroke.baseWidth
+            : PDF_PEN_REFERENCE_WIDTH;
         return {
           id: Number.isFinite(stroke?.id) ? stroke.id : index + 1,
           t: stroke?.type || 'pen',
           c: stroke?.color || PDF_PEN_COLOR,
-          w: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
+          w: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
           pts: Array.isArray(stroke?.points)
             ? stroke.points.map(pt => [Number(pt?.x ?? 0), Number(pt?.y ?? 0)])
             : []
@@ -536,13 +785,13 @@ function deserializePdfStrokes(serialized) {
             return null;
           })
           .filter(Boolean);
-        const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_WIDTH;
+        const width = Number.isFinite(item?.w) ? item.w : PDF_PEN_REFERENCE_WIDTH;
         return {
           id: Number.isFinite(item?.id) ? item.id : index + 1,
           type: item?.t || 'pen',
           color: item?.c || PDF_PEN_COLOR,
           width,
-          baseWidth: Number.isFinite(width) ? width : PDF_PEN_WIDTH,
+          baseWidth: Number.isFinite(width) ? width : PDF_PEN_REFERENCE_WIDTH,
           points
         };
       })
@@ -611,30 +860,26 @@ function findPdfStrokeHits(strokes, point, radius) {
 let currentPdfPage = null;
 let stylusTapHistory = [];
 const pdfDirtyLayers = new Set();
+const pdfActivePointerIds = new Set();
+let pdfAutosaveSuspended = false;
 let pdfStylusDrawingActive = false;
 let pdfPersistListenersAttached = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
 const questoesData = buildBancoQuestoes([
   ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
+  ...(window.listaQuestoesD1 || []),
+  ...(window.listaQuestoesNaoClassificadas || [])
 ]);
-const { map: examsDataLin, order: examOrderLin } = buildExamMap([
+const allQuestoes = [
   ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'lin');
-const { map: examsDataHum, order: examOrderHum } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'hum');
-const { map: examsDataNat, order: examOrderNat } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'nat');
-const { map: examsDataMat, order: examOrderMat } = buildExamMap([
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || [])
-], 'mat');
+  ...(window.listaQuestoesD1 || []),
+  ...(window.listaQuestoesNaoClassificadas || [])
+];
+const { map: examsDataLin, order: examOrderLin } = buildExamMap(allQuestoes, 'lin');
+const { map: examsDataHum, order: examOrderHum } = buildExamMap(allQuestoes, 'hum');
+const { map: examsDataNat, order: examOrderNat } = buildExamMap(allQuestoes, 'nat');
+const { map: examsDataMat, order: examOrderMat } = buildExamMap(allQuestoes, 'mat');
 
 const examsDataByMode = {
   lin: examsDataLin,
@@ -656,6 +901,9 @@ const examOrderByMode = {
 
 /** Retorna o nome legível do assunto ou fallback. */
 function getFriendlyName(disc, sub) {
+  if (sub === UNCLASSIFIED_SUBJECT_CODE || sub === null || sub === undefined) {
+    return 'Sem assunto';
+  }
   const list = SUBJECT_NAMES[disc] || [];
   const idx  = parseInt(sub, 10) - 1;   // "01" -> 0
   return list[idx] ?? `Assunto ${sub}`;
@@ -681,28 +929,75 @@ function buildBancoQuestoes(listaFlat) {
   return banco;
 }
 
+function getModeFromDiscName(disc){
+  if (!disc) return null;
+  if (DISCIPLINES_BY_MODE.lin.includes(disc)) return 'lin';
+  if (DISCIPLINES_BY_MODE.hum.includes(disc)) return 'hum';
+  if (DISCIPLINES_BY_MODE.nat.includes(disc)) return 'nat';
+  if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'mat';
+  return null;
+}
+
+function getModeFromQuestionNumber(number){
+  if (!Number.isFinite(number)) return null;
+  if (number >= 1 && number <= 45) return 'lin';
+  if (number >= 46 && number <= 90) return 'hum';
+  if (number >= 91 && number <= 135) return 'nat';
+  if (number >= 136 && number <= 180) return 'mat';
+  return null;
+}
+
 function buildExamMap(list, mode='nat'){
   const exams = {};
   const order = [];
   const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
   list.forEach(item => {
+    if(!item || !item.label) return;
     const m = item.label.match(/^(.*)-Q-(\d+)/);
-    if (!m || (allowed.size && !allowed.has(item.Disciplina))) return;
+    if (!m) return;
     const exam = m[1];
+    const questionNumber = parseInt(m[2], 10);
+    const inferredModeFromDisc = getModeFromDiscName(item.Disciplina);
+    const inferredModeFromNumber = Number.isFinite(questionNumber)
+      ? getModeFromQuestionNumber(questionNumber)
+      : null;
+    const itemMode = item.area || item.mode || inferredModeFromDisc || inferredModeFromNumber || mode;
+    if (itemMode && itemMode !== mode) {
+      if (allowed.size && allowed.has(item.Disciplina)) {
+        // disciplina pertence a outra área mas faz parte do modo atual
+      } else {
+        return;
+      }
+    }
+    let disc = item.Disciplina;
+    let sub = item.Assunto;
+    if (!disc || (allowed.size && !allowed.has(disc))) {
+      const fallbackDisc = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
+      if (!fallbackDisc || (allowed.size && !allowed.has(fallbackDisc))) {
+        return;
+      }
+      disc = fallbackDisc;
+      sub = UNCLASSIFIED_SUBJECT_CODE;
+    }
+    if (!sub) {
+      sub = UNCLASSIFIED_SUBJECT_CODE;
+    }
     if (!exams[exam]) {
       exams[exam] = [];
       order.push(exam);
     }
     exams[exam].push({
-      disc: item.Disciplina,
-      sub: item.Assunto,
+      disc,
+      sub,
       q: {
         label: item.label,
         QPDFName: item.QPDFName,
         page: item.page,
         GPDFName: item.GPDFName,
         gabaritoPage: item.gabaritoPage,
-        gabaritoAnswer: item.gabaritoAnswer
+        gabaritoAnswer: item.gabaritoAnswer,
+        area: mode,
+        unclassified: sub === UNCLASSIFIED_SUBJECT_CODE
       }
     });
   });
@@ -717,17 +1012,53 @@ function buildExamMap(list, mode='nat'){
 }
 
 function getExamCategory(disc){
-  if (DISCIPLINES_BY_MODE.lin.includes(disc)) return 'Lin';
-  if (DISCIPLINES_BY_MODE.hum.includes(disc)) return 'Hum';
-  if (DISCIPLINES_BY_MODE.nat.includes(disc)) return 'Nat';
-  if (DISCIPLINES_BY_MODE.mat.includes(disc)) return 'Mat';
+  const mode = getModeFromDiscName(disc);
+  if (!mode) return null;
+  if (mode === 'lin') return 'Lin';
+  if (mode === 'hum') return 'Hum';
+  if (mode === 'nat') return 'Nat';
+  if (mode === 'mat') return 'Mat';
   return null;
 }
-async function doExport() {
+
+function isHandwritingStorageKey(key) {
+  return typeof key === 'string' && key.startsWith(PDF_DRAW_PREFIX);
+}
+
+function shouldIncludeKeyForExport(key, mode) {
+  const handwriting = isHandwritingStorageKey(key);
+  if (mode === 'handwriting') return handwriting;
+  return !handwriting;
+}
+
+function shouldIncludeKeyForImport(key, mode) {
+  return shouldIncludeKeyForExport(key, mode);
+}
+
+function removeHandwritingEntriesFromLocalStorage() {
+  if (typeof localStorage === 'undefined') return;
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (isHandwritingStorageKey(key)) {
+      toRemove.push(key);
+    }
+  }
+  toRemove.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+}
+
+function getExportFilenamePrefix(mode) {
+  return mode === 'handwriting' ? 'Newtonius_handwriting' : 'Newtonius';
+}
+
+async function doExport({ mode = 'general' } = {}) {
   /* 1 ▸ lê tudo do localStorage e joga num array  [key,value] */
   const pares = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
+    if (!shouldIncludeKeyForExport(k, mode)) continue;
     pares.push([k, localStorage.getItem(k)]);
   }
 
@@ -765,7 +1096,7 @@ async function doExport() {
   }
   const stamp = `${dateMap.year}_${dateMap.month}_${dateMap.day}` +
                 `_${dateMap.hour}_${dateMap.minute}`;
-  const filename = `Newtonius_${stamp}.json`;
+  const filename = `${getExportFilenamePrefix(mode)}_${stamp}.json`;
 
   /* 6 ▸ tenta usar File System Access. Se falhar, baixa direto */
   let saved = false;
@@ -802,24 +1133,29 @@ async function doExport() {
 
 
 /** Faz backup do progresso (estrelas + status + comentários). */
-function exportData() {
+function exportData(mode = 'general') {
+  const normalizedMode = mode === 'handwriting' ? 'handwriting' : 'general';
 
   /* 1 ▸ força o iframe a descarregar para salvar o resumo */
   if (summaryContainer.style.display !== "none") {
     summaryFrame.src = "about:blank";      // dispara o unload do editor
   }
 
+  const flagKey = "__exportReady__";
+  const hasSession = typeof sessionStorage !== 'undefined';
+  const pending = hasSession ? sessionStorage.getItem(flagKey) : null;
+  const legacyMatch = normalizedMode === 'general' && pending === 'yes';
+
   /* 2 ▸ já estamos de volta do reload? */
-  if (typeof sessionStorage !== 'undefined' &&
-      sessionStorage.getItem("__exportReady__") === "yes") {
-    sessionStorage.removeItem("__exportReady__");
-    doExport();                            // faz o download
+  if (hasSession && (pending === normalizedMode || legacyMatch)) {
+    sessionStorage.removeItem(flagKey);
+    doExport({ mode: normalizedMode });     // faz o download
     return;
   }
 
   /* 3 ▸ primeira chamada: marca a flag, recarrega a página */
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem("__exportReady__","yes");
+  if (hasSession) {
+    sessionStorage.setItem(flagKey, normalizedMode);
     location.reload();                     // equivale ao F5
   }
 }
@@ -829,6 +1165,70 @@ function exportData() {
    ============================================================== */
 function qKey(disc, sub, label) {
   return `${disc}_${sub}_${encodeURIComponent(label)}`;
+}
+
+const cssEscape = typeof CSS !== 'undefined' && CSS.escape
+  ? CSS.escape.bind(CSS)
+  : (str) => String(str).replace(/[\0-\x1f\x7f-\x9f!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~]/g, '\\$&');
+
+const htmlTextHelper = document.createElement('div');
+
+function htmlToPlainText(html) {
+  if (!html) return '';
+  htmlTextHelper.innerHTML = html;
+  const text = htmlTextHelper.textContent || '';
+  htmlTextHelper.textContent = '';
+  return text;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch] || ch));
+}
+
+function buildSearchExcerpt(text, startIndex, matchLength) {
+  if (startIndex < 0 || !text) return '';
+  const context = 60;
+  const start = Math.max(0, startIndex - context);
+  const end = Math.min(text.length, startIndex + matchLength + context);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < text.length ? '…' : '';
+  const before = escapeHtml(text.slice(start, startIndex));
+  const match = escapeHtml(text.slice(startIndex, startIndex + matchLength));
+  const after = escapeHtml(text.slice(startIndex + matchLength, end));
+  return `${prefix}${before}<mark>${match}</mark>${after}${suffix}`;
+}
+
+function parseCommentKey(key) {
+  if (!key || !key.startsWith('comment_')) return null;
+  const parts = key.split('_');
+  if (parts.length < 4) return null;
+  const disc = parts[1];
+  const sub = parts[2];
+  const label = decodeURIComponent(parts.slice(3).join('_'));
+  return { disc, sub, label };
+}
+
+function parseSummaryKey(key) {
+  if (!key || !key.startsWith('summary_')) return null;
+  const parts = key.split('_');
+  if (parts.length < 3) return null;
+  const disc = parts[1];
+  const sub = parts.slice(2).join('_');
+  return { disc, sub };
+}
+
+function describeSubjectForSearch(disc, sub) {
+  if (!sub) return '';
+  if (sub === '00') return 'Resumo da disciplina';
+  if (sub === 'micro') return 'Micro Simulado';
+  const friendly = getFriendlyName(disc, sub);
+  return friendly || `Assunto ${sub}`;
 }
     /* ---------------------------------------------------------------
    Recebe um texto e devolve:
@@ -924,12 +1324,104 @@ function updateStar(el, state) {
   img.src = `Stars/${PNG}`;
 }
 
+function getStoredQuestionState(disc, sub, label) {
+  return +localStorage.getItem(qKey(disc, sub, label)) || 0;
+}
+
+function getEffectiveStateFromKey(key, baseState) {
+  if (!postReviewMode || baseState !== 2) {
+    return baseState;
+  }
+  const reviewState = +localStorage.getItem(`natReview_${key}`) || 0;
+  return reviewState === 1 ? 1 : baseState;
+}
+
+function getEffectiveQuestionState(disc, sub, label) {
+  const key = qKey(disc, sub, label);
+  const baseState = getStoredQuestionState(disc, sub, label);
+  return getEffectiveStateFromKey(key, baseState);
+}
+
+function updateReviewModeButton() {
+  if (!reviewModeBtn) return;
+  reviewModeBtn.textContent = postReviewMode ? 'Pré-Revisão' : 'Pós-Revisão';
+}
+
+function refreshReviewModeUI() {
+  switch (currentView) {
+    case 'home':
+      showMenu();
+      break;
+    case 'subjects':
+      if (currentDisc) {
+        showSubjects(currentDisc);
+      } else {
+        showMenu();
+      }
+      break;
+    case 'questions':
+      if (currentDisc && currentSub) {
+        showQuestions(currentDisc, currentSub, false, trailReturnSub);
+      } else if (currentDisc) {
+        showSubjects(currentDisc);
+      } else {
+        showMenu();
+      }
+      break;
+    case 'trail':
+      showTrail(undefined, true);
+      break;
+    case 'examMenu':
+      showExamMenu();
+      break;
+    case 'examList':
+      if (currentExamMode) {
+        showExamList(currentExamMode);
+      } else {
+        showExamMenu();
+      }
+      break;
+    case 'exam':
+      if (currentExam) {
+        showExam(currentExam);
+      } else if (currentExamMode) {
+        showExamList(currentExamMode);
+      } else {
+        showExamMenu();
+      }
+      break;
+    case 'review':
+      showNatReview();
+      break;
+    case 'microSim':
+      if (currentMicroSimEntry) {
+        showMicroSim(currentMicroSimEntry);
+      } else {
+        showSubjects('Matemática');
+      }
+      break;
+    default:
+      showMenu();
+  }
+}
+
+function setPostReviewMode(enabled) {
+  postReviewMode = !!enabled;
+  if (postReviewMode) {
+    localStorage.setItem(REVIEW_MODE_STORAGE_KEY, '1');
+  } else {
+    localStorage.removeItem(REVIEW_MODE_STORAGE_KEY);
+  }
+  updateReviewModeButton();
+  refreshReviewModeUI();
+}
+
 // Calcula automaticamente a estrela de um assunto
 function calcStarState(disc, sub) {
   const qs = questoesData[disc][sub] || [];
   let correct = 0, answered = 0;
   qs.forEach(q => {
-    const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+    const st = getEffectiveQuestionState(disc, sub, q.label);
     if (st === 1) correct++;
     if (st === 1 || st === 2) answered++;
   });
@@ -1077,14 +1569,19 @@ function getTotalQuestionsCount() {
     .flatMap(([, subs]) => Object.values(subs))
     .reduce((sum, arr) => sum + arr.length, 0);
 }
-if (typeof sessionStorage !== 'undefined' &&
-    sessionStorage.getItem("__exportReady__") === "yes") {
-  exportData();            // cai direto no ramo que baixa o arquivo
+if (typeof sessionStorage !== 'undefined') {
+  const pendingExport = sessionStorage.getItem("__exportReady__");
+  if (pendingExport) {
+    const mode = pendingExport === 'yes' ? 'general' : pendingExport;
+    exportData(mode);        // cai direto no ramo que baixa o arquivo
+  }
 }
 /* ---------------- MENU PRINCIPAL ---------------- */
 function showMenu () {
   examListOpen=false;
   currentExam=null;
+  currentView = 'home';
+  currentMicroSimEntry = null;
   /* 1 ▸ devolve o xpModal para <body> antes que clear() o remova        */
   const xpModalEl = document.getElementById('xpModal');
   if (xpModalEl && xpModalEl.parentElement !== document.body) {
@@ -1183,22 +1680,305 @@ document.addEventListener("click", e=>{
   if(!settingsMenu.contains(e.target) && e.target!==settingsBtn){
     settingsMenu.style.display = "none";
   }
+  if(
+    reviewSettingsMenu && reviewSettingsBtn &&
+    !reviewSettingsMenu.contains(e.target) &&
+    e.target !== reviewSettingsBtn
+  ){
+    reviewSettingsMenu.style.display = 'none';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+  }
 });
 
 function toggleSettingsVisibility(showHome){
   settingsBtn.style.display  = showHome ? 'block' : 'none';
   /* se saiu da home, fecha o menu para não ficar solto */
   if (!showHome) settingsMenu.style.display = 'none';
+  toggleReviewSettingsVisibility(false);
 }
+
+function isSearchOverlayOpen(){
+  return !!(searchOverlay && searchOverlay.classList.contains('open'));
+}
+
+function openSearchOverlay(){
+  if(!searchOverlay || !searchInput || !searchResultsList) return;
+  searchOverlay.classList.add('open');
+  searchOverlay.setAttribute('aria-hidden', 'false');
+  setBodyScrollLocked(true);
+  searchResultsList.innerHTML = '';
+  updateSearchFeedback('Digite um termo para buscar em comentários e resumos.');
+  requestAnimationFrame(() => {
+    searchInput.focus();
+    searchInput.select();
+  });
+}
+
+function closeSearchOverlay(){
+  if(!searchOverlay) return;
+  searchOverlay.classList.remove('open');
+  searchOverlay.setAttribute('aria-hidden', 'true');
+  const pdfOpen = pdfContainer && pdfContainer.style.display === 'flex';
+  const summaryOpen = summaryContainer && summaryContainer.style.display !== 'none';
+  if(!pdfOpen && !summaryOpen){
+    setBodyScrollLocked(false);
+  }
+}
+
+function updateSearchFeedback(message, isError = false){
+  if(!searchFeedbackEl) return;
+  searchFeedbackEl.textContent = message;
+  searchFeedbackEl.classList.toggle('search-feedback--error', !!isError);
+}
+
+function focusQuestionFromSearch(match){
+  if(!match) return;
+  const selector = `[data-question-key="${cssEscape(match.key)}"]`;
+  const row = app.querySelector(selector);
+  if(!row) return;
+  const comment = row.querySelector('.comment-edit');
+  row.classList.add('search-hit');
+  if(comment) comment.classList.add('search-hit');
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    row.classList.remove('search-hit');
+    if(comment) comment.classList.remove('search-hit');
+  }, 4500);
+}
+
+function navigateToQuestionFromSearch(disc, sub, label){
+  pendingSearchFocus = {
+    disc,
+    sub,
+    label,
+    key: qKey(disc, sub, label)
+  };
+  showQuestions(disc, sub, false, false);
+}
+
+function performSearch(rawTerm){
+  if(!searchResultsList) return;
+  const term = (rawTerm || '').trim();
+  if(!term){
+    searchResultsList.innerHTML = '';
+    updateSearchFeedback('Digite um termo para buscar em comentários e resumos.');
+    return;
+  }
+  if(term.length < 2){
+    searchResultsList.innerHTML = '';
+    updateSearchFeedback('Digite pelo menos 2 caracteres.', true);
+    return;
+  }
+
+  const normalized = term.toLocaleLowerCase('pt-BR');
+  const results = [];
+
+  for(let i = 0; i < localStorage.length; i += 1){
+    const key = localStorage.key(i);
+    if(!key) continue;
+
+    if(key.startsWith('comment_')){
+      const parsed = parseCommentKey(key);
+      if(!parsed) continue;
+      const html = localStorage.getItem(key) || '';
+      const text = htmlToPlainText(html);
+      if(!text.trim()) continue;
+      const lower = text.toLocaleLowerCase('pt-BR');
+      const idx = lower.indexOf(normalized);
+      if(idx === -1) continue;
+      results.push({
+        type: 'comment',
+        disc: parsed.disc,
+        sub: parsed.sub,
+        label: parsed.label,
+        key: qKey(parsed.disc, parsed.sub, parsed.label),
+        excerpt: buildSearchExcerpt(text, idx, term.length)
+      });
+    } else if(key.startsWith('summary_')){
+      const parsed = parseSummaryKey(key);
+      if(!parsed) continue;
+      const html = localStorage.getItem(key) || '';
+      const text = htmlToPlainText(html);
+      if(!text.trim()) continue;
+      const lower = text.toLocaleLowerCase('pt-BR');
+      const idx = lower.indexOf(normalized);
+      if(idx === -1) continue;
+      results.push({
+        type: 'summary',
+        disc: parsed.disc,
+        sub: parsed.sub,
+        excerpt: buildSearchExcerpt(text, idx, term.length)
+      });
+    }
+  }
+
+  results.sort((a, b) => {
+    if(a.type !== b.type) return a.type === 'comment' ? -1 : 1;
+    const discCmp = a.disc.localeCompare(b.disc, 'pt-BR');
+    if(discCmp !== 0) return discCmp;
+    const subA = a.sub || '';
+    const subB = b.sub || '';
+    const subCmp = subA.localeCompare(subB, 'pt-BR');
+    if(subCmp !== 0) return subCmp;
+    if(a.type === 'comment' && b.type === 'comment'){
+      return a.label.localeCompare(b.label, 'pt-BR');
+    }
+    return 0;
+  });
+
+  if(results.length === 0){
+    searchResultsList.innerHTML = '';
+    updateSearchFeedback('Nenhum resultado encontrado.', true);
+    return;
+  }
+
+  updateSearchFeedback(`${results.length} resultado${results.length>1?'s':''} encontrado${results.length>1?'s':''}.`);
+  renderSearchResults(results);
+}
+
+function renderSearchResults(results){
+  if(!searchResultsList) return;
+  searchResultsList.innerHTML = '';
+  results.forEach(result => {
+    const item = document.createElement('li');
+    item.className = 'search-result';
+
+    const main = document.createElement('button');
+    main.type = 'button';
+    main.className = 'search-result-main';
+
+    const pathParts = [result.disc];
+    if(result.type === 'comment'){
+      const subject = describeSubjectForSearch(result.disc, result.sub);
+      if(subject) pathParts.push(subject);
+    } else {
+      if(result.sub === '00'){
+        pathParts.push('Resumo da disciplina');
+      } else {
+        const subject = describeSubjectForSearch(result.disc, result.sub);
+        if(subject) pathParts.push(subject);
+      }
+    }
+
+    const path = document.createElement('span');
+    path.className = 'search-result-path';
+    path.textContent = pathParts.filter(Boolean).join(' • ');
+    main.appendChild(path);
+
+    const target = document.createElement('span');
+    target.className = 'search-result-target';
+    target.textContent = result.type === 'comment'
+      ? result.label
+      : 'Resumo';
+    main.appendChild(target);
+
+    const excerpt = document.createElement('span');
+    excerpt.className = 'search-result-excerpt';
+    excerpt.innerHTML = result.excerpt;
+    main.appendChild(excerpt);
+
+    main.addEventListener('click', () => {
+      closeSearchOverlay();
+      if(result.type === 'comment'){
+        navigateToQuestionFromSearch(result.disc, result.sub, result.label);
+      } else {
+        openSummaryFor(result.disc, result.sub);
+      }
+    });
+
+    const tag = document.createElement('span');
+    tag.className = 'search-result-tag';
+    tag.textContent = result.type === 'comment' ? 'Comentário' : 'Resumo';
+
+    item.appendChild(main);
+    item.appendChild(tag);
+    searchResultsList.appendChild(item);
+  });
+}
+
+if(searchNotesBtn){
+  searchNotesBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    openSearchOverlay();
+  };
+}
+
+if(searchCloseBtn){
+  searchCloseBtn.addEventListener('click', closeSearchOverlay);
+}
+
+if(searchOverlay){
+  searchOverlay.addEventListener('click', e => {
+    if(e.target === searchOverlay){
+      closeSearchOverlay();
+    }
+  });
+}
+
+if(searchForm){
+  searchForm.addEventListener('submit', e => {
+    e.preventDefault();
+    performSearch(searchInput ? searchInput.value : '');
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && isSearchOverlayOpen()){
+    closeSearchOverlay();
+  }
+});
 
 exportBtn.onclick = () => {
   settingsMenu.style.display = "none";
-  exportData();
+  exportData('general');
 };
+if (exportHandBtn) {
+  exportHandBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    exportData('handwriting');
+  };
+}
 importBtn.onclick = () => {
   settingsMenu.style.display = "none";
+  importFile.value = '';
+  importFile.dataset.mode = 'general';
   importFile.click();
 };
+if (importHandBtn) {
+  importHandBtn.onclick = () => {
+    settingsMenu.style.display = "none";
+    importFile.value = '';
+    importFile.dataset.mode = 'handwriting';
+    importFile.click();
+  };
+}
+
+if (clearManuscriptsBtn) {
+  clearManuscriptsBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    const confirmed = confirm(
+      'Deseja apagar todos os manuscritos salvos nos PDFs? Essa ação não pode ser desfeita.'
+    );
+    if (!confirmed) return;
+
+    try {
+      pdfDirtyLayers.clear();
+    } catch (err) {
+      console.warn('Falha ao limpar a fila de camadas do PDF antes da remoção.', err);
+    }
+
+    const pagesCleared = clearPdfDrawings();
+    if (pagesCleared === null) {
+      alert('Não foi possível limpar os manuscritos. Verifique o console para mais detalhes.');
+      return;
+    }
+    if (pagesCleared === 0) {
+      alert('Nenhum manuscrito encontrado.');
+    } else {
+      alert(`${pagesCleared} página(s) com manuscritos foram apagadas.`);
+    }
+  };
+}
 
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {
@@ -1262,8 +2042,17 @@ examsBtn.onclick = () => {
 
 natReviewBtn.onclick = () => {
   settingsMenu.style.display = 'none';
+  resetNatReviewState();
   showNatReview();
 };
+
+if (reviewModeBtn) {
+  updateReviewModeButton();
+  reviewModeBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    setPostReviewMode(!postReviewMode);
+  };
+}
 
 function updateD1Btn(){
   toggleD1Btn.textContent = d1Enabled ? 'Esconder - D1' : 'Exibir - D1';
@@ -1280,7 +2069,9 @@ toggleD1Btn.onclick = () => {
 
 function loadTrail(dayStr){
   const raw = localStorage.getItem(`trail_${dayStr}`);
-  return raw ? JSON.parse(raw) : { novo: [] };
+  const data = raw ? JSON.parse(raw) : {};
+  data.novo ||= [];
+  return data;
 }
 function saveTrail(dayStr,data){
   localStorage.setItem(`trail_${dayStr}`, JSON.stringify(data));
@@ -1364,11 +2155,13 @@ function countMicroProgress(entry){
 
 function openPicker(callback){
   pickerDisc.innerHTML = '';
+  pickerReviewDisc.innerHTML = '';
   pickerSub.innerHTML  = '';
   pickerExamMode.innerHTML='';
   pickerExam.innerHTML='';
   pickerExamMode.style.display='none';
   pickerExam.style.display='none';
+  pickerAdd.disabled = false;
   for(const d of Object.keys(SUBJECT_NAMES)){
     const opt = document.createElement('option');
     opt.value = d;
@@ -1379,18 +2172,30 @@ function openPicker(callback){
   optExam.value='__exams__';
   optExam.textContent='Provas e Simulados';
   pickerDisc.appendChild(optExam);
+  const optReview=document.createElement('option');
+  optReview.value='__review__';
+  optReview.textContent='Revisão';
+  pickerDisc.appendChild(optReview);
   const optComment=document.createElement('option');
   optComment.value='__comment__';
   optComment.textContent='Comentário';
   pickerDisc.appendChild(optComment);
   pickerDisc.onchange = () => {
-    if(pickerDisc.value==='__comment__'){
+    const selected = pickerDisc.value;
+    const hideReviewSelectors = () => {
+      pickerReviewDisc.style.display = 'none';
+      pickerReviewDisc.onchange = null;
+    };
+
+    if(selected==='__comment__'){
+      hideReviewSelectors();
       pickerSub.style.display='none';
       pickerComment.style.display='inline-block';
       pickerMicro.style.display='none';
       pickerExamMode.style.display='none';
       pickerExam.style.display='none';
-    }else if(pickerDisc.value==='__exams__'){
+    }else if(selected==='__exams__'){
+      hideReviewSelectors();
       pickerSub.style.display='none';
       pickerComment.style.display='none';
       pickerMicro.style.display='none';
@@ -1413,7 +2218,65 @@ function openPicker(callback){
       };
       pickerExamMode.onchange=populateExam;
       populateExam();
+    }else if(selected==='__review__'){
+      pickerComment.style.display='none';
+      pickerMicro.style.display='none';
+      pickerExamMode.style.display='none';
+      pickerExam.style.display='none';
+      pickerReviewDisc.style.display='';
+      pickerSub.style.display='';
+      pickerReviewDisc.innerHTML='';
+      const reviewMode = natReviewState.mode || 'nat';
+      const reviewAreaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Área';
+      const optAllDisc=document.createElement('option');
+      optAllDisc.value=REVIEW_ALL_DISC;
+      optAllDisc.textContent=`Revisão: ${reviewAreaLabel}`;
+      pickerReviewDisc.appendChild(optAllDisc);
+      (DISCIPLINES_BY_MODE[reviewMode] || []).forEach(disc=>{
+        const opt=document.createElement('option');
+        opt.value=disc;
+        opt.textContent=disc;
+        pickerReviewDisc.appendChild(opt);
+      });
+      if(!pickerReviewDisc.options.length){
+        pickerSub.innerHTML='';
+        pickerAdd.disabled = true;
+        return;
+      }
+      pickerAdd.disabled = false;
+      const populateReviewSubs = ()=>{
+        const disc = pickerReviewDisc.value;
+        pickerSub.innerHTML='';
+        if(!disc){
+          pickerAdd.disabled = true;
+          return;
+        }
+        pickerAdd.disabled = false;
+        const isAll = disc === REVIEW_ALL_DISC;
+        pickerSub.style.display = isAll ? 'none' : '';
+        if(isAll){
+          const opt=document.createElement('option');
+          opt.value=ALL_SUB;
+          opt.textContent=`Revisão: ${reviewAreaLabel}`;
+          pickerSub.appendChild(opt);
+          pickerSub.value=ALL_SUB;
+          return;
+        }
+        const optAll=document.createElement('option');
+        optAll.value=ALL_SUB;
+        optAll.textContent='Disciplina Inteira';
+        pickerSub.appendChild(optAll);
+        (SUBJECT_NAMES[disc]||[]).forEach((n,i)=>{
+          const o=document.createElement('option');
+          o.value=String(i+1).padStart(2,'0');
+          o.textContent=n;
+          pickerSub.appendChild(o);
+        });
+      };
+      pickerReviewDisc.onchange = populateReviewSubs;
+      populateReviewSubs();
     }else{
+      hideReviewSelectors();
       pickerSub.style.display='';
       pickerComment.style.display='none';
       pickerSub.innerHTML = '';
@@ -1421,14 +2284,14 @@ function openPicker(callback){
       optAll.value=ALL_SUB;
       optAll.textContent='Disciplina Inteira';
       pickerSub.appendChild(optAll);
-      SUBJECT_NAMES[pickerDisc.value].forEach((n,i)=>{
+      SUBJECT_NAMES[selected].forEach((n,i)=>{
         const o=document.createElement('option');
         o.value=String(i+1).padStart(2,'0');
         o.textContent=n;
         pickerSub.appendChild(o);
       });
       pickerMicro.style.display =
-        pickerDisc.value==='Matemática'? 'inline-block' : 'none';
+        selected==='Matemática'? 'inline-block' : 'none';
       pickerExamMode.style.display='none';
       pickerExam.style.display='none';
     }
@@ -1441,6 +2304,13 @@ function openPicker(callback){
       pickerComment.value='';
     }else if(pickerDisc.value==='__exams__'){
       callback({exam:pickerExam.value,mode:pickerExamMode.value});
+    }else if(pickerDisc.value==='__review__'){
+      const reviewDisc = pickerReviewDisc.value;
+      if(!reviewDisc){
+        alert('Selecione uma disciplina para revisar.');
+        return;
+      }
+      callback({review:true, mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -1537,6 +2407,7 @@ function renderTrailDay(day,expand){
     };
     wrap.appendChild(btnAdd);
     sec.appendChild(wrap);
+    data[key] ||= [];
     data[key].forEach((s,idx)=>{
       const item=document.createElement('div');
       item.className='trail-item';
@@ -1581,11 +2452,55 @@ function renderTrailDay(day,expand){
         return;
       }
 
-        if(s.exam){
-          const subj=document.createElement('button');
-          subj.className='trail-subject';
-          const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
-          const area=areaTitles[s.mode]||'';
+      if(s.review){
+        const subj=document.createElement('button');
+        subj.className='trail-subject trail-review';
+        const isAllDisc = s.disc === REVIEW_ALL_DISC;
+        const hasAll = isAllDisc || s.sub === ALL_SUB;
+        const labelParts = ['Revisão'];
+        const mode = s.mode || natReviewState.mode || 'nat';
+        const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
+        if(isAllDisc){
+          labelParts.push(areaLabel);
+        }else{
+          labelParts.push(s.disc);
+          if(!hasAll){
+            labelParts.push(getFriendlyName(s.disc,s.sub));
+          }
+        }
+        subj.textContent=labelParts.join(': ');
+        subj.onclick=()=>{
+          trailReturn=dayStr;
+          trailReturnSub=false;
+          const filter = isAllDisc
+            ? {mode, disc:REVIEW_ALL_DISC}
+            : {mode, disc:s.disc, sub:s.sub};
+          showNatReview(filter);
+        };
+        const count=document.createElement('span');
+        count.className='trail-count';
+        const countFilter = isAllDisc ? { mode } : { mode, disc:s.disc, sub:s.sub };
+        count.textContent=countNatReviewItems(countFilter).toString();
+        const rm=document.createElement('button');
+        rm.className='trail-remove';
+        rm.textContent='\u00D7';
+        rm.onclick=()=>{
+          data[key].splice(idx,1);
+          saveTrail(dayStr,data);
+          showTrail(dayStr, true);
+        };
+        item.appendChild(subj);
+        item.appendChild(count);
+        item.appendChild(rm);
+        sec.appendChild(item);
+        return;
+      }
+
+      if(s.exam){
+        const subj=document.createElement('button');
+        subj.className='trail-subject';
+        const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
+        const area=areaTitles[s.mode]||'';
           subj.textContent=area?`${s.exam}: ${area}`:s.exam;
           const m=s.exam.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
           if(m) subj.classList.add(`exam-${m[0].toLowerCase()}`);
@@ -1667,6 +2582,8 @@ function showTrail(expandDay, preserveScroll=false){
   currentDisc=currentSub=null;
   trailReturn=null;
   trailReturnSub=false;
+  currentView = 'trail';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Trilha Estratégica');
@@ -1705,7 +2622,7 @@ function computeExamStats(){
           Nat:{c:0,a:0,t:0},
           Mat:{c:0,a:0,t:0}
         };
-        const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
+        const st = getEffectiveQuestionState(disc, sub, q.label);
         const e=exams[exam][cat];
         e.t++; if(st===1) e.c++; if(st===1||st===2) e.a++;
       });
@@ -1791,6 +2708,106 @@ function renderExamSummary(){
   container.appendChild(table);
   app.appendChild(container);
 }
+
+function collectNatReviewItems(filter=null){
+  const mode = filter?.mode || natReviewState.mode || 'nat';
+  const normalizedFilter = (() => {
+    if (!filter) return null;
+    const { disc, sub } = filter.disc === REVIEW_ALL_DISC ? { disc: null, sub: null } : filter;
+    return {
+      disc: disc ?? null,
+      sub: sub ?? null
+    };
+  })();
+  const areaData = examsDataByMode[mode] || {};
+  const examOrder = examOrderByMode[mode] || [];
+  const visited = new Set();
+  const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
+  const matchesFilter = (disc, sub) => {
+    if(!allowed.has(disc)) return false;
+    if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
+    if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
+    return true;
+  };
+  const combined = [];
+  const pushQuestionsFromExam = exam => {
+    const questions = areaData[exam] || [];
+    const upper = exam.toUpperCase();
+    const isEnem = upper.includes('ENEM');
+    const isSas  = upper.includes('SAS');
+    if(!isEnem && !isSas) return;
+    questions.forEach(({disc,sub,q})=>{
+      if(!matchesFilter(disc,sub)) return;
+      const key = qKey(disc,sub,q.label);
+      const state = getStoredQuestionState(disc, sub, q.label);
+      const effectiveState = getEffectiveStateFromKey(key, state);
+      const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+      const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
+      const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+      const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
+      const isHidden = localStorage.getItem(hiddenKey) === '1';
+      const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
+      const isFavorite = localStorage.getItem(favoriteKey) === '1';
+      const isSoon = localStorage.getItem(soonKey) === '1';
+      if((isEnem || isSas) && effectiveState === 2){
+        combined.push({exam,mode,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+      }
+      if(isEnem && effectiveState === 0){
+        combined.push({exam,mode,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+      }
+    });
+    visited.add(exam);
+  };
+  examOrder.forEach(exam => pushQuestionsFromExam(exam));
+  Object.keys(areaData).forEach(exam => {
+    if(!visited.has(exam)) pushQuestionsFromExam(exam);
+  });
+  return combined;
+}
+
+function computeNatReviewSnapshot(items){
+  if (typeof localStorage === 'undefined') {
+    return { wrongCount: 0, pendingCount: 0, totalCount: 0, reviewedCount: 0 };
+  }
+  let wrongCount = 0;
+  let pendingCount = 0;
+  let reviewedCount = 0;
+  items.forEach(item=>{
+    const key = qKey(item.disc,item.sub,item.q.label);
+    const state = getStoredQuestionState(item.disc, item.sub, item.q.label);
+    const effectiveState = getEffectiveStateFromKey(key, state);
+    const isWrongItem = item.type === 'wrong';
+    const qualifies = isWrongItem ? effectiveState === 2 : effectiveState === 0;
+    if(!qualifies) return;
+    if(isWrongItem){
+      wrongCount += 1;
+    }else{
+      pendingCount += 1;
+    }
+    const reviewKey = `natReview_${key}`;
+    const reviewState = +localStorage.getItem(reviewKey) || 0;
+    if(reviewState > 0){
+      reviewedCount += 1;
+    }
+  });
+  const totalCount = wrongCount + pendingCount;
+  return { wrongCount, pendingCount, totalCount, reviewedCount };
+}
+
+function countNatReviewItems(filter=null){
+  const effectiveFilter = (() => {
+    if (!filter) return null;
+    const next = { ...filter };
+    if (next.disc === REVIEW_ALL_DISC) {
+      delete next.disc;
+    }
+    return next;
+  })();
+  const combined = collectNatReviewItems(effectiveFilter);
+  const visibleItems = combined.filter(item => !item.hidden);
+  const snapshot = computeNatReviewSnapshot(visibleItems);
+  return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
+}
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
 /* ---------------- PROVAS E SIMULADOS ---------------- */
 function showExamMenu(){
@@ -1798,6 +2815,8 @@ function showExamMenu(){
   currentExam=null;
   currentExamMode=null;
   examListOpen=true;
+  currentView = 'examMenu';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   updateHeader(true,'Provas e Simulados');
@@ -1813,6 +2832,8 @@ function showExamList(mode='nat'){
   currentExam=null;
   examListOpen=true;
   currentExamMode=mode;
+  currentView = 'examList';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
@@ -1836,6 +2857,8 @@ function showExamList(mode='nat'){
 function showExam(exam){
   examListOpen=false;
   currentExam=exam;
+  currentView = 'exam';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   const areaTitles={lin:'Linguagens',hum:'Humanas',nat:'Natureza',mat:'Matemática'};
@@ -1851,7 +2874,7 @@ function showExam(exam){
     let c=0,a=0;
     let bioErr=0,quiErr=0,fisErr=0;
     questions.forEach(({disc,sub,q})=>{
-      const st=+localStorage.getItem(qKey(disc,sub,q.label))||0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if(st===1) c++;
       if(st===1||st===2) a++;
       if(st===2){
@@ -1883,14 +2906,16 @@ function showExam(exam){
     qBtn.innerHTML=`<span class="ms-topic">${getFriendlyName(disc,sub)}</span><br><span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
     const topicSpan=qBtn.querySelector('.ms-topic');
-    topicSpan.style.color=discColors[disc];
+    topicSpan.style.color=discColors[disc] || 'var(--c-text-muted)';
     const m=q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
     qBtn.addEventListener('click',e=>{
       if(e.target.closest('.ms-topic')){
-        currentDisc=disc;
-        currentSub=sub;
-        openSummary();
+        if(sub !== UNCLASSIFIED_SUBJECT_CODE){
+          currentDisc=disc;
+          currentSub=sub;
+          openSummary();
+        }
         e.stopPropagation();
       }else{
         openPdf(q.QPDFName,q.page);
@@ -1902,11 +2927,29 @@ function showExam(exam){
       className:'small-btn',
       onclick:()=>openGabarito(q)}));
     const key=qKey(disc,sub,q.label);
-    let st=+localStorage.getItem(key)||0;
+    let st=getStoredQuestionState(disc, sub, q.label);
     const box=row.appendChild(Object.assign(document.createElement('span'),{className:'state-box'}));
-    const paint=()=>{box.textContent=st===1?'\u2713':st===2?'\u2717':'';box.style.color=st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';};
+    const paint=()=>{
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent=effective===1?'\u2713':effective===2?'\u2717':'';
+      box.style.color=effective===1?'#32cd32':effective===2?'#ff0000':'#f0f0f0';
+    };
     paint();
-    box.onclick=()=>{st=(st+1)%3;localStorage.setItem(key,st);const today=getTodayStr();const logKey=`log_${today}_${key}`;if(!D1_DISCIPLINES.includes(disc)){if(st===1||st===2){localStorage.setItem(logKey,'1');}else{localStorage.removeItem(logKey);}}paint();refresh();};
+    box.onclick=()=>{
+      st=(st+1)%3;
+      localStorage.setItem(key,st);
+      const today=getTodayStr();
+      const logKey=`log_${today}_${key}`;
+      if(!D1_DISCIPLINES.includes(disc)){
+        if(st===1||st===2){
+          localStorage.setItem(logKey,'1');
+        }else{
+          localStorage.removeItem(logKey);
+        }
+      }
+      paint();
+      refresh();
+    };
     const cKey=`comment_${key}`;
     const editDiv=document.createElement('div');
     editDiv.className='comment-edit';
@@ -1926,15 +2969,38 @@ function showExam(exam){
   });
 }
 
-function showNatReview(){
+
+function showNatReview(filter=null){
+  if(filter){
+    setNatReviewState(filter);
+  }
+  const { mode: reviewMode = 'nat', disc, sub, showHidden } = natReviewState;
+  const isAll = disc === REVIEW_ALL_DISC;
+  const effectiveFilter = isAll
+    ? { mode: reviewMode }
+    : { mode: reviewMode, disc, sub };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
   examListOpen = false;
-  currentExamMode = 'nat';
+  currentExamMode = reviewMode;
+  currentView = 'review';
+  currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
-  updateHeader(true, 'Revisão');
+  toggleReviewSettingsVisibility(true);
+  renderReviewSettingsMenu();
+  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Revisão';
+  let headerLabel = `Revisão: ${areaLabel}`;
+  if(!isAll){
+    headerLabel = `Revisão: ${disc}`;
+    if(sub && sub !== ALL_SUB){
+      headerLabel += `: ${getFriendlyName(disc, sub)}`;
+    }
+  }else{
+    headerLabel = `Revisão: ${areaLabel}`;
+  }
+  updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
   summaryBtn.onclick = null;
   orderHint.style.display = 'none';
@@ -1947,162 +3013,384 @@ function showNatReview(){
   clear();
   window.scrollTo(0,0);
 
-  const natDiscs = new Set(['Biologia','Química','Física']);
-  const natData = examsDataByMode.nat || {};
-  const combined = [];
-  const examOrder = examOrderNat || [];
-  const visited = new Set();
-  const pushQuestionsFromExam = exam => {
-    const questions = natData[exam] || [];
-    const upper = exam.toUpperCase();
-    const isEnem = upper.includes('ENEM');
-    const isSas  = upper.includes('SAS');
-    if(!isEnem && !isSas) return;
-    questions.forEach(({disc,sub,q})=>{
-      if(!natDiscs.has(disc)) return;
-      const state = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
-      if((isEnem || isSas) && state === 2){
-        combined.push({exam,disc,sub,q,type:'wrong'});
-      }
-      if(isEnem && state === 0){
-        combined.push({exam,disc,sub,q,type:'pending'});
-      }
-    });
-    visited.add(exam);
-  };
-  examOrder.forEach(exam => pushQuestionsFromExam(exam));
-  Object.keys(natData).forEach(exam => {
-    if(!visited.has(exam)) pushQuestionsFromExam(exam);
-  });
+  const combined = collectNatReviewItems(effectiveFilter);
+  const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
+    ? 'Nenhuma questão para revisar no filtro escolhido.'
+    : 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
-  emptyMsg.textContent = 'Nenhuma questão errada ou pendente encontrada nos simulados ENEM/SAS.';
 
-  const ensureEmptyState = ()=>{
+  const ensureEmptyState = () => {
     const hasRow = !!app.querySelector('.question-row');
-    if(hasRow){
-      if(emptyMsg.isConnected) emptyMsg.remove();
-    }else if(!emptyMsg.isConnected){
-      app.appendChild(emptyMsg);
+    if (hasRow) {
+      if (emptyMsg.isConnected) emptyMsg.remove();
+    } else {
+      let message = baseEmptyText;
+      const hiddenSnapshot = computeNatReviewSnapshot(combined.filter(item => item.hidden && !item.favorite));
+      const visibleSnapshot = computeNatReviewSnapshot(combined.filter(item => !item.hidden || item.favorite));
+      if (!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0) {
+        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir Ocultas”.';
+      }
+      emptyMsg.textContent = message;
+      if (!emptyMsg.isConnected) app.appendChild(emptyMsg);
     }
   };
 
-  const refreshStats = ()=>{
-    let wrongCount = 0;
-    let pendingCount = 0;
-    combined.forEach(item=>{
-      const st = +localStorage.getItem(qKey(item.disc,item.sub,item.q.label)) || 0;
-      if(item.type === 'wrong' && st === 2) wrongCount++;
-      if(item.type === 'pending' && st === 0) pendingCount++;
-    });
-    stats.textContent = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount}`;
+  const refreshStats = () => {
+    const snapshot = computeNatReviewSnapshot(combined);
+    const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
+    const text = `Erradas ENEM/SAS: ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total: ${reviewedCount}/${totalCount}`;
+    stats.textContent = text;
     stats.className = 'stat';
   };
 
   const fragment = document.createDocumentFragment();
 
-  combined.forEach(item=>{
-    const key = qKey(item.disc,item.sub,item.q.label);
-    let st = +localStorage.getItem(key) || 0;
-    const qualifies = ()=>{
-      if(st === 2) return true;
-      return item.type !== 'wrong' && st === 0;
+  combined.forEach(item => {
+    const key = qKey(item.disc, item.sub, item.q.label);
+    let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
+    const qualifies = () => {
+      const effective = getEffectiveStateFromKey(key, st);
+      if (item.type === 'wrong') return effective === 2;
+      return effective === 0;
     };
-    if(!qualifies()) return;
+    if (!qualifies()) return;
+
+    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
+    const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+    const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
+
+    let isHidden = !!item.hidden;
+    let autoHidden = localStorage.getItem(autoHiddenKey) === '1';
+    let isFavorite = !!item.favorite;
+    let isSoon = !!item.soon;
+
+    const reviewKey = `natReview_${key}`;
+    let reviewState = +localStorage.getItem(reviewKey) || 0;
+
+    const syncWithReviewState = ({ deferAutoHide = false } = {}) => {
+      const shouldDefer = deferAutoHide || natReviewDeferredAutoHide.has(key);
+      if (reviewState === 1) {
+        if (isFavorite) {
+          natReviewDeferredAutoHide.delete(key);
+          if (isHidden) {
+            isHidden = false;
+            localStorage.removeItem(hiddenKey);
+          }
+          if (autoHidden) {
+            autoHidden = false;
+            localStorage.removeItem(autoHiddenKey);
+          }
+        } else {
+          if (!autoHidden) {
+            autoHidden = true;
+          }
+          localStorage.setItem(autoHiddenKey, '1');
+          if (shouldDefer) {
+            natReviewDeferredAutoHide.add(key);
+            if (isHidden) {
+              isHidden = false;
+              localStorage.removeItem(hiddenKey);
+            }
+          } else {
+            natReviewDeferredAutoHide.delete(key);
+            if (!isHidden) {
+              isHidden = true;
+            }
+            localStorage.setItem(hiddenKey, '1');
+          }
+        }
+      } else {
+        if (natReviewDeferredAutoHide.has(key)) {
+          natReviewDeferredAutoHide.delete(key);
+        }
+        if (autoHidden) {
+          autoHidden = false;
+          localStorage.removeItem(autoHiddenKey);
+          if (isHidden) {
+            isHidden = false;
+            localStorage.removeItem(hiddenKey);
+          }
+        }
+      }
+      item.hidden = isHidden;
+      item.autoHidden = autoHidden;
+    };
+
+    syncWithReviewState();
+
+    if (!natReviewState.showHidden && isHidden && !isFavorite) {
+      return;
+    }
+
+    item.hidden = isHidden;
+    item.favorite = isFavorite;
+    item.soon = isSoon;
 
     const row = document.createElement('div');
     row.className = 'question-row';
+    if (isHidden) row.classList.add('review-hidden');
+    if (isFavorite) row.classList.add('review-favorite');
+    if (isSoon) row.classList.add('review-soon');
 
     const qBtn = document.createElement('button');
-    qBtn.classList.add('btn','question-btn','two-line-btn');
+    qBtn.classList.add('btn', 'question-btn', 'two-line-btn', 'question-btn--with-menu');
     const examPrefix = `${item.exam}-`;
     const labelText = item.q.label.toUpperCase().startsWith(examPrefix.toUpperCase())
       ? item.q.label
       : `${item.exam} • ${item.q.label}`;
-    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc,item.sub)}</span><br>`+
+    qBtn.innerHTML = `<span class="ms-topic">${getFriendlyName(item.disc, item.sub)}</span><br>` +
       `<span class="ms-label">${labelText}</span>`;
     const topicSpan = qBtn.querySelector('.ms-topic');
-    topicSpan.style.color = discColors[item.disc];
+    topicSpan.style.color = discColors[item.disc] || 'var(--c-text-muted)';
     const m = item.q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
-    if(m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
-    qBtn.addEventListener('click',e=>{
-      if(e.target.closest('.ms-topic')){
-        currentDisc = item.disc;
-        currentSub = item.sub;
-        openSummary();
+    if (m) qBtn.classList.add(`exam-${m[0].toLowerCase()}`);
+    qBtn.addEventListener('click', e => {
+      if (e.target.closest('.ms-topic')) {
+        if (item.sub !== UNCLASSIFIED_SUBJECT_CODE) {
+          currentDisc = item.disc;
+          currentSub = item.sub;
+          openSummary();
+        }
         e.stopPropagation();
-      }else{
-        openPdf(item.q.QPDFName,item.q.page);
+      } else {
+        openPdf(item.q.QPDFName, item.q.page);
       }
     });
     row.appendChild(qBtn);
 
-    row.appendChild(Object.assign(document.createElement('button'),{
-      textContent:'Gabarito',
-      className:'small-btn',
-      onclick:()=>openGabarito(item.q)
+    row.appendChild(Object.assign(document.createElement('button'), {
+      textContent: 'Gabarito',
+      className: 'small-btn',
+      onclick: () => openGabarito(item.q)
     }));
 
-    const box = Object.assign(document.createElement('span'),{className:'state-box'});
-    const paintState = ()=>{
-      box.textContent = st===1?'\u2713':st===2?'\u2717':'';
-      box.style.color = st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+    const menuToggle = document.createElement('span');
+    menuToggle.className = 'question-menu-toggle';
+    menuToggle.textContent = '▾';
+    menuToggle.title = 'Ações da questão';
+    menuToggle.setAttribute('aria-haspopup', 'menu');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    qBtn.appendChild(menuToggle);
+
+    const actionMenu = document.createElement('div');
+    actionMenu.className = 'question-action-menu';
+    actionMenu.style.display = 'none';
+    const favoriteOption = document.createElement('button');
+    favoriteOption.type = 'button';
+    favoriteOption.className = 'question-action-option';
+    const soonOption = document.createElement('button');
+    soonOption.type = 'button';
+    soonOption.className = 'question-action-option';
+    const hideOption = document.createElement('button');
+    hideOption.type = 'button';
+    hideOption.className = 'question-action-option';
+    actionMenu.appendChild(favoriteOption);
+    actionMenu.appendChild(soonOption);
+    actionMenu.appendChild(hideOption);
+    row.appendChild(actionMenu);
+
+    const controls = document.createElement('div');
+    controls.className = 'review-state-grid';
+
+    const stateBox = document.createElement('span');
+    stateBox.className = 'state-box result-box';
+    stateBox.title = 'Marcar questão como certa ou errada';
+    const paintState = () => {
+      const effective = getEffectiveStateFromKey(key, st);
+      stateBox.textContent = effective === 1 ? '✓' : effective === 2 ? '✗' : '';
+      stateBox.classList.toggle('state-correct', effective === 1);
+      stateBox.classList.toggle('state-wrong', effective === 2);
     };
-    paintState();
-    box.onclick = ()=>{
-      st = (st+1)%3;
-      localStorage.setItem(key,st);
+    stateBox.onclick = () => {
+      st = (st + 1) % 3;
+      localStorage.setItem(key, st);
       const today = getTodayStr();
       const logKey = `log_${today}_${key}`;
-      if(!D1_DISCIPLINES.includes(item.disc)){
-        if(st===1||st===2){
-          localStorage.setItem(logKey,'1');
-        }else{
+      if (!D1_DISCIPLINES.includes(item.disc)) {
+        if (st === 1 || st === 2) {
+          localStorage.setItem(logKey, '1');
+        } else {
           localStorage.removeItem(logKey);
         }
       }
-      if(st===2 && item.type !== 'wrong'){
+      if (st === 2 && item.type !== 'wrong') {
         item.type = 'wrong';
-        ensureReviewBox();
       }
       paintState();
       ensureEmptyState();
       refreshStats();
     };
-    row.appendChild(box);
+    paintState();
+    controls.appendChild(stateBox);
 
-    const reviewKey = `natReview_${key}`;
-    let reviewState = +localStorage.getItem(reviewKey) || 0;
-    let reviewBox = null;
-    const paintReview = ()=>{
-      if(!reviewBox) return;
-      reviewBox.textContent = reviewState===1?'\u2713':reviewState===2?'\u2717':'';
-      reviewBox.style.color = reviewState===1?'#43c743':reviewState===2?'#ff6666':'#bbbbbb';
-      reviewBox.title = reviewState===0
+    const reviewBox = document.createElement('span');
+    reviewBox.className = 'state-box review-box';
+    const paintReview = () => {
+      reviewBox.textContent = reviewState === 1 ? '✓' : reviewState === 2 ? '✗' : '';
+      reviewBox.classList.toggle('review-correct', reviewState === 1);
+      reviewBox.classList.toggle('review-wrong', reviewState === 2);
+      reviewBox.title = reviewState === 0
         ? 'Marcar revisão'
-        : reviewState===1
+        : reviewState === 1
           ? 'Revisado – certo'
           : 'Revisado – errado';
     };
-    const ensureReviewBox = ()=>{
-      if(reviewBox) return;
-      reviewBox = Object.assign(document.createElement('span'),{className:'state-box review-box'});
-      reviewBox.onclick = ()=>{
-        reviewState = (reviewState+1)%3;
-        if(reviewState===0){
-          localStorage.removeItem(reviewKey);
-        }else{
-          localStorage.setItem(reviewKey,reviewState);
-        }
-        paintReview();
-      };
+    reviewBox.onclick = () => {
+      reviewState = (reviewState + 1) % 3;
+      if (reviewState === 0) {
+        localStorage.removeItem(reviewKey);
+      } else {
+        localStorage.setItem(reviewKey, reviewState);
+      }
       paintReview();
-      row.appendChild(reviewBox);
+      syncWithReviewState({ deferAutoHide: reviewState === 1 });
+      paintHide();
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
     };
-    if(item.type === 'wrong'){
-      ensureReviewBox();
-    }
+    paintReview();
+    controls.appendChild(reviewBox);
+
+    const updateMenuToggle = () => {
+      const hasState = isHidden || isFavorite || isSoon;
+      menuToggle.classList.toggle('menu-active', hasState);
+    };
+
+    const paintHide = () => {
+      hideOption.textContent = isHidden ? 'Exibir' : 'Ocultar';
+      hideOption.classList.toggle('active', isHidden);
+      row.classList.toggle('review-hidden', isHidden);
+      updateMenuToggle();
+    };
+
+    const paintFavorite = () => {
+      favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
+      favoriteOption.classList.toggle('active', isFavorite);
+      row.classList.toggle('review-favorite', isFavorite);
+      updateMenuToggle();
+    };
+
+    const paintSoon = () => {
+      soonOption.textContent = isSoon ? 'Remover Em Breve' : 'Em Breve';
+      soonOption.classList.toggle('active', isSoon);
+      row.classList.toggle('review-soon', isSoon);
+      updateMenuToggle();
+    };
+
+    let menuOpen = false;
+    const onOutsideClick = event => {
+      if (!row.contains(event.target)) {
+        closeMenu();
+      }
+    };
+    const closeMenu = () => {
+      if (!menuOpen) return;
+      menuOpen = false;
+      actionMenu.style.display = 'none';
+      menuToggle.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('click', onOutsideClick);
+      row.style.zIndex = '';
+    };
+    const openMenu = () => {
+      if (menuOpen) return;
+      menuOpen = true;
+      row.style.zIndex = '30';
+      actionMenu.style.display = 'block';
+      actionMenu.style.visibility = 'hidden';
+      const toggleRect = menuToggle.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const menuRect = actionMenu.getBoundingClientRect();
+      const maxLeft = Math.max(rowRect.width - menuRect.width, 0);
+      const desiredLeft = Math.max(toggleRect.right - rowRect.left - menuRect.width, 0);
+      actionMenu.style.left = `${Math.min(desiredLeft, maxLeft)}px`;
+      actionMenu.style.top = `${toggleRect.bottom - rowRect.top + 4}px`;
+      actionMenu.style.visibility = 'visible';
+      menuToggle.classList.add('open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      document.addEventListener('click', onOutsideClick);
+    };
+
+    menuToggle.addEventListener('click', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (menuOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    favoriteOption.addEventListener('click', e => {
+      e.preventDefault();
+      isFavorite = !isFavorite;
+      item.favorite = isFavorite;
+      if (isFavorite) {
+        localStorage.setItem(favoriteKey, '1');
+      } else {
+        localStorage.removeItem(favoriteKey);
+      }
+      paintFavorite();
+      syncWithReviewState();
+      paintHide();
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
+      closeMenu();
+    });
+
+    soonOption.addEventListener('click', e => {
+      e.preventDefault();
+      isSoon = !isSoon;
+      item.soon = isSoon;
+      if (isSoon) {
+        localStorage.setItem(soonKey, '1');
+      } else {
+        localStorage.removeItem(soonKey);
+      }
+      paintSoon();
+      closeMenu();
+    });
+
+    hideOption.addEventListener('click', e => {
+      e.preventDefault();
+      isHidden = !isHidden;
+      item.hidden = isHidden;
+      if (isHidden) {
+        localStorage.setItem(hiddenKey, '1');
+      } else {
+        localStorage.removeItem(hiddenKey);
+      }
+      autoHidden = false;
+      localStorage.removeItem(autoHiddenKey);
+      natReviewDeferredAutoHide.delete(key);
+      paintHide();
+      syncWithReviewState();
+      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+        row.remove();
+      }
+      ensureEmptyState();
+      refreshStats();
+      closeMenu();
+    });
+
+    qBtn.addEventListener('click', () => {
+      if (menuOpen) closeMenu();
+    });
+
+    paintFavorite();
+    paintSoon();
+    paintHide();
+
+    row.appendChild(controls);
 
     const cKey = `comment_${key}`;
     const editDiv=document.createElement('div');
@@ -2132,6 +3420,8 @@ function showSubjects(disc) {
   currentDisc = disc;
   currentSub  = null;
   trailReturnSub = false;
+  currentView = 'subjects';
+  currentMicroSimEntry = null;
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
 
@@ -2181,7 +3471,7 @@ function showSubjects(disc) {
       const qs = questoesData[disc][sub];
       total += qs.length;
       qs.forEach(q => {
-        const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+        const st = getEffectiveQuestionState(disc, sub, q.label);
         if (st === 1) correct++;
         if (st === 1 || st === 2) answered++;
       });
@@ -2231,7 +3521,7 @@ function showSubjects(disc) {
     // faixa de cor de desempenho
     const qs = questoesData[disc][sub];
     const [c, a] = qs.reduce(([c, a], q) => {
-      const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       return [
         c + (st === 1 ? 1 : 0),
         a + ((st === 1 || st === 2) ? 1 : 0)
@@ -2255,6 +3545,8 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   trailReturnSub = fromTrailSub; // registra se veio direto da Trilha para um sub
   currentDisc = disc;
   currentSub  = sub;
+  currentView = 'questions';
+  currentMicroSimEntry = null;
   leaveHome();            // volta ao visual normal fora da Home
   toggleSettingsVisibility(false);  // esconde engrenagem
   updateHeader(true, `${disc}: ${getFriendlyName(disc, sub)}`);
@@ -2276,7 +3568,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
     const qs = questoesData[disc][sub];
     let c = 0, a = 0;
     qs.forEach(q => {
-      const st = +localStorage.getItem(qKey(disc, sub, q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if (st === 1) c++;
       if (st === 1 || st === 2) a++;
     });
@@ -2314,6 +3606,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   qs.forEach((q, idx) => {
     const row = app.appendChild(Object.assign(
       document.createElement("div"), { className:"question-row" }));
+    row.dataset.questionKey = qKey(disc, sub, q.label);
 
     /* Botão da questão (abre PDF) */
     // ─── Botão “stripe” com cor por exame ───
@@ -2341,13 +3634,14 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
 
     /* Caixa ✓ / ✗ */
     const key    = qKey(disc, sub, q.label);          // estado ✓/✗
-    let st    = +localStorage.getItem(key) || 0;
+    let st    = getStoredQuestionState(disc, sub, q.label);
     const box = row.appendChild(Object.assign(
       document.createElement("span"), { className:"state-box" }));
 
     const paint = () => {
-      box.textContent = st===1 ? "✓" : st===2 ? "✗" : "";
-      box.style.color= st===1 ? "#32cd32" : st===2 ? "#ff0000" : "#f0f0f0";
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent = effective===1 ? "✓" : effective===2 ? "✗" : "";
+      box.style.color= effective===1 ? "#32cd32" : effective===2 ? "#ff0000" : "#f0f0f0";
     };
     paint();
     box.onclick = () => {
@@ -2510,7 +3804,10 @@ editDiv.addEventListener('click', function(e) {
    6. VISUALIZAÇÃO DE PDF (PDF.js)
    ============================================================== */
 function clearPdfViewerContent() {
+  cancelPdfAutosave();
   pdfDirtyLayers.clear();
+  pdfActivePointerIds.clear();
+  pdfAutosaveSuspended = false;
   lastPdfRenderedPages = [];
   if (pdfPagesWrapper) {
     pdfPagesWrapper.innerHTML = '';
@@ -2597,6 +3894,133 @@ function getPdfDrawingStorageKey(pdfName, pageNumber) {
   return `${PDF_DRAW_PREFIX}${safeName}::${page}`;
 }
 
+function buildPdfDrawingMetadata({ strokeCount = null, timestamp = Date.now() } = {}) {
+  const ts = Number.isFinite(timestamp) ? timestamp : Date.now();
+  const data = { v: PDF_DRAW_METADATA_VERSION, ts };
+  if (Number.isFinite(strokeCount)) {
+    data.sc = strokeCount;
+  }
+  return JSON.stringify(data);
+}
+
+function parsePdfDrawingMetadata(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  if (raw.startsWith('data:image/')) {
+    return { type: 'image', timestamp: 0 };
+  }
+  try {
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return null;
+    const timestamp = Number.isFinite(data.ts)
+      ? data.ts
+      : Number.isFinite(data.timestamp)
+        ? data.timestamp
+        : 0;
+    const strokeCount = Number.isFinite(data.sc)
+      ? data.sc
+      : Number.isFinite(data.strokes)
+        ? data.strokes
+        : null;
+    return {
+      type: 'meta',
+      timestamp,
+      strokeCount: Number.isFinite(strokeCount) ? strokeCount : null
+    };
+  } catch (err) {
+    if (raw.startsWith('v3|')) {
+      const parts = raw.split('|');
+      const timestamp = Number(parts[1]) || 0;
+      const strokeCount = Number(parts[2]);
+      return {
+        type: 'meta',
+        timestamp,
+        strokeCount: Number.isFinite(strokeCount) ? strokeCount : null
+      };
+    }
+    return null;
+  }
+}
+
+function isQuotaExceededError(error) {
+  if (!error) return false;
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException) {
+    if (error.code === 22 || error.code === 1014) return true;
+  }
+  const name = String(error.name || '').toLowerCase();
+  if (name === 'quotaexceedederror' || name === 'ns_error_dom_quota_reached') {
+    return true;
+  }
+  const message = String(error.message || '').toLowerCase();
+  if (message.includes('quota') || message.includes('storage') || message.includes('cheio')) {
+    return true;
+  }
+  return false;
+}
+
+function purgeOldPdfDrawingEntries({ preserveKeys = new Set(), maxRemovals = 1 } = {}) {
+  if (typeof localStorage === 'undefined') return 0;
+  const preserve = preserveKeys instanceof Set
+    ? preserveKeys
+    : new Set(Array.isArray(preserveKeys) ? preserveKeys : []);
+  const entries = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || preserve.has(key)) continue;
+    if (!key.startsWith(PDF_DRAW_PREFIX) || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+    if (key.endsWith(PDF_DRAW_STROKES_SUFFIX)) continue;
+    const metadata = parsePdfDrawingMetadata(localStorage.getItem(key));
+    const timestamp = metadata?.timestamp || 0;
+    entries.push({ key, timestamp });
+  }
+  if (!entries.length) return 0;
+  entries.sort((a, b) => a.timestamp - b.timestamp);
+  const limit = Math.max(1, Number(maxRemovals) || 0);
+  let removed = 0;
+  for (const entry of entries) {
+    if (removed >= limit) break;
+    localStorage.removeItem(entry.key);
+    localStorage.removeItem(`${entry.key}${PDF_DRAW_STROKES_SUFFIX}`);
+    removed += 1;
+  }
+  return removed;
+}
+
+function optimizePdfDrawingStorage() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const updates = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key === PDF_DRAW_LAST_CLEAN_KEY) continue;
+      if (!key.startsWith(PDF_DRAW_PREFIX)) continue;
+      if (key.endsWith(PDF_DRAW_STROKES_SUFFIX)) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw || typeof raw !== 'string') continue;
+      if (!raw.startsWith('data:image/')) continue;
+      const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
+      const serialized = localStorage.getItem(strokeKey);
+      if (!serialized) continue;
+      let strokeCount = null;
+      try {
+        const { strokes } = deserializePdfStrokes(serialized);
+        strokeCount = Array.isArray(strokes) ? strokes.length : null;
+      } catch (err) {
+        console.error('Falha ao analisar manuscrito ao otimizar armazenamento do PDF', err);
+      }
+      updates.push({ key, metadata: buildPdfDrawingMetadata({ strokeCount }) });
+    }
+    updates.forEach(({ key, metadata }) => {
+      try {
+        localStorage.setItem(key, metadata);
+      } catch (err) {
+        console.error('Falha ao otimizar armazenamento das anotações do PDF', err);
+      }
+    });
+  } catch (err) {
+    console.error('Falha ao otimizar armazenamento das anotações do PDF', err);
+  }
+}
+
 function isPdfCanvasBlank(canvas) {
   const ctx = canvas?.getContext('2d');
   if (!ctx) return true;
@@ -2615,34 +4039,114 @@ function isPdfCanvasBlank(canvas) {
 }
 
 function savePdfDrawingLayer(pdfName, pageNumber, canvas) {
-  if (typeof localStorage === 'undefined') return;
+  if (typeof localStorage === 'undefined') return false;
   const key = getPdfDrawingStorageKey(pdfName, pageNumber);
-  if (!key) return;
+  if (!key) return false;
   const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
   const state = getPdfCanvasState(canvas);
-  try {
-    if (isPdfCanvasBlank(canvas)) {
-      localStorage.removeItem(key);
-      localStorage.removeItem(strokeKey);
-      return;
+  const strokes = Array.isArray(state?.strokes) ? state.strokes : [];
+  const strokeCount = strokes.length;
+
+  const hasBackgroundImage = state?.backgroundImage instanceof HTMLImageElement;
+  let isBlank = false;
+  if (strokeCount === 0 && !hasBackgroundImage) {
+    try {
+      isBlank = isPdfCanvasBlank(canvas);
+    } catch (err) {
+      console.error('Falha ao inspecionar camada de desenho do PDF', err);
     }
-    const dataUrl = canvas.toDataURL('image/png');
-    localStorage.setItem(key, dataUrl);
-    if (state?.strokes?.length) {
-      state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
-      state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
-      const serialized = serializePdfStrokes(state.strokes, {
-        width: state.canvasWidth,
-        height: state.canvasHeight
-      });
-      if (serialized) {
-        localStorage.setItem(strokeKey, serialized);
-      }
+  }
+
+  if (isBlank || (strokeCount === 0 && !hasBackgroundImage)) {
+    localStorage.removeItem(key);
+    localStorage.removeItem(strokeKey);
+    return true;
+  }
+
+  if (state) {
+    state.canvasWidth = Number.isFinite(canvas?.width) ? canvas.width : state.canvasWidth;
+    state.canvasHeight = Number.isFinite(canvas?.height) ? canvas.height : state.canvasHeight;
+  }
+
+  let serialized = null;
+  if (strokeCount > 0) {
+    serialized = serializePdfStrokes(strokes, {
+      width: state?.canvasWidth,
+      height: state?.canvasHeight
+    });
+  }
+
+  const metadata = serialized
+    ? buildPdfDrawingMetadata({ strokeCount })
+    : null;
+
+  let dataUrl = null;
+  if (!metadata) {
+    try {
+      dataUrl = canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('Falha ao gerar imagem da anotação do PDF', err);
+    }
+  }
+
+  if (!metadata && !dataUrl) {
+    console.error('Falha ao salvar anotação do PDF: dados indisponíveis.');
+    return false;
+  }
+
+  const attemptStore = () => {
+    if (metadata) {
+      localStorage.setItem(key, metadata);
+    } else if (dataUrl) {
+      localStorage.setItem(key, dataUrl);
+    }
+    if (serialized) {
+      localStorage.setItem(strokeKey, serialized);
     } else {
       localStorage.removeItem(strokeKey);
     }
+  };
+
+  try {
+    attemptStore();
+    return true;
   } catch (err) {
-    console.error('Falha ao salvar anotação do PDF', err);
+    if (!isQuotaExceededError(err)) {
+      console.error('Falha ao salvar anotação do PDF', err);
+      return false;
+    }
+
+    const preserve = new Set([key]);
+    if (serialized) {
+      preserve.add(strokeKey);
+    }
+
+    let success = false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const removed = purgeOldPdfDrawingEntries({ preserveKeys: preserve, maxRemovals: 1 });
+      if (!removed) break;
+      try {
+        attemptStore();
+        success = true;
+        break;
+      } catch (retryErr) {
+        if (!isQuotaExceededError(retryErr)) {
+          console.error('Falha ao salvar anotação do PDF', retryErr);
+          return false;
+        }
+      }
+    }
+
+    if (!success) {
+      if (!pdfStorageQuotaAlertShown) {
+        alert('Espaço insuficiente para salvar novas anotações. Exporte ou remova manuscritos antigos para liberar memória.');
+        pdfStorageQuotaAlertShown = true;
+      }
+      console.error('Falha ao salvar anotação do PDF: espaço insuficiente.', err);
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -2655,8 +4159,12 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     state.selectedStrokeIds.clear();
   }
   const stored = localStorage.getItem(key);
+  const metadata = parsePdfDrawingMetadata(stored);
   const strokeKey = `${key}${PDF_DRAW_STROKES_SUFFIX}`;
   const serialized = localStorage.getItem(strokeKey);
+  if (state) {
+    state.lastSavedAt = metadata?.timestamp || null;
+  }
   if (serialized && state) {
     const { strokes, width: storedWidth, height: storedHeight } = deserializePdfStrokes(serialized);
     state.strokes = strokes;
@@ -2697,6 +4205,7 @@ function restorePdfDrawingLayer(pdfName, pageNumber, canvas) {
     return;
   }
   if (!stored) return;
+  if (metadata && metadata.type === 'meta') return;
   const image = new Image();
   image.onload = () => {
     if (state) {
@@ -2761,6 +4270,7 @@ function cleanupStalePdfDrawings() {
   if (typeof localStorage === 'undefined') return;
   try {
     migrateLegacyPdfDrawings();
+    optimizePdfDrawingStorage();
     const orphanStrokeKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -2779,12 +4289,90 @@ function cleanupStalePdfDrawings() {
   }
 }
 
+function clearPdfDrawings() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const keysToRemove = [];
+    let pages = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(PDF_DRAW_PREFIX)) continue;
+      keysToRemove.push(key);
+      if (!key.endsWith(PDF_DRAW_STROKES_SUFFIX) && key !== PDF_DRAW_LAST_CLEAN_KEY) {
+        pages++;
+      }
+    }
+    if (!keysToRemove.length) return 0;
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    return pages;
+  } catch (err) {
+    console.error('Falha ao remover manuscritos dos PDFs', err);
+    return null;
+  }
+}
+
 cleanupStalePdfDrawings();
+
+function getPdfPointerKey(pointerId) {
+  if (pointerId == null) return null;
+  try {
+    return String(pointerId);
+  } catch (err) {
+    console.warn('Falha ao normalizar pointerId para o autosave do PDF.', err);
+    return null;
+  }
+}
+
+function suspendPdfAutosave(pointerId = null) {
+  const key = getPdfPointerKey(pointerId);
+  if (key !== null) {
+    pdfActivePointerIds.add(key);
+  }
+  if (pdfAutosaveSuspended) return;
+  pdfAutosaveSuspended = true;
+  cancelPdfAutosave();
+}
+
+function resumePdfAutosave(pointerId = null) {
+  const key = getPdfPointerKey(pointerId);
+  if (key !== null) {
+    pdfActivePointerIds.delete(key);
+  }
+  if (pdfActivePointerIds.size > 0) {
+    return;
+  }
+  const wasSuspended = pdfAutosaveSuspended;
+  pdfAutosaveSuspended = false;
+  if (wasSuspended || pdfDirtyLayers.size > 0) {
+    schedulePdfAutosave();
+  }
+}
 
 function markPdfLayerDirty(canvas) {
   if (!canvas) return;
   canvas.dataset.dirty = 'true';
   pdfDirtyLayers.add(canvas);
+  schedulePdfAutosave();
+}
+
+function cancelPdfAutosave() {
+  if (pdfAutosaveTimeout != null) {
+    clearTimeout(pdfAutosaveTimeout);
+    pdfAutosaveTimeout = null;
+  }
+}
+
+function schedulePdfAutosave() {
+  if (pdfAutosaveSuspended) return;
+  if (pdfAutosaveTimeout != null) return;
+  if (!pdfDirtyLayers.size) return;
+  pdfAutosaveTimeout = setTimeout(() => {
+    pdfAutosaveTimeout = null;
+    if (pdfAutosaveSuspended || !pdfDirtyLayers.size) {
+      return;
+    }
+    persistCurrentPdfDrawings();
+  }, PDF_AUTOSAVE_DELAY);
 }
 
 function ensurePdfPersistenceHandlers() {
@@ -2801,6 +4389,7 @@ function ensurePdfPersistenceHandlers() {
 }
 
 function persistCurrentPdfDrawings({ force = false } = {}) {
+  cancelPdfAutosave();
   if (typeof localStorage === 'undefined') {
     pdfDirtyLayers.clear();
     return;
@@ -2811,12 +4400,17 @@ function persistCurrentPdfDrawings({ force = false } = {}) {
     const pdfName = layer.dataset.pdfName;
     const pageNumber = Number(layer.dataset.pageNumber);
     if (!force && layer.dataset.dirty !== 'true') return;
-    savePdfDrawingLayer(pdfName, pageNumber, layer);
-    layer.dataset.dirty = 'false';
-    pdfDirtyLayers.delete(layer);
+    const saved = savePdfDrawingLayer(pdfName, pageNumber, layer);
+    if (saved) {
+      layer.dataset.dirty = 'false';
+      pdfDirtyLayers.delete(layer);
+    } else {
+      layer.dataset.dirty = 'true';
+      pdfDirtyLayers.add(layer);
+    }
   });
-  if (force) {
-    pdfDirtyLayers.clear();
+  if (pdfDirtyLayers.size > 0) {
+    schedulePdfAutosave();
   }
 }
 
@@ -3014,6 +4608,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     }
     if (!drawing) {
       pdfStylusDrawingActive = false;
+      resumePdfAutosave(event.pointerId);
       return;
     }
 
@@ -3043,6 +4638,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
       markPdfLayerDirty(canvas);
       strokeDirty = false;
     }
+    resumePdfAutosave(event.pointerId);
   };
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -3054,6 +4650,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
     if (canvas.setPointerCapture) {
       canvas.setPointerCapture(event.pointerId);
     }
+    suspendPdfAutosave(event.pointerId);
     const point = getPoint(event);
     drawing = true;
     strokeDirty = false;
@@ -3062,7 +4659,7 @@ function attachDrawingEvents(canvas, pdfName, pageNumber) {
 
     if (activeTool === 'pen') {
       state.selectedStrokeIds.clear();
-      const width = pointerType === 'pen' ? PDF_PEN_WIDTH_STYLUS : PDF_PEN_WIDTH;
+      const width = getPdfEffectivePenWidth(currentPdfZoom);
       activeStroke = {
         id: state.nextId++,
         type: 'pen',
@@ -3410,7 +5007,7 @@ async function loadPdfDocument(pdfName) {
 
   releaseCurrentPdfDocument();
 
-  const sources = [`PDFs/${pdfName}`, `PDFsD1/${pdfName}`];
+  const sources = [`PDFs/${pdfName}`, `PDFsD1/${pdfName}`, `PDFs_Não_Classificados/${pdfName}`];
   let lastError = null;
   for (const src of sources) {
     try {
@@ -3672,6 +5269,19 @@ if (pdfNextPageBtn) {
     navigatePdfPage(1);
   });
 }
+if (pdfPageIndicator) {
+  pdfPageIndicator.setAttribute('role', 'button');
+  pdfPageIndicator.setAttribute('tabindex', '0');
+  pdfPageIndicator.setAttribute('aria-label', 'Recolher navegação de páginas');
+  const closeMenu = () => setPdfPageMenuOpen(false);
+  pdfPageIndicator.addEventListener('click', closeMenu);
+  pdfPageIndicator.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeMenu();
+    }
+  });
+}
 if (pdfContainer) {
   pdfContainer.addEventListener('touchstart', handlePdfPinchStart, { passive: false });
   pdfContainer.addEventListener('touchmove', handlePdfPinchMove, { passive: false });
@@ -3705,6 +5315,8 @@ if (imgContainer) {
 function showMicroSim(entry) {
   currentDisc = 'Matemática';
   currentSub  = null;
+  currentView = 'microSim';
+  currentMicroSimEntry = null;
   // mantém trailReturn para voltar à trilha corretamente
   leaveHome();
   toggleSettingsVisibility(false);
@@ -3716,9 +5328,11 @@ function showMicroSim(entry) {
   clear();
   window.scrollTo(0,0);
 
+  let sourceEntry = null;
   let micro = [];
   if(entry && Array.isArray(entry.qs)) {
-    micro = entry.qs;
+    sourceEntry = { ...entry };
+    micro = entry.qs.slice();
   } else {
     const max = countRemainingQuestions('Matemática');
     if(max===0){
@@ -3732,6 +5346,7 @@ function showMicroSim(entry) {
     }
     const n = Math.max(1, Math.min(parseInt(inp,10)||0, max));
     micro = generateMicroQuestions(n);
+    sourceEntry = { disc: 'Matemática', sub: 'micro', qs: micro.slice() };
   }
   if(micro.length===0){
     app.textContent = 'Todas as questões de Matemática foram concluídas.';
@@ -3741,12 +5356,18 @@ function showMicroSim(entry) {
     const q = questoesData['Matemática'][sub].find(x => x.label===label);
     return q? {disc:'Matemática', sub, q}: null;
   }).filter(Boolean);
+  if (questions.length === 0) {
+    app.textContent = 'Todas as questões de Matemática foram concluídas.';
+    return;
+  }
+  const normalizedQs = questions.map(({sub, q}) => ({ sub, label: q.label }));
+  currentMicroSimEntry = { ...(sourceEntry || { disc: 'Matemática', sub: 'micro' }), qs: normalizedQs };
 
   const statDiv = document.getElementById('headerStats');
   function refreshStats(){
     let c=0,a=0;
     questions.forEach(({disc,sub,q})=>{
-      const st = +localStorage.getItem(qKey(disc,sub,q.label)) || 0;
+      const st = getEffectiveQuestionState(disc, sub, q.label);
       if(st===1) c++;
       if(st===1||st===2) a++;
     });
@@ -3768,7 +5389,7 @@ function showMicroSim(entry) {
       <span class="ms-topic">${getFriendlyName(disc,sub)}</span><br>
       <span class="ms-label">${q.label}</span>`;
     qBtn.classList.add('btn','question-btn','two-line-btn');
-    qBtn.querySelector('.ms-topic').style.color = discColors[disc];
+    qBtn.querySelector('.ms-topic').style.color = discColors[disc] || 'var(--c-text-muted)';
     const m = q.label.match(/ENEM|SAS|BERNOULLI|POLIEDRO|SOMOS|EVOLUCIONAL/i);
     if(m){
       const exam = m[0].toLowerCase();
@@ -3784,12 +5405,13 @@ function showMicroSim(entry) {
         onclick:()=>openGabarito(q)}));
 
     const key = qKey(disc,sub,q.label);
-    let st = +localStorage.getItem(key)||0;
+    let st = getStoredQuestionState(disc, sub, q.label);
     const box = row.appendChild(Object.assign(
       document.createElement('span'),{className:'state-box'}));
     const paint=()=>{
-      box.textContent=st===1?'✓':st===2?'✗':'';
-      box.style.color=st===1?'#32cd32':st===2?'#ff0000':'#f0f0f0';
+      const effective = getEffectiveStateFromKey(key, st);
+      box.textContent=effective===1?'✓':effective===2?'✗':'';
+      box.style.color=effective===1?'#32cd32':effective===2?'#ff0000':'#f0f0f0';
     };
     paint();
     box.onclick=()=>{
@@ -3857,20 +5479,37 @@ function showMicroSim(entry) {
   if(document.activeElement && document.activeElement.classList.contains('comment-edit')){
     document.activeElement.blur();
   }
+  if(pendingSearchFocus && pendingSearchFocus.disc === disc && pendingSearchFocus.sub === sub){
+    const match = pendingSearchFocus;
+    pendingSearchFocus = null;
+    requestAnimationFrame(() => focusQuestionFromSearch(match));
+  }
 }
 
 function openSummary(){                      // usa a disciplina/assunto atuais
-  const d = encodeURIComponent(currentDisc);
-  const s = encodeURIComponent(currentSub);
-  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=${s}`;   // carrega o resumo certo
-  summaryContainer.style.display = "flex";
+  if(!currentDisc || !currentSub) return;
+  openSummaryFor(currentDisc, currentSub);
 }
 function openDisciplineSummary(disc){        // resumo geral da disciplina
-  const d = encodeURIComponent(disc);
-  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=00`;
-  summaryContainer.style.display = "flex";
+  if(!disc) return;
+  openSummaryFor(disc, '00');
 }
-function closeSummary(){ summaryContainer.style.display = "none"; }
+function openSummaryFor(disc, sub){
+  if(!disc || !summaryFrame || !summaryContainer) return;
+  const d = encodeURIComponent(disc);
+  const effectiveSub = sub ?? '00';
+  const s = encodeURIComponent(effectiveSub);
+  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=${s}`;
+  summaryContainer.style.display = "flex";
+  setBodyScrollLocked(true);
+}
+function closeSummary(){
+  summaryContainer.style.display = "none";
+  const pdfOpen = pdfContainer && pdfContainer.style.display === 'flex';
+  if(!pdfOpen && !isSearchOverlayOpen()){
+    setBodyScrollLocked(false);
+  }
+}
 window.closeSummary = closeSummary;           // para o iframe conseguir fechar
 
 /* ===================================================================
@@ -3975,19 +5614,43 @@ window.closeSummary = closeSummary;           // para o iframe conseguir fechar
 /* 1 ───── Handler do botão “Importar” ───── */
 importFile.addEventListener("change", ({ target }) => {
   const file = target.files[0];
-  if (!file) return;
+  const mode = target.dataset.mode === 'handwriting' ? 'handwriting' : 'general';
+  if (!file) {
+    target.dataset.mode = '';
+    target.value = '';
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = (e) => {
     // guarda o JSON bruto em sessionStorage
     if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem("__pendingImport__", e.target.result);
+      const wrapper = {
+        __type: IMPORT_WRAPPER_TYPE,
+        mode,
+        data: e.target.result
+      };
+      try {
+        sessionStorage.setItem("__pendingImport__", JSON.stringify(wrapper));
+      } catch (err) {
+        console.error('Falha ao preparar importação', err);
+        alert('Não foi possível preparar a importação. Verifique o console para mais detalhes.');
+        target.dataset.mode = '';
+        target.value = '';
+        return;
+      }
     }
 
     // libera espaço no localStorage para a próxima carga
-    localStorage.clear();
+    if (mode === 'handwriting') {
+      removeHandwritingEntriesFromLocalStorage();
+    } else {
+      localStorage.clear();
+    }
 
     // recarrega a página; o passo 2 roda no boot
+    target.dataset.mode = '';
+    target.value = '';
     location.reload();
   };
   reader.readAsText(file);
@@ -3995,20 +5658,57 @@ importFile.addEventListener("change", ({ target }) => {
 
 /* 2 ───── Restauração automática logo no início do JS principal ───── */
 (() => {
-  const raw = (typeof sessionStorage !== 'undefined')
-    ? sessionStorage.getItem("__pendingImport__")
-    : null;
+  const hasSession = typeof sessionStorage !== 'undefined';
+  const raw = hasSession ? sessionStorage.getItem("__pendingImport__") : null;
   if (!raw) return;                           // nada pendente
 
+  let mode = 'general';
+  let parsedData = null;
+
   try {
-    const obj = JSON.parse(raw);              // texto → objeto
-    localStorage.clear();                     // garante que está limpo
-    Object.entries(obj).forEach(([k, v]) => localStorage.setItem(k, v));
+    const maybeWrapper = JSON.parse(raw);
+    if (maybeWrapper && typeof maybeWrapper === 'object' && !Array.isArray(maybeWrapper) && maybeWrapper.__type === IMPORT_WRAPPER_TYPE) {
+      mode = maybeWrapper.mode === 'handwriting' ? 'handwriting' : 'general';
+      if (typeof maybeWrapper.data !== 'string') {
+        throw new Error('Wrapper de importação inválido');
+      }
+      parsedData = JSON.parse(maybeWrapper.data);
+    } else {
+      parsedData = maybeWrapper;
+    }
+  } catch (err) {
+    console.error("Falha ao processar backup:", err);
+    alert("Importação cancelada (arquivo corrompido).");
+    if (hasSession) {
+      sessionStorage.removeItem("__pendingImport__");
+    }
+    return;
+  }
+
+  if (!parsedData || typeof parsedData !== 'object' || Array.isArray(parsedData)) {
+    console.error('Falha ao processar backup: formato inesperado.');
+    alert("Importação cancelada (arquivo corrompido).");
+    if (hasSession) {
+      sessionStorage.removeItem("__pendingImport__");
+    }
+    return;
+  }
+
+  try {
+    if (mode === 'handwriting') {
+      removeHandwritingEntriesFromLocalStorage();
+    } else {
+      localStorage.clear();
+    }
+    Object.entries(parsedData).forEach(([k, v]) => {
+      if (!shouldIncludeKeyForImport(k, mode)) return;
+      localStorage.setItem(k, v);
+    });
   } catch (err) {
     console.error("Falha ao processar backup:", err);
     alert("Importação cancelada (arquivo corrompido).");
   } finally {
-    if (typeof sessionStorage !== 'undefined') {
+    if (hasSession) {
       sessionStorage.removeItem("__pendingImport__"); // limpa a flag
     }
   }
