@@ -319,6 +319,56 @@ const pickerMicro   = document.getElementById("pickerMicro");
 const pickerCancel  = document.getElementById("pickerCancel");
 const orderHint     = document.getElementById("orderHint");
 const toggleD1Btn   = document.getElementById("toggleD1Btn");
+const searchNotesBtn = document.getElementById("searchNotesBtn");
+const searchOverlay  = document.getElementById("searchOverlay");
+const searchForm     = document.getElementById("searchForm");
+const searchInput    = document.getElementById("searchInput");
+const searchResultsList = document.getElementById("searchResults");
+const searchFeedbackEl  = document.getElementById("searchFeedback");
+const searchCloseBtn = document.getElementById("searchCloseBtn");
+
+const DEFAULT_SEARCH_MESSAGE = 'Digite um termo para buscar em comentários e resumos.';
+
+function createEmptySearchSnapshot(){
+  return {
+    term: '',
+    results: [],
+    scrollTop: 0,
+    activeId: null,
+    feedback: { message: DEFAULT_SEARCH_MESSAGE, isError: false }
+  };
+}
+
+function buildSearchResultId(result){
+  if(result.id) return result.id;
+  if(result.type === 'comment'){
+    return `comment|${result.key}`;
+  }
+  const subPart = result.sub != null ? result.sub : '';
+  return `summary|${result.disc}|${subPart}`;
+}
+
+function cloneSearchResult(result){
+  const copy = { ...result };
+  copy.id = buildSearchResultId(copy);
+  return copy;
+}
+
+function cloneSearchState(state){
+  const base = state || {};
+  return {
+    term: base.term || '',
+    results: (base.results || []).map(cloneSearchResult),
+    scrollTop: typeof base.scrollTop === 'number' ? base.scrollTop : 0,
+    activeId: base.activeId || null,
+    feedback: base.feedback
+      ? { message: base.feedback.message || DEFAULT_SEARCH_MESSAGE, isError: !!base.feedback.isError }
+      : { message: DEFAULT_SEARCH_MESSAGE, isError: false }
+  };
+}
+
+let searchSnapshot = createEmptySearchSnapshot();
+const searchReturnStack = [];
 
 function setNatReviewState(partial = {}) {
   const next = { ...natReviewState };
@@ -477,6 +527,7 @@ const AGENDA_DAY = 'agenda'; // Dia fixo "Agenda, Planejamento e Metodologia"
 
 let currentView = 'home';
 let currentMicroSimEntry = null;
+let pendingSearchFocus = null;
 
 // Metadados do PDF aberto no modal
 let lastPdfName = null;
@@ -1061,6 +1112,70 @@ function exportData(mode = 'general') {
 function qKey(disc, sub, label) {
   return `${disc}_${sub}_${encodeURIComponent(label)}`;
 }
+
+const cssEscape = typeof CSS !== 'undefined' && CSS.escape
+  ? CSS.escape.bind(CSS)
+  : (str) => String(str).replace(/[\0-\x1f\x7f-\x9f!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~]/g, '\\$&');
+
+const htmlTextHelper = document.createElement('div');
+
+function htmlToPlainText(html) {
+  if (!html) return '';
+  htmlTextHelper.innerHTML = html;
+  const text = htmlTextHelper.textContent || '';
+  htmlTextHelper.textContent = '';
+  return text;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch] || ch));
+}
+
+function buildSearchExcerpt(text, startIndex, matchLength) {
+  if (startIndex < 0 || !text) return '';
+  const context = 60;
+  const start = Math.max(0, startIndex - context);
+  const end = Math.min(text.length, startIndex + matchLength + context);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < text.length ? '…' : '';
+  const before = escapeHtml(text.slice(start, startIndex));
+  const match = escapeHtml(text.slice(startIndex, startIndex + matchLength));
+  const after = escapeHtml(text.slice(startIndex + matchLength, end));
+  return `${prefix}${before}<mark>${match}</mark>${after}${suffix}`;
+}
+
+function parseCommentKey(key) {
+  if (!key || !key.startsWith('comment_')) return null;
+  const parts = key.split('_');
+  if (parts.length < 4) return null;
+  const disc = parts[1];
+  const sub = parts[2];
+  const label = decodeURIComponent(parts.slice(3).join('_'));
+  return { disc, sub, label };
+}
+
+function parseSummaryKey(key) {
+  if (!key || !key.startsWith('summary_')) return null;
+  const parts = key.split('_');
+  if (parts.length < 3) return null;
+  const disc = parts[1];
+  const sub = parts.slice(2).join('_');
+  return { disc, sub };
+}
+
+function describeSubjectForSearch(disc, sub) {
+  if (!sub) return '';
+  if (sub === '00') return 'Resumo da disciplina';
+  if (sub === 'micro') return 'Micro Simulado';
+  const friendly = getFriendlyName(disc, sub);
+  return friendly || `Assunto ${sub}`;
+}
     /* ---------------------------------------------------------------
    Recebe um texto e devolve:
    { aliased: texto com URLs → 'Link', links: [array de URLs] }
@@ -1527,6 +1642,316 @@ function toggleSettingsVisibility(showHome){
   if (!showHome) settingsMenu.style.display = 'none';
   toggleReviewSettingsVisibility(false);
 }
+
+function isSearchOverlayOpen(){
+  return !!(searchOverlay && searchOverlay.classList.contains('open'));
+}
+
+function openSearchOverlay(restoreState = null){
+  if(!searchOverlay || !searchInput || !searchResultsList) return;
+  searchOverlay.classList.add('open');
+  searchOverlay.setAttribute('aria-hidden', 'false');
+  setBodyScrollLocked(true);
+  if(restoreState){
+    searchSnapshot = cloneSearchState(restoreState);
+    searchInput.value = searchSnapshot.term;
+    renderSearchResults(searchSnapshot.results, searchSnapshot.activeId);
+    updateSearchFeedback(searchSnapshot.feedback.message, searchSnapshot.feedback.isError);
+    requestAnimationFrame(() => {
+      searchResultsList.scrollTop = searchSnapshot.scrollTop || 0;
+      searchInput.focus();
+      searchInput.select();
+    });
+    return;
+  }
+
+  searchReturnStack.length = 0;
+  searchSnapshot = createEmptySearchSnapshot();
+  searchResultsList.innerHTML = '';
+  searchInput.value = '';
+  updateSearchFeedback(DEFAULT_SEARCH_MESSAGE);
+  requestAnimationFrame(() => {
+    searchInput.focus();
+    searchInput.select();
+  });
+}
+
+function closeSearchOverlay(){
+  if(!searchOverlay) return;
+  if(searchResultsList){
+    searchSnapshot.scrollTop = searchResultsList.scrollTop;
+  }
+  searchOverlay.classList.remove('open');
+  searchOverlay.setAttribute('aria-hidden', 'true');
+  const pdfOpen = pdfContainer && pdfContainer.style.display === 'flex';
+  const summaryOpen = summaryContainer && summaryContainer.style.display !== 'none';
+  if(!pdfOpen && !summaryOpen){
+    setBodyScrollLocked(false);
+  }
+}
+
+function updateSearchFeedback(message, isError = false){
+  if(!searchFeedbackEl) return;
+  searchFeedbackEl.textContent = message;
+  searchFeedbackEl.classList.toggle('search-feedback--error', !!isError);
+  searchSnapshot.feedback = { message, isError: !!isError };
+}
+
+function focusQuestionFromSearch(match){
+  if(!match) return;
+  const selector = `[data-question-key="${cssEscape(match.key)}"]`;
+  const row = app.querySelector(selector);
+  if(!row) return;
+  const comment = row.querySelector('.comment-edit');
+  row.classList.add('search-hit');
+  if(comment) comment.classList.add('search-hit');
+  const targetEl = comment || row;
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    row.classList.remove('search-hit');
+    if(comment) comment.classList.remove('search-hit');
+  }, 4500);
+}
+
+function navigateToQuestionFromSearch(disc, sub, label){
+  pendingSearchFocus = {
+    disc,
+    sub,
+    label,
+    key: qKey(disc, sub, label)
+  };
+  showQuestions(disc, sub, false, false);
+}
+
+function performSearch(rawTerm){
+  if(!searchResultsList) return;
+  const term = (rawTerm || '').trim();
+  searchSnapshot.term = term;
+  if(!term){
+    searchResultsList.innerHTML = '';
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
+    updateSearchFeedback(DEFAULT_SEARCH_MESSAGE);
+    return;
+  }
+  if(term.length < 2){
+    searchResultsList.innerHTML = '';
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
+    updateSearchFeedback('Digite pelo menos 2 caracteres.', true);
+    return;
+  }
+
+  const normalized = term.toLocaleLowerCase('pt-BR');
+  const results = [];
+
+  for(let i = 0; i < localStorage.length; i += 1){
+    const key = localStorage.key(i);
+    if(!key) continue;
+
+    if(key.startsWith('comment_')){
+      const parsed = parseCommentKey(key);
+      if(!parsed) continue;
+      const html = localStorage.getItem(key) || '';
+      const text = htmlToPlainText(html);
+      if(!text.trim()) continue;
+      const lower = text.toLocaleLowerCase('pt-BR');
+      const idx = lower.indexOf(normalized);
+      if(idx === -1) continue;
+      const commentResult = {
+        type: 'comment',
+        disc: parsed.disc,
+        sub: parsed.sub,
+        label: parsed.label,
+        key: qKey(parsed.disc, parsed.sub, parsed.label),
+        excerpt: buildSearchExcerpt(text, idx, term.length)
+      };
+      commentResult.id = buildSearchResultId(commentResult);
+      results.push(commentResult);
+    } else if(key.startsWith('summary_')){
+      const parsed = parseSummaryKey(key);
+      if(!parsed) continue;
+      const html = localStorage.getItem(key) || '';
+      const text = htmlToPlainText(html);
+      if(!text.trim()) continue;
+      const lower = text.toLocaleLowerCase('pt-BR');
+      const idx = lower.indexOf(normalized);
+      if(idx === -1) continue;
+      const summaryResult = {
+        type: 'summary',
+        disc: parsed.disc,
+        sub: parsed.sub,
+        excerpt: buildSearchExcerpt(text, idx, term.length)
+      };
+      summaryResult.id = buildSearchResultId(summaryResult);
+      results.push(summaryResult);
+    }
+  }
+
+  results.sort((a, b) => {
+    if(a.type !== b.type) return a.type === 'comment' ? -1 : 1;
+    const discCmp = a.disc.localeCompare(b.disc, 'pt-BR');
+    if(discCmp !== 0) return discCmp;
+    const subA = a.sub || '';
+    const subB = b.sub || '';
+    const subCmp = subA.localeCompare(subB, 'pt-BR');
+    if(subCmp !== 0) return subCmp;
+    if(a.type === 'comment' && b.type === 'comment'){
+      return a.label.localeCompare(b.label, 'pt-BR');
+    }
+    return 0;
+  });
+
+  if(results.length === 0){
+    searchResultsList.innerHTML = '';
+    searchSnapshot.results = [];
+    searchSnapshot.activeId = null;
+    searchSnapshot.scrollTop = 0;
+    updateSearchFeedback('Nenhum resultado encontrado.', true);
+    return;
+  }
+
+  updateSearchFeedback(`${results.length} resultado${results.length>1?'s':''} encontrado${results.length>1?'s':''}.`);
+  searchSnapshot.scrollTop = 0;
+  renderSearchResults(results);
+  searchResultsList.scrollTop = 0;
+}
+
+function renderSearchResults(results, activeId = null){
+  if(!searchResultsList) return;
+  searchResultsList.innerHTML = '';
+  const normalized = results.map(result => {
+    const normalizedResult = { ...result };
+    normalizedResult.id = buildSearchResultId(normalizedResult);
+    return normalizedResult;
+  });
+
+  searchSnapshot.results = normalized.map(cloneSearchResult);
+  searchSnapshot.activeId = activeId || null;
+
+  normalized.forEach(result => {
+    const item = document.createElement('li');
+    item.className = 'search-result';
+    item.dataset.resultId = result.id;
+
+    if(searchSnapshot.activeId && result.id === searchSnapshot.activeId){
+      item.classList.add('search-result--active');
+      item.setAttribute('aria-current', 'true');
+    } else {
+      item.setAttribute('aria-current', 'false');
+    }
+
+    const main = document.createElement('button');
+    main.type = 'button';
+    main.className = 'search-result-main';
+
+    const pathParts = [result.disc];
+    if(result.type === 'comment'){
+      const subject = describeSubjectForSearch(result.disc, result.sub);
+      if(subject) pathParts.push(subject);
+    } else {
+      if(result.sub === '00'){
+        pathParts.push('Resumo da disciplina');
+      } else {
+        const subject = describeSubjectForSearch(result.disc, result.sub);
+        if(subject) pathParts.push(subject);
+      }
+    }
+
+    const path = document.createElement('span');
+    path.className = 'search-result-path';
+    path.textContent = pathParts.filter(Boolean).join(' • ');
+    main.appendChild(path);
+
+    const target = document.createElement('span');
+    target.className = 'search-result-target';
+    target.textContent = result.type === 'comment'
+      ? result.label
+      : 'Resumo';
+    main.appendChild(target);
+
+    const excerpt = document.createElement('span');
+    excerpt.className = 'search-result-excerpt';
+    excerpt.innerHTML = result.excerpt;
+    main.appendChild(excerpt);
+
+    main.addEventListener('click', () => {
+      if(searchResultsList){
+        searchSnapshot.scrollTop = searchResultsList.scrollTop;
+      }
+      searchSnapshot.activeId = result.id;
+      const snapshotCopy = cloneSearchState(searchSnapshot);
+      searchReturnStack.push(snapshotCopy);
+      closeSearchOverlay();
+      if(result.type === 'comment'){
+        navigateToQuestionFromSearch(result.disc, result.sub, result.label);
+      } else {
+        openSummaryFor(result.disc, result.sub);
+      }
+    });
+
+    const tag = document.createElement('span');
+    tag.className = 'search-result-tag';
+    tag.textContent = result.type === 'comment' ? 'Comentário' : 'Resumo';
+
+    item.appendChild(main);
+    item.appendChild(tag);
+    searchResultsList.appendChild(item);
+  });
+}
+
+function tryRestoreSearchOverlay(){
+  if(searchReturnStack.length === 0) return false;
+  const snapshot = cloneSearchState(searchReturnStack.pop());
+  openSearchOverlay(snapshot);
+  return true;
+}
+
+if(searchNotesBtn){
+  searchNotesBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    openSearchOverlay();
+  };
+}
+
+if(searchCloseBtn){
+  searchCloseBtn.addEventListener('click', closeSearchOverlay);
+}
+
+if(searchOverlay){
+  searchOverlay.addEventListener('click', e => {
+    if(e.target === searchOverlay){
+      closeSearchOverlay();
+    }
+  });
+}
+
+if(searchInput){
+  searchInput.addEventListener('input', () => {
+    searchSnapshot.term = searchInput.value;
+  });
+}
+
+if(searchResultsList){
+  searchResultsList.addEventListener('scroll', () => {
+    searchSnapshot.scrollTop = searchResultsList.scrollTop;
+  });
+}
+
+if(searchForm){
+  searchForm.addEventListener('submit', e => {
+    e.preventDefault();
+    performSearch(searchInput ? searchInput.value : '');
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && isSearchOverlayOpen()){
+    closeSearchOverlay();
+  }
+});
 
 exportBtn.onclick = () => {
   settingsMenu.style.display = "none";
@@ -3180,6 +3605,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
   qs.forEach((q, idx) => {
     const row = app.appendChild(Object.assign(
       document.createElement("div"), { className:"question-row" }));
+    row.dataset.questionKey = qKey(disc, sub, q.label);
 
     /* Botão da questão (abre PDF) */
     // ─── Botão “stripe” com cor por exame ───
@@ -5052,20 +5478,37 @@ function showMicroSim(entry) {
   if(document.activeElement && document.activeElement.classList.contains('comment-edit')){
     document.activeElement.blur();
   }
+  if(pendingSearchFocus && pendingSearchFocus.disc === disc && pendingSearchFocus.sub === sub){
+    const match = pendingSearchFocus;
+    pendingSearchFocus = null;
+    requestAnimationFrame(() => focusQuestionFromSearch(match));
+  }
 }
 
 function openSummary(){                      // usa a disciplina/assunto atuais
-  const d = encodeURIComponent(currentDisc);
-  const s = encodeURIComponent(currentSub);
-  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=${s}`;   // carrega o resumo certo
-  summaryContainer.style.display = "flex";
+  if(!currentDisc || !currentSub) return;
+  openSummaryFor(currentDisc, currentSub);
 }
 function openDisciplineSummary(disc){        // resumo geral da disciplina
-  const d = encodeURIComponent(disc);
-  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=00`;
-  summaryContainer.style.display = "flex";
+  if(!disc) return;
+  openSummaryFor(disc, '00');
 }
-function closeSummary(){ summaryContainer.style.display = "none"; }
+function openSummaryFor(disc, sub){
+  if(!disc || !summaryFrame || !summaryContainer) return;
+  const d = encodeURIComponent(disc);
+  const effectiveSub = sub ?? '00';
+  const s = encodeURIComponent(effectiveSub);
+  summaryFrame.src = `Editor_de_Texto.html?disc=${d}&sub=${s}`;
+  summaryContainer.style.display = "flex";
+  setBodyScrollLocked(true);
+}
+function closeSummary(){
+  summaryContainer.style.display = "none";
+  const pdfOpen = pdfContainer && pdfContainer.style.display === 'flex';
+  if(!pdfOpen && !isSearchOverlayOpen()){
+    setBodyScrollLocked(false);
+  }
+}
 window.closeSummary = closeSummary;           // para o iframe conseguir fechar
 
 /* ===================================================================
@@ -5273,6 +5716,9 @@ importFile.addEventListener("change", ({ target }) => {
 
 /* Botão Voltar → decide se volta à lista de assuntos, trilha ou menu */
 backBtn.onclick = () => {
+  if(tryRestoreSearchOverlay()){
+    return;
+  }
   if(currentExam){
     if(trailReturn){
       const d=trailReturn;
