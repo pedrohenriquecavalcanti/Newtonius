@@ -237,6 +237,9 @@ const ALL_SUB = '__all__';
 const UNCLASSIFIED_SUBJECT_CODE = '__sem_assunto__';
 
 const D1_DISCIPLINES = ['Linguagens','História e Filosofia','Geografia e Sociologia','Redação','Sem Assunto (Linguagens)','Sem Assunto (Humanas)'];
+const D1_DISPLAY_DISCIPLINES = D1_DISCIPLINES.filter(
+  disc => !disc.startsWith('Sem Assunto')
+);
 
 const DISCIPLINES_BY_MODE = {
   lin: ['Linguagens', 'Redação', 'Sem Assunto (Linguagens)'],
@@ -1671,7 +1674,7 @@ function showMenu () {
     document.createElement("div"), { className: "metacog-lines" }));
 
   const discList = ["Biologia","Química","Física","Matemática"];
-  if(d1Enabled) discList.push(...D1_DISCIPLINES);
+  if(d1Enabled) discList.push(...D1_DISPLAY_DISCIPLINES);
   for (const disc of discList) {
     const line = lines.appendChild(Object.assign(
       document.createElement("div"), { className: "disc-line" }));
