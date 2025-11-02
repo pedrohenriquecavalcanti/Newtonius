@@ -284,6 +284,7 @@ let reviewSettingsBtn = null;
 let reviewSettingsMenu = null;
 
 let postReviewMode = localStorage.getItem(REVIEW_MODE_STORAGE_KEY) === '1';
+let postReviewModeRestore = null;
 
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
@@ -1611,6 +1612,18 @@ function showMenu () {
   currentExam=null;
   currentView = 'home';
   currentMicroSimEntry = null;
+  if (postReviewModeRestore !== null) {
+    if (postReviewMode !== postReviewModeRestore) {
+      postReviewMode = postReviewModeRestore;
+      if (postReviewMode) {
+        localStorage.setItem(REVIEW_MODE_STORAGE_KEY, '1');
+      } else {
+        localStorage.removeItem(REVIEW_MODE_STORAGE_KEY);
+      }
+    }
+    updateReviewModeButton();
+    postReviewModeRestore = null;
+  }
   /* 1 ▸ devolve o xpModal para <body> antes que clear() o remova        */
   const xpModalEl = document.getElementById('xpModal');
   if (xpModalEl && xpModalEl.parentElement !== document.body) {
@@ -3001,6 +3014,9 @@ function showExam(exam){
 
 
 function showNatReview(filter=null){
+  if (currentView !== 'review' && postReviewModeRestore === null) {
+    postReviewModeRestore = postReviewMode;
+  }
   if (postReviewMode) {
     postReviewMode = false;
     localStorage.removeItem(REVIEW_MODE_STORAGE_KEY);
