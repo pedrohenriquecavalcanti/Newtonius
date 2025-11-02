@@ -3001,6 +3001,11 @@ function showExam(exam){
 
 
 function showNatReview(filter=null){
+  if (postReviewMode) {
+    postReviewMode = false;
+    localStorage.removeItem(REVIEW_MODE_STORAGE_KEY);
+    updateReviewModeButton();
+  }
   if(filter){
     setNatReviewState(filter);
   }
