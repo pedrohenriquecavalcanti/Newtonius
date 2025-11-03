@@ -1034,14 +1034,52 @@ function buildExamMap(list, mode='nat'){
       }
     });
   });
-  for (const ex of order) {
+  const normalizedOrder = reorderExamsByFamily(order);
+  for (const ex of normalizedOrder) {
     exams[ex].sort((a,b)=>{
       const na = parseInt(a.q.label.match(/Q-(\d+)/)[1],10);
       const nb = parseInt(b.q.label.match(/Q-(\d+)/)[1],10);
       return na-nb;
     });
   }
-  return { map: exams, order };
+  return { map: exams, order: normalizedOrder };
+}
+
+function reorderExamsByFamily(order){
+  if(!Array.isArray(order) || order.length === 0) return [];
+  const groups = new Map();
+  const familyOrder = [];
+  order.forEach(exam => {
+    const family = getExamFamily(exam);
+    if(!groups.has(family)){
+      groups.set(family, []);
+      familyOrder.push(family);
+    }
+    groups.get(family).push(exam);
+  });
+  const normalized = [];
+  familyOrder.forEach(family => {
+    const exams = groups.get(family);
+    if(Array.isArray(exams)){
+      exams.forEach(exam => normalized.push(exam));
+    }
+  });
+  return normalized;
+}
+
+function getExamFamily(exam){
+  if(typeof exam !== 'string') return '';
+  const trimmed = exam.trim();
+  if(!trimmed) return '';
+  const hyphenIdx = trimmed.indexOf('-');
+  if(hyphenIdx > 0){
+    return trimmed.slice(0, hyphenIdx).toUpperCase();
+  }
+  const spaceIdx = trimmed.indexOf(' ');
+  if(spaceIdx > 0){
+    return trimmed.slice(0, spaceIdx).toUpperCase();
+  }
+  return trimmed.toUpperCase();
 }
 
 function getExamCategory(disc){
