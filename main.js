@@ -255,6 +255,10 @@ const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
   mat: 'Sem Assunto (Matemática)'
 };
 
+const EXAM_NAME_COLLATOR = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
+  ? new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' })
+  : null;
+
 function getReviewDisciplineOptions(mode){
   const list = DISCIPLINES_BY_MODE[mode] || [];
   const unclassified = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
@@ -1034,6 +1038,13 @@ function buildExamMap(list, mode='nat'){
       }
     });
   });
+  if(order.length > 1){
+    if(EXAM_NAME_COLLATOR){
+      order.sort((a,b)=>EXAM_NAME_COLLATOR.compare(a,b));
+    }else{
+      order.sort((a,b)=>a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }
+  }
   for (const ex of order) {
     exams[ex].sort((a,b)=>{
       const na = parseInt(a.q.label.match(/Q-(\d+)/)[1],10);
