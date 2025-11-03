@@ -903,20 +903,30 @@ let pdfStylusDrawingActive = false;
 let pdfPersistListenersAttached = false;
 
 /* Constrói a estrutura { Disciplina → Assunto → [Questões] }        */
-const questoesData = buildBancoQuestoes([
+const classifiedQuestoes = [
   ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || []),
-  ...(window.listaQuestoesNaoClassificadas || [])
-]);
-const allQuestoes = [
-  ...(window.listaQuestoes || []),
-  ...(window.listaQuestoesD1 || []),
+  ...(window.listaQuestoesD1 || [])
+];
+const unclassifiedQuestoes = [
   ...(window.listaQuestoesNaoClassificadas || [])
 ];
-const { map: examsDataLin, order: examOrderLin } = buildExamMap(allQuestoes, 'lin');
-const { map: examsDataHum, order: examOrderHum } = buildExamMap(allQuestoes, 'hum');
-const { map: examsDataNat, order: examOrderNat } = buildExamMap(allQuestoes, 'nat');
-const { map: examsDataMat, order: examOrderMat } = buildExamMap(allQuestoes, 'mat');
+const questoesData = buildBancoQuestoes([
+  ...classifiedQuestoes,
+  ...unclassifiedQuestoes
+]);
+
+function buildCompleteExamData(mode) {
+  const base = buildExamMap(classifiedQuestoes, mode);
+  if (unclassifiedQuestoes.length) {
+    addQuestionsToExamMap(base, unclassifiedQuestoes, mode);
+  }
+  return base;
+}
+
+const { map: examsDataLin, order: examOrderLin } = buildCompleteExamData('lin');
+const { map: examsDataHum, order: examOrderHum } = buildCompleteExamData('hum');
+const { map: examsDataNat, order: examOrderNat } = buildCompleteExamData('nat');
+const { map: examsDataMat, order: examOrderMat } = buildCompleteExamData('mat');
 
 const examsDataByMode = {
   lin: examsDataLin,
@@ -984,11 +994,25 @@ function getModeFromQuestionNumber(number){
   return null;
 }
 
+function addQuestionsToExamMap(target, list, mode = 'nat') {
+  if (!target || !list || !list.length) {
+    return target;
+  }
+  return fillExamMap(target, list, mode, EXAM_NAME_COLLATOR);
+}
+
 function buildExamMap(list, mode='nat'){
-  const exams = {};
-  const order = [];
+  const target = { map: {}, order: [] };
+  return fillExamMap(target, list, mode, null);
+}
+
+function fillExamMap(target, list, mode='nat', collator=null){
+  const exams = target.map;
+  const order = target.order;
   const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
-  list.forEach(item => {
+  const seen = new Set(order);
+  const touched = new Set();
+  (list || []).forEach(item => {
     if(!item || !item.label) return;
     const m = item.label.match(/^(.*)-Q-(\d+)/);
     if (!m) return;
@@ -1021,7 +1045,11 @@ function buildExamMap(list, mode='nat'){
     }
     if (!exams[exam]) {
       exams[exam] = [];
-      order.push(exam);
+    }
+    if (!seen.has(exam)) {
+      const insertIndex = findExamInsertIndex(order, exam, collator);
+      order.splice(insertIndex, 0, exam);
+      seen.add(exam);
     }
     exams[exam].push({
       disc,
@@ -1037,22 +1065,33 @@ function buildExamMap(list, mode='nat'){
         unclassified: sub === UNCLASSIFIED_SUBJECT_CODE
       }
     });
+    touched.add(exam);
   });
-  if(order.length > 1){
-    if(EXAM_NAME_COLLATOR){
-      order.sort((a,b)=>EXAM_NAME_COLLATOR.compare(a,b));
-    }else{
-      order.sort((a,b)=>a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  touched.forEach(ex => {
+    exams[ex].sort(compareQuestionsByNumber);
+  });
+  return target;
+}
+
+function findExamInsertIndex(order, exam, collator) {
+  if (!collator) {
+    return order.length;
+  }
+  for (let i = 0; i < order.length; i += 1) {
+    if (collator.compare(exam, order[i]) < 0) {
+      return i;
     }
   }
-  for (const ex of order) {
-    exams[ex].sort((a,b)=>{
-      const na = parseInt(a.q.label.match(/Q-(\d+)/)[1],10);
-      const nb = parseInt(b.q.label.match(/Q-(\d+)/)[1],10);
-      return na-nb;
-    });
-  }
-  return { map: exams, order };
+  return order.length;
+}
+
+function compareQuestionsByNumber(a, b) {
+  const extract = entry => {
+    const match = entry?.q?.label ? entry.q.label.match(/Q-(\d+)/) : null;
+    const value = match ? parseInt(match[1], 10) : NaN;
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  };
+  return extract(a) - extract(b);
 }
 
 function getExamCategory(disc){
