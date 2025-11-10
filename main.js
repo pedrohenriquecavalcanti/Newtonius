@@ -3899,6 +3899,22 @@ editDiv.addEventListener('click', function(e) {
 /* ================================================================
    6. VISUALIZAÇÃO DE PDF (PDF.js)
    ============================================================== */
+function isLikelyMobilePhone() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const maxTouchPoints = Number(navigator.maxTouchPoints || 0);
+  const isIpad = /\b(iPad)\b/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+  if (isIpad) return false;
+  if (/\bTablet\b/i.test(ua)) return false;
+  if (/\bAndroid\b/i.test(ua) && !/\bMobile\b/i.test(ua)) return false;
+  return /\b(iPhone|iPod)\b/i.test(ua) || /\bMobile\b/i.test(ua);
+}
+
+function shouldForcePdfPenMode() {
+  return !isLikelyMobilePhone();
+}
+
 function clearPdfViewerContent() {
   cancelPdfAutosave();
   pdfDirtyLayers.clear();
@@ -5190,12 +5206,16 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   const sortedPages = pagesToRender.slice().sort((a, b) => a - b);
   const desiredPage = sortedPages.length ? sortedPages[0] : null;
   const wasHidden = pdfContainer.style.display !== "flex";
+  const forcePenMode = shouldForcePdfPenMode();
   cleanupStalePdfDrawings();
   ensurePdfPersistenceHandlers();
   pdfContainer.style.display = "flex";
   setBodyScrollLocked(true);
+  setPdfIpadMode(true, { forcePen: forcePenMode && wasHidden });
   if (wasHidden) {
-    setPdfIpadMode(true, { forcePen: true });
+    if (!forcePenMode) {
+      setPdfDrawingTool('hand');
+    }
     pdfContainer.scrollTop = 0;
     setPdfPageMenuOpen(false);
   } else {
