@@ -221,6 +221,7 @@ button:hover { filter: brightness(1.2); }
 
 /* --- Botão da disciplina (com cor própria) --- */
 .disc-btn {
+  position: relative;
   width: 200px;
   height: 33px;
   font-size: 16px;
@@ -230,6 +231,19 @@ button:hover { filter: brightness(1.2); }
   align-items: center;         /* centra o conteúdo na altura          */
   justify-content: center;     /* já centraliza horizontalmente também */
   white-space: nowrap;
+}
+.disc-btn-label{
+  display:block;
+}
+.disc-btn-stats{
+  position:absolute;
+  right:6px;
+  bottom:3px;
+  font-size:8px;
+  line-height:1;
+  font-weight:700;
+  opacity:.82;
+  pointer-events:none;
 }
 .disc-btn.biologia             { background: var(--c-bio); }
 .disc-btn.quimica              { background: var(--c-qui); }

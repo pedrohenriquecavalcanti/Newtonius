@@ -516,20 +516,6 @@ function renderReviewSettingsMenu() {
   divider.className = 'review-menu-divider';
   reviewSettingsMenu.appendChild(divider);
 
-  const hiddenBtn = document.createElement('button');
-  hiddenBtn.className = 'review-menu-option review-menu-toggle';
-  hiddenBtn.type = 'button';
-  const showHidden = !!natReviewState.showHidden;
-  hiddenBtn.textContent = showHidden ? 'Ocultar' : 'Exibir Ocultas';
-  if (showHidden) hiddenBtn.classList.add('active');
-  hiddenBtn.addEventListener('click', () => {
-    setNatReviewState({ showHidden: !natReviewState.showHidden });
-    reviewSettingsMenu.style.display = 'none';
-    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
-    showNatReview();
-  });
-  reviewSettingsMenu.appendChild(hiddenBtn);
-
   const pendingBtn = document.createElement('button');
   pendingBtn.className = 'review-menu-option review-menu-toggle';
   pendingBtn.type = 'button';
@@ -1129,7 +1115,7 @@ function clearQuestionDataFromLocalStorage() {
   const keysToRemove = [];
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i);
-    if (!isHandwritingStorageKey(key)) {
+    if (!isHandwritingStorageKey(key) && !key.startsWith('summary_')) {
       keysToRemove.push(key);
     }
   }
@@ -1665,6 +1651,24 @@ if (typeof sessionStorage !== 'undefined') {
   }
 }
 /* ---------------- MENU PRINCIPAL ---------------- */
+function getDisciplineQuestionStats(disc) {
+  const subjects = questoesData[disc] || {};
+  let correct = 0;
+  let answered = 0;
+  let total = 0;
+
+  Object.entries(subjects).forEach(([sub, questions]) => {
+    questions.forEach((q) => {
+      total += 1;
+      const state = getEffectiveQuestionState(disc, sub, q.label);
+      if (state === 1 || state === 2) answered += 1;
+      if (state === 1) correct += 1;
+    });
+  });
+
+  return { correct, answered, total };
+}
+
 function showMenu () {
   examListOpen=false;
   currentExam=null;
@@ -1736,7 +1740,6 @@ function showMenu () {
     const btn = Object.assign(
       document.createElement("button"), {
         className: `disc-btn ${discClasses[disc]}`,
-        textContent: disc,
         onclick: () => {
           if(disc === 'Redação') {
             currentDisc = disc;
@@ -1747,6 +1750,15 @@ function showMenu () {
           }
         },
       });
+    btn.appendChild(Object.assign(
+      document.createElement('span'),
+      { className: 'disc-btn-label', textContent: disc }
+    ));
+    const { correct, answered, total } = getDisciplineQuestionStats(disc);
+    btn.appendChild(Object.assign(
+      document.createElement('span'),
+      { className: 'disc-btn-stats', textContent: `${correct}/${answered}[${total}]` }
+    ));
     if(disc === 'Geografia e Sociologia') btn.style.padding='0 4px';
     line.appendChild(btn);
 
@@ -2864,19 +2876,13 @@ function collectNatReviewItems(filter=null){
       const key = qKey(disc,sub,q.label);
       const state = getStoredQuestionState(disc, sub, q.label);
       const effectiveState = getEffectiveStateFromKey(key, state);
-      const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-      const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
       const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-      const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
-      const isHidden = localStorage.getItem(hiddenKey) === '1';
-      const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
-      const isSoon = localStorage.getItem(soonKey) === '1';
       if(effectiveState === 2){
-        combined.push({exam,mode,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+        combined.push({exam,mode,disc,sub,q,type:'wrong',favorite:isFavorite});
       }
       if(isEnem && effectiveState === 0){
-        combined.push({exam,mode,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
+        combined.push({exam,mode,disc,sub,q,type:'pending',favorite:isFavorite});
       }
     });
     visited.add(exam);
@@ -2929,8 +2935,7 @@ function countNatReviewItems(filter=null){
   const combined = collectNatReviewItems(effectiveFilter);
   const showPending = natReviewState.showPending;
   const filteredItems = combined.filter(item => showPending || item.type !== 'pending');
-  const visibleItems = filteredItems.filter(item => !item.hidden);
-  const snapshot = computeNatReviewSnapshot(visibleItems);
+  const snapshot = computeNatReviewSnapshot(filteredItems);
   return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
@@ -3107,7 +3112,7 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = 'nat', disc, sub, showHidden, showPending } = natReviewState;
+  const { mode: reviewMode = 'nat', disc, sub, showPending } = natReviewState;
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
     ? { mode: reviewMode }
@@ -3162,11 +3167,7 @@ function showNatReview(filter=null){
       if (emptyMsg.isConnected) emptyMsg.remove();
     } else {
       let message = baseEmptyText;
-      const hiddenSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => item.hidden && !item.favorite));
-      const visibleSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => !item.hidden || item.favorite));
-      if (!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0) {
-        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir Ocultas”.';
-      } else if (pendingFilteredOut) {
+      if (pendingFilteredOut) {
         message = 'Ative “Exibir Não Feitas” para ver as questões pendentes.';
       }
       emptyMsg.textContent = message;
@@ -3194,83 +3195,24 @@ function showNatReview(filter=null){
     };
     if (!qualifies()) return;
 
-    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-    const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
     const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-    const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
 
-    let isHidden = !!item.hidden;
-    let autoHidden = localStorage.getItem(autoHiddenKey) === '1';
     let isFavorite = !!item.favorite;
-    let isSoon = !!item.soon;
 
     const reviewKey = `natReview_${key}`;
     let reviewState = +localStorage.getItem(reviewKey) || 0;
 
-    const syncWithReviewState = ({ deferAutoHide = false } = {}) => {
-      const shouldDefer = deferAutoHide || natReviewDeferredAutoHide.has(key);
-      if (reviewState === 1) {
-        if (isFavorite) {
-          natReviewDeferredAutoHide.delete(key);
-          if (isHidden) {
-            isHidden = false;
-            localStorage.removeItem(hiddenKey);
-          }
-          if (autoHidden) {
-            autoHidden = false;
-            localStorage.removeItem(autoHiddenKey);
-          }
-        } else {
-          if (!autoHidden) {
-            autoHidden = true;
-          }
-          localStorage.setItem(autoHiddenKey, '1');
-          if (shouldDefer) {
-            natReviewDeferredAutoHide.add(key);
-            if (isHidden) {
-              isHidden = false;
-              localStorage.removeItem(hiddenKey);
-            }
-          } else {
-            natReviewDeferredAutoHide.delete(key);
-            if (!isHidden) {
-              isHidden = true;
-            }
-            localStorage.setItem(hiddenKey, '1');
-          }
-        }
-      } else {
-        if (natReviewDeferredAutoHide.has(key)) {
-          natReviewDeferredAutoHide.delete(key);
-        }
-        if (autoHidden) {
-          autoHidden = false;
-          localStorage.removeItem(autoHiddenKey);
-          if (isHidden) {
-            isHidden = false;
-            localStorage.removeItem(hiddenKey);
-          }
-        }
-      }
-      item.hidden = isHidden;
-      item.autoHidden = autoHidden;
+    const syncWithReviewState = () => {
+      item.favorite = isFavorite;
     };
 
     syncWithReviewState();
 
-    if (!natReviewState.showHidden && isHidden && !isFavorite) {
-      return;
-    }
-
-    item.hidden = isHidden;
     item.favorite = isFavorite;
-    item.soon = isSoon;
 
     const row = document.createElement('div');
     row.className = 'question-row';
-    if (isHidden) row.classList.add('review-hidden');
     if (isFavorite) row.classList.add('review-favorite');
-    if (isSoon) row.classList.add('review-soon');
 
     const qBtn = document.createElement('button');
     qBtn.classList.add('btn', 'question-btn', 'two-line-btn', 'question-btn--with-menu');
@@ -3318,15 +3260,7 @@ function showNatReview(filter=null){
     const favoriteOption = document.createElement('button');
     favoriteOption.type = 'button';
     favoriteOption.className = 'question-action-option';
-    const soonOption = document.createElement('button');
-    soonOption.type = 'button';
-    soonOption.className = 'question-action-option';
-    const hideOption = document.createElement('button');
-    hideOption.type = 'button';
-    hideOption.className = 'question-action-option';
     actionMenu.appendChild(favoriteOption);
-    actionMenu.appendChild(soonOption);
-    actionMenu.appendChild(hideOption);
     row.appendChild(actionMenu);
 
     const controls = document.createElement('div');
@@ -3383,11 +3317,7 @@ function showNatReview(filter=null){
         localStorage.setItem(reviewKey, reviewState);
       }
       paintReview();
-      syncWithReviewState({ deferAutoHide: reviewState === 1 });
-      paintHide();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
-        row.remove();
-      }
+      syncWithReviewState();
       ensureEmptyState();
       refreshStats();
     };
@@ -3395,28 +3325,14 @@ function showNatReview(filter=null){
     controls.appendChild(reviewBox);
 
     const updateMenuToggle = () => {
-      const hasState = isHidden || isFavorite || isSoon;
+      const hasState = isFavorite;
       menuToggle.classList.toggle('menu-active', hasState);
-    };
-
-    const paintHide = () => {
-      hideOption.textContent = isHidden ? 'Exibir' : 'Ocultar';
-      hideOption.classList.toggle('active', isHidden);
-      row.classList.toggle('review-hidden', isHidden);
-      updateMenuToggle();
     };
 
     const paintFavorite = () => {
       favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
       favoriteOption.classList.toggle('active', isFavorite);
       row.classList.toggle('review-favorite', isFavorite);
-      updateMenuToggle();
-    };
-
-    const paintSoon = () => {
-      soonOption.textContent = isSoon ? 'Remover Em Breve' : 'Em Breve';
-      soonOption.classList.toggle('active', isSoon);
-      row.classList.toggle('review-soon', isSoon);
       updateMenuToggle();
     };
 
@@ -3475,57 +3391,17 @@ function showNatReview(filter=null){
       }
       paintFavorite();
       syncWithReviewState();
-      paintHide();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
-        row.remove();
-      }
       ensureEmptyState();
       refreshStats();
       closeMenu();
     });
 
-    soonOption.addEventListener('click', e => {
-      e.preventDefault();
-      isSoon = !isSoon;
-      item.soon = isSoon;
-      if (isSoon) {
-        localStorage.setItem(soonKey, '1');
-      } else {
-        localStorage.removeItem(soonKey);
-      }
-      paintSoon();
-      closeMenu();
-    });
-
-    hideOption.addEventListener('click', e => {
-      e.preventDefault();
-      isHidden = !isHidden;
-      item.hidden = isHidden;
-      if (isHidden) {
-        localStorage.setItem(hiddenKey, '1');
-      } else {
-        localStorage.removeItem(hiddenKey);
-      }
-      autoHidden = false;
-      localStorage.removeItem(autoHiddenKey);
-      natReviewDeferredAutoHide.delete(key);
-      paintHide();
-      syncWithReviewState();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
-        row.remove();
-      }
-      ensureEmptyState();
-      refreshStats();
-      closeMenu();
-    });
 
     qBtn.addEventListener('click', () => {
       if (menuOpen) closeMenu();
     });
 
     paintFavorite();
-    paintSoon();
-    paintHide();
 
     row.appendChild(controls);
 
