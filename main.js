@@ -1781,17 +1781,32 @@ function showMenu () {
   toggleSettingsVisibility(true);   // mostra engrenagem
 }
 
+function closeProgrammerMenu() {
+  if (!programmerMenu || !programmerBtn) return;
+  programmerMenu.style.display = 'none';
+  programmerBtn.setAttribute('aria-expanded', 'false');
+}
+
+function closeSettingsMenu() {
+  settingsMenu.style.display = "none";
+  closeProgrammerMenu();
+}
+
 // Abre/fecha ao clicar na engrenagem
 settingsBtn.onclick = e => {
   e.stopPropagation();   // evita fechar imediatamente
-  settingsMenu.style.display =
-    settingsMenu.style.display === "flex" ? "none" : "flex";
+  if (settingsMenu.style.display === "flex") {
+    closeSettingsMenu();
+  } else {
+    closeProgrammerMenu();
+    settingsMenu.style.display = "flex";
+  }
 };
 
 // Fecha se clicar fora do menu
 document.addEventListener("click", e=>{
   if(!settingsMenu.contains(e.target) && e.target!==settingsBtn){
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
   }
   if(
     reviewSettingsMenu && reviewSettingsBtn &&
@@ -1806,7 +1821,7 @@ document.addEventListener("click", e=>{
 function toggleSettingsVisibility(showHome){
   settingsBtn.style.display  = showHome ? 'block' : 'none';
   /* se saiu da home, fecha o menu para não ficar solto */
-  if (!showHome) settingsMenu.style.display = 'none';
+  if (!showHome) closeSettingsMenu();
   toggleReviewSettingsVisibility(false);
 }
 
@@ -2086,7 +2101,7 @@ if (programmerBtn && programmerMenu) {
 
 if (clearAllBtn) {
   clearAllBtn.onclick = async () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     const confirmed = confirm(
       'Deseja apagar tudo? Isso remove questões, comentários, revisões, resumos, manuscritos e cache. Essa ação não pode ser desfeita.'
     );
@@ -2116,7 +2131,7 @@ if (clearAllBtn) {
 
 if (clearQuestionsBtn) {
   clearQuestionsBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     const confirmed = confirm(
       'Deseja apagar todos os dados de questões, comentários e revisão? Manuscritos e cache não serão apagados por esta ação.'
     );
@@ -2130,7 +2145,7 @@ if (clearQuestionsBtn) {
 
 if (clearManuscriptsBtn) {
   clearManuscriptsBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     const confirmed = confirm(
       'Deseja apagar todos os manuscritos salvos nos PDFs? Essa ação não pode ser desfeita.'
     );
@@ -2157,7 +2172,7 @@ if (clearManuscriptsBtn) {
 
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     const confirmed = confirm(
       "Deseja limpar o cache?\nIsso faz o navegador baixar a versão mais recente sem apagar seu progresso."
     );

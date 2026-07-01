@@ -223,7 +223,7 @@ button:hover { filter: brightness(1.2); }
 .disc-btn {
   position: relative;
   width: 200px;
-  height: 33px;
+  height: 40px;
   font-size: 16px;
   color: #fff;
   font-weight: bold;
