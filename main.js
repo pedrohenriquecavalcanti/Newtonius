@@ -256,19 +256,35 @@ const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
 };
 
 function getReviewDisciplineOptions(mode){
-  if (mode === REVIEW_ALL_MODE) {
-    const all = Object.keys(DISCIPLINES_BY_MODE).flatMap(key => getReviewDisciplineOptions(key));
-    return [...new Set(all)];
-  }
   const list = DISCIPLINES_BY_MODE[mode] || [];
   const unclassified = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
-  return unclassified ? list.filter(disc => disc !== unclassified) : list.slice();
+  return list.filter(disc => disc !== unclassified && disc !== 'Redação');
 }
 
-const REVIEW_ALL_MODE = 'all';
-const REVIEW_MODE_LABELS = { all: 'Todas', lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
+const REVIEW_DEFAULT_MODES = ['nat', 'mat'];
+const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
 const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
 const REVIEW_ALL_DISC = '__review_all__';
+
+function getReviewDisciplinesForModes(modes = REVIEW_DEFAULT_MODES) {
+  return [...new Set(modes.flatMap(mode => getReviewDisciplineOptions(mode)))];
+}
+
+function normalizeReviewModes(modes) {
+  const normalized = Array.isArray(modes)
+    ? modes.filter(mode => REVIEW_MODES.includes(mode))
+    : [];
+  return [...new Set(normalized)];
+}
+
+function normalizeReviewDiscs(discs, modes) {
+  const allowed = new Set(getReviewDisciplinesForModes(modes));
+  const normalized = Array.isArray(discs)
+    ? discs.filter(disc => allowed.has(disc))
+    : [];
+  return [...new Set(normalized)];
+}
+
 const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
 const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
@@ -279,7 +295,8 @@ const natReviewDeferredAutoHide = new Set();
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
 
 const DEFAULT_NAT_REVIEW_STATE = {
-  mode: REVIEW_ALL_MODE,
+  modes: REVIEW_DEFAULT_MODES.slice(),
+  discs: getReviewDisciplinesForModes(REVIEW_DEFAULT_MODES),
   disc: REVIEW_ALL_DISC,
   sub: null,
   kind: 'wrong',
@@ -368,8 +385,16 @@ const searchCloseBtn = document.getElementById("searchCloseBtn");
 
 function setNatReviewState(partial = {}) {
   const next = { ...natReviewState };
-  if (partial.mode !== undefined && partial.mode !== next.mode) {
-    next.mode = partial.mode;
+  if (partial.modes !== undefined || partial.mode !== undefined) {
+    const requestedModes = partial.modes !== undefined ? partial.modes : [partial.mode];
+    next.modes = normalizeReviewModes(requestedModes);
+    next.discs = normalizeReviewDiscs(partial.discs !== undefined ? partial.discs : next.discs, next.modes);
+    next.disc = REVIEW_ALL_DISC;
+    next.sub = null;
+  }
+  if (partial.discs !== undefined) {
+    const modes = normalizeReviewModes(next.modes);
+    next.discs = normalizeReviewDiscs(partial.discs, modes);
     next.disc = REVIEW_ALL_DISC;
     next.sub = null;
   }
@@ -377,8 +402,15 @@ function setNatReviewState(partial = {}) {
     next.disc = partial.disc;
     if (partial.disc === REVIEW_ALL_DISC) {
       next.sub = null;
-    } else if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
-      next.sub = null;
+    } else {
+      const modes = normalizeReviewModes(next.modes);
+      const allowed = new Set(getReviewDisciplinesForModes(modes));
+      if (allowed.has(partial.disc) && !next.discs.includes(partial.disc)) {
+        next.discs = [...next.discs, partial.disc];
+      }
+      if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
+        next.sub = null;
+      }
     }
   }
   if (partial.sub !== undefined) {
@@ -390,9 +422,8 @@ function setNatReviewState(partial = {}) {
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
-  if (!next.mode) {
-    next.mode = REVIEW_ALL_MODE;
-  }
+  next.modes = normalizeReviewModes(next.modes);
+  next.discs = normalizeReviewDiscs(next.discs, next.modes);
   natReviewState = next;
   localStorage.setItem(
     NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
@@ -402,7 +433,13 @@ function setNatReviewState(partial = {}) {
 }
 
 function resetNatReviewState(kind = 'wrong') {
-  setNatReviewState({ mode: REVIEW_ALL_MODE, disc: REVIEW_ALL_DISC, sub: null, kind });
+  setNatReviewState({
+    modes: REVIEW_DEFAULT_MODES.slice(),
+    discs: getReviewDisciplinesForModes(REVIEW_DEFAULT_MODES),
+    disc: REVIEW_ALL_DISC,
+    sub: null,
+    kind
+  });
 }
 
 function ensureReviewSettingsUI() {
@@ -469,17 +506,19 @@ function renderReviewSettingsMenu() {
 
   const areaWrap = document.createElement('div');
   areaWrap.className = 'review-menu-options';
-  const currentMode = natReviewState.mode || REVIEW_ALL_MODE;
+  const currentModes = normalizeReviewModes(natReviewState.modes);
   REVIEW_MODES.forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
     btn.textContent = REVIEW_MODE_LABELS[mode] || mode;
-    if (mode === currentMode) btn.classList.add('active');
+    if (currentModes.includes(mode)) btn.classList.add('active');
     btn.addEventListener('click', () => {
-      setNatReviewState({ mode, disc: REVIEW_ALL_DISC, sub: null });
-      reviewSettingsMenu.style.display = 'none';
-      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      const nextModes = currentModes.includes(mode)
+        ? currentModes.filter(item => item !== mode)
+        : [...currentModes, mode];
+      const nextDiscs = getReviewDisciplinesForModes(nextModes);
+      setNatReviewState({ modes: nextModes, discs: nextDiscs });
       showNatReview();
     });
     areaWrap.appendChild(btn);
@@ -493,21 +532,19 @@ function renderReviewSettingsMenu() {
 
   const optionsWrap = document.createElement('div');
   optionsWrap.className = 'review-menu-options';
-  const areaLabel = REVIEW_MODE_LABELS[currentMode] || 'Área';
-  const disciplineOptions = [REVIEW_ALL_DISC, ...getReviewDisciplineOptions(currentMode)];
+  const disciplineOptions = getReviewDisciplinesForModes(currentModes);
+  const selectedDisciplines = normalizeReviewDiscs(natReviewState.discs, currentModes);
   disciplineOptions.forEach(value => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
-    btn.textContent = value === REVIEW_ALL_DISC ? 'Todas' : value;
-    const isSelected =
-      (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
-      natReviewState.disc === value;
-    if (isSelected) btn.classList.add('active');
+    btn.textContent = value;
+    if (selectedDisciplines.includes(value)) btn.classList.add('active');
     btn.addEventListener('click', () => {
-      setNatReviewState({ disc: value, sub: null });
-      reviewSettingsMenu.style.display = 'none';
-      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+      const nextDiscs = selectedDisciplines.includes(value)
+        ? selectedDisciplines.filter(item => item !== value)
+        : [...selectedDisciplines, value];
+      setNatReviewState({ discs: nextDiscs });
       showNatReview();
     });
     optionsWrap.appendChild(btn);
@@ -2500,7 +2537,7 @@ function openPicker(callback){
       pickerReviewDisc.style.display='';
       pickerSub.style.display='';
       pickerReviewDisc.innerHTML='';
-      const reviewMode = natReviewState.mode || 'nat';
+      const reviewMode = normalizeReviewModes(natReviewState.modes)[0] || 'nat';
       const reviewAreaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Área';
       const optAllDisc=document.createElement('option');
       optAllDisc.value=REVIEW_ALL_DISC;
@@ -2732,7 +2769,7 @@ function renderTrailDay(day,expand){
         const isAllDisc = s.disc === REVIEW_ALL_DISC;
         const hasAll = isAllDisc || s.sub === ALL_SUB;
         const labelParts = ['Revisão'];
-        const mode = s.mode || natReviewState.mode || 'nat';
+        const mode = s.mode || normalizeReviewModes(natReviewState.modes)[0] || 'nat';
         const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
         if(isAllDisc){
           labelParts.push(areaLabel);
@@ -2984,14 +3021,14 @@ function renderExamSummary(){
 }
 
 function collectNatReviewItems(filter=null){
-  const mode = filter?.mode || natReviewState.mode || REVIEW_ALL_MODE;
+  const modes = normalizeReviewModes(filter?.modes || (filter?.mode ? [filter.mode] : natReviewState.modes));
+  const selectedDisciplines = new Set(normalizeReviewDiscs(filter?.discs || natReviewState.discs, modes));
   const kind = filter?.kind || natReviewState.kind || 'wrong';
   const normalizedFilter = (() => {
     if (!filter) return null;
     const { disc, sub } = filter.disc === REVIEW_ALL_DISC ? { disc: null, sub: null } : filter;
     return { disc: disc ?? null, sub: sub ?? null };
   })();
-  const modes = mode === REVIEW_ALL_MODE ? Object.keys(DISCIPLINES_BY_MODE) : [mode];
   const combined = [];
   modes.forEach(currentMode => {
     const areaData = examsDataByMode[currentMode] || {};
@@ -3000,6 +3037,7 @@ function collectNatReviewItems(filter=null){
     const allowed = new Set(DISCIPLINES_BY_MODE[currentMode] || []);
     const matchesFilter = (disc, sub) => {
       if(!allowed.has(disc)) return false;
+      if(!selectedDisciplines.has(disc)) return false;
       if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
       if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
       return true;
@@ -3232,23 +3270,27 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = REVIEW_ALL_MODE, disc, sub, kind: reviewKind = 'wrong' } = natReviewState;
+  const { disc, sub, kind: reviewKind = 'wrong' } = natReviewState;
+  const reviewModes = normalizeReviewModes(natReviewState.modes);
+  const reviewDiscs = normalizeReviewDiscs(natReviewState.discs, reviewModes);
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
-    ? { mode: reviewMode, kind: reviewKind }
-    : { mode: reviewMode, disc, sub, kind: reviewKind };
+    ? { modes: reviewModes, discs: reviewDiscs, kind: reviewKind }
+    : { modes: reviewModes, discs: reviewDiscs, disc, sub, kind: reviewKind };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
   examListOpen = false;
-  currentExamMode = reviewMode;
+  currentExamMode = reviewModes[0] || 'nat';
   currentView = 'review';
   currentMicroSimEntry = null;
   leaveHome();
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
   renderReviewSettingsMenu();
-  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Todas';
+  const areaLabel = reviewModes.length
+    ? reviewModes.map(mode => REVIEW_MODE_LABELS[mode] || mode).join(' + ')
+    : 'Nenhuma área';
   const reviewTitle = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
   let headerLabel = `${reviewTitle}: ${areaLabel}`;
   if(!isAll){
