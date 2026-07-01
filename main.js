@@ -340,6 +340,7 @@ const clearCacheBtn = document.getElementById("clearCacheBtn");
 const programmerBtn = document.getElementById("programmerBtn");
 const programmerMenu = document.getElementById("programmerMenu");
 const clearQuestionsBtn = document.getElementById("clearQuestionsBtn");
+const clearAllBtn = document.getElementById("clearAllBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
 const pickerReviewDisc = document.getElementById("pickerReviewDisc");
@@ -2066,12 +2067,50 @@ if (importHandBtn) {
 }
 
 
+
+async function clearBrowserCaches() {
+  if (!("caches" in window)) return;
+  const cacheNames = await caches.keys();
+  await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
+}
+
 if (programmerBtn && programmerMenu) {
   programmerBtn.onclick = (event) => {
     event.stopPropagation();
     const expanded = programmerMenu.style.display === 'flex';
     programmerMenu.style.display = expanded ? 'none' : 'flex';
     programmerBtn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  };
+}
+
+
+if (clearAllBtn) {
+  clearAllBtn.onclick = async () => {
+    settingsMenu.style.display = 'none';
+    const confirmed = confirm(
+      'Deseja apagar tudo? Isso remove questões, comentários, revisões, resumos, manuscritos e cache. Essa ação não pode ser desfeita.'
+    );
+    if (!confirmed) return;
+
+    try {
+      pdfDirtyLayers.clear();
+    } catch (err) {
+      console.warn('Falha ao limpar a fila de camadas do PDF antes da limpeza total.', err);
+    }
+
+    try {
+      localStorage.clear();
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
+      await clearBrowserCaches();
+    } catch (err) {
+      console.error('Erro ao limpar todos os dados', err);
+      alert('Não foi possível concluir a limpeza total. Verifique o console para mais detalhes.');
+      return;
+    }
+
+    window.location.reload();
   };
 }
 
@@ -2128,10 +2167,7 @@ if (clearCacheBtn) {
     clearCacheBtn.textContent = "Limpando...";
 
     try {
-      if ("caches" in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
-      }
+      await clearBrowserCaches();
 
       const resources = new Set();
       const addLocalResource = url => {
