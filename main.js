@@ -269,7 +269,6 @@ const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
 const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
-const NAT_REVIEW_SHOW_PENDING_STORAGE_KEY = 'natReviewShowPending';
 const natReviewDeferredAutoHide = new Set();
 
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
@@ -279,7 +278,6 @@ const DEFAULT_NAT_REVIEW_STATE = {
   disc: REVIEW_ALL_DISC,
   sub: null,
   showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
-  showPending: localStorage.getItem(NAT_REVIEW_SHOW_PENDING_STORAGE_KEY) === '1',
 };
 
 let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
@@ -382,9 +380,6 @@ function setNatReviewState(partial = {}) {
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
-  if (partial.showPending !== undefined) {
-    next.showPending = !!partial.showPending;
-  }
   if (!next.mode) {
     next.mode = 'nat';
   }
@@ -392,10 +387,6 @@ function setNatReviewState(partial = {}) {
   localStorage.setItem(
     NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
     natReviewState.showHidden ? '1' : '0'
-  );
-  localStorage.setItem(
-    NAT_REVIEW_SHOW_PENDING_STORAGE_KEY,
-    natReviewState.showPending ? '1' : '0'
   );
   return natReviewState;
 }
@@ -512,24 +503,6 @@ function renderReviewSettingsMenu() {
     optionsWrap.appendChild(btn);
   });
   reviewSettingsMenu.appendChild(optionsWrap);
-
-  const divider = document.createElement('div');
-  divider.className = 'review-menu-divider';
-  reviewSettingsMenu.appendChild(divider);
-
-  const pendingBtn = document.createElement('button');
-  pendingBtn.className = 'review-menu-option review-menu-toggle';
-  pendingBtn.type = 'button';
-  const showPending = !!natReviewState.showPending;
-  pendingBtn.textContent = showPending ? 'Ocultar Não Feitas' : 'Exibir Não Feitas';
-  if (showPending) pendingBtn.classList.add('active');
-  pendingBtn.addEventListener('click', () => {
-    setNatReviewState({ showPending: !natReviewState.showPending });
-    reviewSettingsMenu.style.display = 'none';
-    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
-    showNatReview();
-  });
-  reviewSettingsMenu.appendChild(pendingBtn);
 
   if (wasOpen) {
     reviewSettingsMenu.style.display = 'flex';
@@ -2919,9 +2892,6 @@ function collectNatReviewItems(filter=null){
   const combined = [];
   const pushQuestionsFromExam = exam => {
     const questions = areaData[exam] || [];
-    const upper = exam.toUpperCase();
-    const isEnem = upper.includes('ENEM');
-    const isSas  = upper.includes('SAS');
     questions.forEach(({disc,sub,q})=>{
       if(!matchesFilter(disc,sub)) return;
       const key = qKey(disc,sub,q.label);
@@ -2931,9 +2901,6 @@ function collectNatReviewItems(filter=null){
       const isFavorite = localStorage.getItem(favoriteKey) === '1';
       if(effectiveState === 2){
         combined.push({exam,mode,disc,sub,q,type:'wrong',favorite:isFavorite});
-      }
-      if(isEnem && effectiveState === 0){
-        combined.push({exam,mode,disc,sub,q,type:'pending',favorite:isFavorite});
       }
     });
     visited.add(exam);
@@ -2947,31 +2914,22 @@ function collectNatReviewItems(filter=null){
 
 function computeNatReviewSnapshot(items){
   if (typeof localStorage === 'undefined') {
-    return { wrongCount: 0, pendingCount: 0, totalCount: 0, reviewedCount: 0 };
+    return { wrongCount: 0, totalCount: 0, reviewedCount: 0 };
   }
   let wrongCount = 0;
-  let pendingCount = 0;
   let reviewedCount = 0;
   items.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const state = getStoredQuestionState(item.disc, item.sub, item.q.label);
-    const effectiveState = getEffectiveStateFromKey(key, state);
-    const isWrongItem = item.type === 'wrong';
-    const qualifies = isWrongItem ? effectiveState === 2 : effectiveState === 0;
-    if(!qualifies) return;
-    if(isWrongItem){
-      wrongCount += 1;
-    }else{
-      pendingCount += 1;
-    }
+    const effectiveState = getEffectiveQuestionState(item.disc, item.sub, item.q.label);
+    if(effectiveState !== 2) return;
+    wrongCount += 1;
     const reviewKey = `natReview_${key}`;
     const reviewState = +localStorage.getItem(reviewKey) || 0;
     if(reviewState > 0){
       reviewedCount += 1;
     }
   });
-  const totalCount = wrongCount + pendingCount;
-  return { wrongCount, pendingCount, totalCount, reviewedCount };
+  return { wrongCount, totalCount: wrongCount, reviewedCount };
 }
 
 function countNatReviewItems(filter=null){
@@ -2984,9 +2942,7 @@ function countNatReviewItems(filter=null){
     return next;
   })();
   const combined = collectNatReviewItems(effectiveFilter);
-  const showPending = natReviewState.showPending;
-  const filteredItems = combined.filter(item => showPending || item.type !== 'pending');
-  const snapshot = computeNatReviewSnapshot(filteredItems);
+  const snapshot = computeNatReviewSnapshot(combined);
   return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
@@ -3163,7 +3119,7 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = 'nat', disc, sub, showPending } = natReviewState;
+  const { mode: reviewMode = 'nat', disc, sub } = natReviewState;
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
     ? { mode: reviewMode }
@@ -3202,9 +3158,7 @@ function showNatReview(filter=null){
   clear();
   window.scrollTo(0,0);
 
-  const combined = collectNatReviewItems(effectiveFilter);
-  const itemsForView = combined.filter(item => showPending || item.type !== 'pending');
-  const pendingFilteredOut = !showPending && combined.some(item => item.type === 'pending');
+  const itemsForView = collectNatReviewItems(effectiveFilter);
   const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
     ? 'Nenhuma questão para revisar no filtro escolhido.'
     : 'Nenhuma questão errada ou pendente encontrada nos simulados.';
@@ -3217,19 +3171,15 @@ function showNatReview(filter=null){
     if (hasRow) {
       if (emptyMsg.isConnected) emptyMsg.remove();
     } else {
-      let message = baseEmptyText;
-      if (pendingFilteredOut) {
-        message = 'Ative “Exibir Não Feitas” para ver as questões pendentes.';
-      }
-      emptyMsg.textContent = message;
+      emptyMsg.textContent = baseEmptyText;
       if (!emptyMsg.isConnected) app.appendChild(emptyMsg);
     }
   };
 
   const refreshStats = () => {
     const snapshot = computeNatReviewSnapshot(itemsForView);
-    const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
-    const text = `Erradas (todos os simulados): ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total visível: ${reviewedCount}/${totalCount}`;
+    const { wrongCount, reviewedCount, totalCount } = snapshot;
+    const text = `Erradas (todos os simulados): ${wrongCount} | Revisadas: ${reviewedCount}/${totalCount}`;
     stats.textContent = text;
     stats.className = 'stat';
   };
@@ -3241,8 +3191,7 @@ function showNatReview(filter=null){
     let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
     const qualifies = () => {
       const effective = getEffectiveStateFromKey(key, st);
-      if (item.type === 'wrong') return effective === 2;
-      return effective === 0;
+      return effective === 2;
     };
     if (!qualifies()) return;
 
