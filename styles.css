@@ -1032,6 +1032,23 @@ button:hover { filter: brightness(1.2); }
   opacity:.45;
   cursor:default;
 }
+#settingsMenu .settings-hidden-control{
+  display:none;
+}
+.settings-programmer-group{
+  display:flex;
+  flex-direction:column;
+}
+#settingsMenu .settings-submenu{
+  display:none;
+  flex-direction:column;
+  margin-top:4px;
+  padding-left:10px;
+  border-left:1px solid var(--c-border-muted);
+}
+#settingsMenu .settings-submenu button{
+  font-size:13px;
+}
 /* === Trilha Estratégica (v2) === */
 .day-btn {
   width: 100%;

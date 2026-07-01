@@ -62,16 +62,22 @@
     <div id="settingsMenu">
       <button id="trilhaBtn">Trilha Estratégica</button>
       <button id="examsBtn">Provas e Simulados</button>
-      <button id="natReviewBtn">Revisão</button>
-      <button id="reviewModeBtn">Pós-Revisão</button>
+      <button id="natReviewBtn">Revisão (Erradas)</button>
+      <button id="reviewModeBtn">Estatísticas Pós-Revisão</button>
       <button id="searchNotesBtn">Buscar anotações</button>
-      <button id="toggleD1Btn">Exibir - D1</button>
+      <button id="toggleD1Btn" class="settings-hidden-control">Exibir - D1</button>
       <button id="importBtn">Importar</button>
       <button id="exportBtn">Exportar</button>
-      <button id="importHandBtn">Handwriting - Importar</button>
-      <button id="exportHandBtn">Handwriting - Exportar</button>
-      <button id="clearManuscriptsBtn" title="Apaga todas as anotações feitas nos PDFs.">Limpar manuscritos</button>
-      <button id="clearCacheBtn" title="Força o navegador a baixar os arquivos mais recentes sem apagar seu progresso.">Limpar Cache</button>
+      <button id="importHandBtn" class="settings-hidden-control">Handwriting - Importar</button>
+      <button id="exportHandBtn" class="settings-hidden-control">Handwriting - Exportar</button>
+      <div class="settings-programmer-group">
+        <button id="programmerBtn" aria-expanded="false" aria-controls="programmerMenu">Programador</button>
+        <div id="programmerMenu" class="settings-submenu">
+          <button id="clearQuestionsBtn" title="Apaga dados de questões, comentários, revisão e demais progressos salvos.">Limpar Questões</button>
+          <button id="clearManuscriptsBtn" title="Apaga todas as anotações feitas nos PDFs.">Limpar Manuscritos</button>
+          <button id="clearCacheBtn" title="Força o navegador a baixar os arquivos mais recentes sem apagar seu progresso.">Limpar Cache</button>
+        </div>
+      </div>
     </div>
     <div class="header-top">
       <span id="headerTitle">Título Dinâmico

@@ -337,6 +337,9 @@ const natReviewBtn  = document.getElementById("natReviewBtn");
 const reviewModeBtn = document.getElementById("reviewModeBtn");
 const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
+const programmerBtn = document.getElementById("programmerBtn");
+const programmerMenu = document.getElementById("programmerMenu");
+const clearQuestionsBtn = document.getElementById("clearQuestionsBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
 const pickerReviewDisc = document.getElementById("pickerReviewDisc");
@@ -1120,6 +1123,20 @@ function removeHandwritingEntriesFromLocalStorage() {
   });
 }
 
+
+function clearQuestionDataFromLocalStorage() {
+  if (typeof localStorage === 'undefined') return 0;
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!isHandwritingStorageKey(key)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key));
+  return keysToRemove.length;
+}
+
 function getExportFilenamePrefix(mode) {
   return mode === 'handwriting' ? 'Newtonius_handwriting' : 'Newtonius';
 }
@@ -1415,7 +1432,7 @@ function getEffectiveQuestionState(disc, sub, label) {
 
 function updateReviewModeButton() {
   if (!reviewModeBtn) return;
-  reviewModeBtn.textContent = postReviewMode ? 'Pré-Revisão' : 'Pós-Revisão';
+  reviewModeBtn.textContent = postReviewMode ? 'Estatísticas Pré-Revisão' : 'Estatísticas Pós-Revisão';
 }
 
 function refreshReviewModeUI() {
@@ -2033,6 +2050,30 @@ if (importHandBtn) {
     importFile.value = '';
     importFile.dataset.mode = 'handwriting';
     importFile.click();
+  };
+}
+
+
+if (programmerBtn && programmerMenu) {
+  programmerBtn.onclick = (event) => {
+    event.stopPropagation();
+    const expanded = programmerMenu.style.display === 'flex';
+    programmerMenu.style.display = expanded ? 'none' : 'flex';
+    programmerBtn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  };
+}
+
+if (clearQuestionsBtn) {
+  clearQuestionsBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    const confirmed = confirm(
+      'Deseja apagar todos os dados de questões, comentários e revisão? Manuscritos e cache não serão apagados por esta ação.'
+    );
+    if (!confirmed) return;
+
+    const removedCount = clearQuestionDataFromLocalStorage();
+    alert(`${removedCount} dado(s) de questões foram apagados.`);
+    window.location.reload();
   };
 }
 
