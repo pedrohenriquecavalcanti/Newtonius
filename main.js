@@ -292,9 +292,9 @@ let postReviewModeRestore = null;
 let d1Enabled = JSON.parse(localStorage.getItem('d1Enabled') || 'false');
 
 // Data prevista do exame no fuso de Brasília (-03)
-const EXAM_DATE = new Date('2025-11-09T00:00:00-03:00');
+const EXAM_DATE = new Date('2026-11-08T00:00:00-03:00');
 // Segunda aplicação do ENEM (D2) e data final exibida na trilha
-const SECOND_EXAM_DATE = new Date('2025-11-16T00:00:00-03:00');
+const SECOND_EXAM_DATE = new Date('2026-11-15T00:00:00-03:00');
 const TRAIL_END_DATE = SECOND_EXAM_DATE;
 
 /* ================================================================
@@ -6085,7 +6085,7 @@ window.addEventListener('focus', resumePomodoroIfNeeded);
 (() => {
 
   /* ---------- Configurações ---------- */
-  const EXAM_DATE = new Date('2025-11-09T00:00:00-03:00');  // 09/11/2025
+  const EXAM_DATE = new Date('2026-11-08T00:00:00-03:00');  // 08/11/2026
 
   /* ---------- Seletores ---------- */
   const xpModal      = document.getElementById('xpModal');
