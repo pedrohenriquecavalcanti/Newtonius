@@ -256,12 +256,17 @@ const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
 };
 
 function getReviewDisciplineOptions(mode){
+  if (mode === REVIEW_ALL_MODE) {
+    const all = Object.keys(DISCIPLINES_BY_MODE).flatMap(key => getReviewDisciplineOptions(key));
+    return [...new Set(all)];
+  }
   const list = DISCIPLINES_BY_MODE[mode] || [];
   const unclassified = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
   return unclassified ? list.filter(disc => disc !== unclassified) : list.slice();
 }
 
-const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
+const REVIEW_ALL_MODE = 'all';
+const REVIEW_MODE_LABELS = { all: 'Todas', lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
 const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
 const REVIEW_ALL_DISC = '__review_all__';
 const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
@@ -274,9 +279,10 @@ const natReviewDeferredAutoHide = new Set();
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
 
 const DEFAULT_NAT_REVIEW_STATE = {
-  mode: 'nat',
+  mode: REVIEW_ALL_MODE,
   disc: REVIEW_ALL_DISC,
   sub: null,
+  kind: 'wrong',
   showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
 };
 
@@ -332,6 +338,7 @@ const importHandBtn = document.getElementById("importHandBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const favReviewBtn  = document.getElementById("favReviewBtn");
 const reviewModeBtn = document.getElementById("reviewModeBtn");
 const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
@@ -377,11 +384,14 @@ function setNatReviewState(partial = {}) {
   if (partial.sub !== undefined) {
     next.sub = partial.sub;
   }
+  if (partial.kind !== undefined) {
+    next.kind = partial.kind === 'favorite' ? 'favorite' : 'wrong';
+  }
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
   if (!next.mode) {
-    next.mode = 'nat';
+    next.mode = REVIEW_ALL_MODE;
   }
   natReviewState = next;
   localStorage.setItem(
@@ -391,8 +401,8 @@ function setNatReviewState(partial = {}) {
   return natReviewState;
 }
 
-function resetNatReviewState() {
-  setNatReviewState({ mode: 'nat', disc: REVIEW_ALL_DISC, sub: null });
+function resetNatReviewState(kind = 'wrong') {
+  setNatReviewState({ mode: REVIEW_ALL_MODE, disc: REVIEW_ALL_DISC, sub: null, kind });
 }
 
 function ensureReviewSettingsUI() {
@@ -459,7 +469,7 @@ function renderReviewSettingsMenu() {
 
   const areaWrap = document.createElement('div');
   areaWrap.className = 'review-menu-options';
-  const currentMode = natReviewState.mode || 'nat';
+  const currentMode = natReviewState.mode || REVIEW_ALL_MODE;
   REVIEW_MODES.forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
@@ -489,7 +499,7 @@ function renderReviewSettingsMenu() {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
-    btn.textContent = value === REVIEW_ALL_DISC ? areaLabel : value;
+    btn.textContent = value === REVIEW_ALL_DISC ? 'Todas' : value;
     const isSelected =
       (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
       natReviewState.disc === value;
@@ -1095,6 +1105,102 @@ function clearQuestionDataFromLocalStorage() {
   }
   keysToRemove.forEach((key) => localStorage.removeItem(key));
   return keysToRemove.length;
+}
+
+
+function attachFavoriteQuestionMenu(row, qBtn, disc, sub, label, onChange = null) {
+  const key = qKey(disc, sub, label);
+  const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+  let isFavorite = localStorage.getItem(favoriteKey) === '1';
+
+  qBtn.classList.add('question-btn--with-menu');
+  row.classList.toggle('review-favorite', isFavorite);
+
+  const menuToggle = document.createElement('span');
+  menuToggle.className = 'question-menu-toggle';
+  menuToggle.textContent = '▾';
+  menuToggle.title = 'Ações da questão';
+  menuToggle.setAttribute('aria-haspopup', 'menu');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  qBtn.appendChild(menuToggle);
+
+  const actionMenu = document.createElement('div');
+  actionMenu.className = 'question-action-menu';
+  actionMenu.style.display = 'none';
+
+  const favoriteOption = document.createElement('button');
+  favoriteOption.type = 'button';
+  favoriteOption.className = 'question-action-option';
+  actionMenu.appendChild(favoriteOption);
+  row.appendChild(actionMenu);
+
+  const updateMenuToggle = () => {
+    menuToggle.classList.toggle('menu-active', isFavorite);
+  };
+
+  const paintFavorite = () => {
+    favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
+    favoriteOption.classList.toggle('active', isFavorite);
+    row.classList.toggle('review-favorite', isFavorite);
+    updateMenuToggle();
+  };
+
+  let menuOpen = false;
+  const onOutsideClick = event => {
+    if (!row.contains(event.target)) closeMenu();
+  };
+  const closeMenu = () => {
+    if (!menuOpen) return;
+    menuOpen = false;
+    actionMenu.style.display = 'none';
+    menuToggle.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onOutsideClick);
+    row.style.zIndex = '';
+  };
+  const openMenu = () => {
+    if (menuOpen) return;
+    menuOpen = true;
+    row.style.zIndex = '30';
+    actionMenu.style.display = 'block';
+    actionMenu.style.visibility = 'hidden';
+    const toggleRect = menuToggle.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const menuRect = actionMenu.getBoundingClientRect();
+    const maxLeft = Math.max(rowRect.width - menuRect.width, 0);
+    const desiredLeft = Math.max(toggleRect.right - rowRect.left - menuRect.width, 0);
+    actionMenu.style.left = `${Math.min(desiredLeft, maxLeft)}px`;
+    actionMenu.style.top = `${toggleRect.bottom - rowRect.top + 4}px`;
+    actionMenu.style.visibility = 'visible';
+    menuToggle.classList.add('open');
+    menuToggle.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onOutsideClick);
+  };
+
+  menuToggle.addEventListener('click', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (menuOpen) closeMenu();
+    else openMenu();
+  });
+
+  favoriteOption.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    isFavorite = !isFavorite;
+    if (isFavorite) localStorage.setItem(favoriteKey, '1');
+    else localStorage.removeItem(favoriteKey);
+    paintFavorite();
+    if (typeof onChange === 'function') onChange(isFavorite, { row, closeMenu });
+    closeMenu();
+  });
+
+  qBtn.addEventListener('click', () => {
+    if (menuOpen) closeMenu();
+  });
+
+  paintFavorite();
+  return { closeMenu, paintFavorite, get isFavorite() { return isFavorite; } };
 }
 
 function getExportFilenamePrefix(mode) {
@@ -2202,9 +2308,17 @@ examsBtn.onclick = () => {
 
 natReviewBtn.onclick = () => {
   settingsMenu.style.display = 'none';
-  resetNatReviewState();
+  resetNatReviewState('wrong');
   showNatReview();
 };
+
+if (favReviewBtn) {
+  favReviewBtn.onclick = () => {
+    settingsMenu.style.display = 'none';
+    resetNatReviewState('favorite');
+    showNatReview();
+  };
+}
 
 if (reviewModeBtn) {
   updateReviewModeButton();
@@ -2870,66 +2984,64 @@ function renderExamSummary(){
 }
 
 function collectNatReviewItems(filter=null){
-  const mode = filter?.mode || natReviewState.mode || 'nat';
+  const mode = filter?.mode || natReviewState.mode || REVIEW_ALL_MODE;
+  const kind = filter?.kind || natReviewState.kind || 'wrong';
   const normalizedFilter = (() => {
     if (!filter) return null;
     const { disc, sub } = filter.disc === REVIEW_ALL_DISC ? { disc: null, sub: null } : filter;
-    return {
-      disc: disc ?? null,
-      sub: sub ?? null
-    };
+    return { disc: disc ?? null, sub: sub ?? null };
   })();
-  const areaData = examsDataByMode[mode] || {};
-  const examOrder = examOrderByMode[mode] || [];
-  const visited = new Set();
-  const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
-  const matchesFilter = (disc, sub) => {
-    if(!allowed.has(disc)) return false;
-    if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
-    if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
-    return true;
-  };
+  const modes = mode === REVIEW_ALL_MODE ? Object.keys(DISCIPLINES_BY_MODE) : [mode];
   const combined = [];
-  const pushQuestionsFromExam = exam => {
-    const questions = areaData[exam] || [];
-    questions.forEach(({disc,sub,q})=>{
-      if(!matchesFilter(disc,sub)) return;
-      const key = qKey(disc,sub,q.label);
-      const state = getStoredQuestionState(disc, sub, q.label);
-      const effectiveState = getEffectiveStateFromKey(key, state);
-      const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-      const isFavorite = localStorage.getItem(favoriteKey) === '1';
-      if(effectiveState === 2){
-        combined.push({exam,mode,disc,sub,q,type:'wrong',favorite:isFavorite});
-      }
+  modes.forEach(currentMode => {
+    const areaData = examsDataByMode[currentMode] || {};
+    const examOrder = examOrderByMode[currentMode] || [];
+    const visited = new Set();
+    const allowed = new Set(DISCIPLINES_BY_MODE[currentMode] || []);
+    const matchesFilter = (disc, sub) => {
+      if(!allowed.has(disc)) return false;
+      if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
+      if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
+      return true;
+    };
+    const pushQuestionsFromExam = exam => {
+      const questions = areaData[exam] || [];
+      questions.forEach(({disc,sub,q})=>{
+        if(!matchesFilter(disc,sub)) return;
+        const key = qKey(disc,sub,q.label);
+        const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+        const isFavorite = localStorage.getItem(favoriteKey) === '1';
+        const effectiveState = getEffectiveQuestionState(disc, sub, q.label);
+        if(kind === 'favorite'){
+          if(isFavorite) combined.push({exam,mode:currentMode,disc,sub,q,type:'favorite',favorite:isFavorite});
+        }else if(effectiveState === 2){
+          combined.push({exam,mode:currentMode,disc,sub,q,type:'wrong',favorite:isFavorite});
+        }
+      });
+      visited.add(exam);
+    };
+    examOrder.forEach(exam => pushQuestionsFromExam(exam));
+    Object.keys(areaData).forEach(exam => {
+      if(!visited.has(exam)) pushQuestionsFromExam(exam);
     });
-    visited.add(exam);
-  };
-  examOrder.forEach(exam => pushQuestionsFromExam(exam));
-  Object.keys(areaData).forEach(exam => {
-    if(!visited.has(exam)) pushQuestionsFromExam(exam);
   });
   return combined;
 }
 
 function computeNatReviewSnapshot(items){
   if (typeof localStorage === 'undefined') {
-    return { wrongCount: 0, totalCount: 0, reviewedCount: 0 };
+    return { totalCount: 0, reviewedCount: 0 };
   }
-  let wrongCount = 0;
   let reviewedCount = 0;
   items.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const effectiveState = getEffectiveQuestionState(item.disc, item.sub, item.q.label);
-    if(effectiveState !== 2) return;
-    wrongCount += 1;
     const reviewKey = `natReview_${key}`;
     const reviewState = +localStorage.getItem(reviewKey) || 0;
     if(reviewState > 0){
       reviewedCount += 1;
     }
   });
-  return { wrongCount, totalCount: wrongCount, reviewedCount };
+  return { totalCount: items.length, reviewedCount };
 }
 
 function countNatReviewItems(filter=null){
@@ -3059,6 +3171,7 @@ function showExam(exam){
       }
     });
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
     row.appendChild(Object.assign(document.createElement('button'),{
       textContent:'Gabarito',
       className:'small-btn',
@@ -3119,11 +3232,11 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = 'nat', disc, sub } = natReviewState;
+  const { mode: reviewMode = REVIEW_ALL_MODE, disc, sub, kind: reviewKind = 'wrong' } = natReviewState;
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
-    ? { mode: reviewMode }
-    : { mode: reviewMode, disc, sub };
+    ? { mode: reviewMode, kind: reviewKind }
+    : { mode: reviewMode, disc, sub, kind: reviewKind };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
@@ -3135,15 +3248,16 @@ function showNatReview(filter=null){
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
   renderReviewSettingsMenu();
-  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Revisão';
-  let headerLabel = `Revisão: ${areaLabel}`;
+  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Todas';
+  const reviewTitle = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
+  let headerLabel = `${reviewTitle}: ${areaLabel}`;
   if(!isAll){
-    headerLabel = `Revisão: ${disc}`;
+    headerLabel = `${reviewTitle}: ${disc}`;
     if(sub && sub !== ALL_SUB){
       headerLabel += `: ${getFriendlyName(disc, sub)}`;
     }
   }else{
-    headerLabel = `Revisão: ${areaLabel}`;
+    headerLabel = `${reviewTitle}: ${areaLabel}`;
   }
   updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
@@ -3161,7 +3275,7 @@ function showNatReview(filter=null){
   const itemsForView = collectNatReviewItems(effectiveFilter);
   const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
     ? 'Nenhuma questão para revisar no filtro escolhido.'
-    : 'Nenhuma questão errada ou pendente encontrada nos simulados.';
+    : (reviewKind === 'favorite' ? 'Nenhuma questão favorita encontrada.' : 'Nenhuma questão errada encontrada nos simulados.');
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
@@ -3178,8 +3292,8 @@ function showNatReview(filter=null){
 
   const refreshStats = () => {
     const snapshot = computeNatReviewSnapshot(itemsForView);
-    const { wrongCount, reviewedCount, totalCount } = snapshot;
-    const text = `Erradas (todos os simulados): ${wrongCount} | Revisadas: ${reviewedCount}/${totalCount}`;
+    const { reviewedCount, totalCount } = snapshot;
+    const text = `Revisadas: ${reviewedCount}/${totalCount}`;
     stats.textContent = text;
     stats.className = 'stat';
   };
@@ -3188,14 +3302,16 @@ function showNatReview(filter=null){
 
   itemsForView.forEach(item => {
     const key = qKey(item.disc, item.sub, item.q.label);
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
     let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
     const qualifies = () => {
+      if (reviewKind === 'favorite') {
+        return localStorage.getItem(favoriteKey) === '1';
+      }
       const effective = getEffectiveStateFromKey(key, st);
       return effective === 2;
     };
     if (!qualifies()) return;
-
-    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
 
     let isFavorite = !!item.favorite;
 
@@ -3391,6 +3507,9 @@ function showNatReview(filter=null){
       }
       paintFavorite();
       syncWithReviewState();
+      if (reviewKind === 'favorite' && !isFavorite) {
+        row.remove();
+      }
       ensureEmptyState();
       refreshStats();
       closeMenu();
@@ -3636,6 +3755,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
 
     qBtn.onclick = () => openPdf(q.QPDFName, q.page);
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
 
     /* Botão gabarito */
     row.appendChild(Object.assign(
@@ -5410,6 +5530,7 @@ function showMicroSim(entry) {
     }
     qBtn.onclick = () => openPdf(q.QPDFName, q.page);
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
 
     row.appendChild(Object.assign(
       document.createElement('button'),{
