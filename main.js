@@ -627,6 +627,7 @@ let currentPdfDocument = null;
 let currentPdfDocumentName = null;
 let pdfAutosaveTimeout = null;
 let pdfStorageQuotaAlertShown = false;
+let pdfRenderingZoom = false;
 
 function smoothPdfPoint(target, previous, rawPrevious) {
   if (!target) return previous || rawPrevious || null;
@@ -648,11 +649,10 @@ function smoothPdfPoint(target, previous, rawPrevious) {
 
 function getPdfEffectivePenWidth(zoom = currentPdfZoom) {
   const activeZoom = Number.isFinite(zoom) ? zoom : PDF_DEFAULT_ZOOM;
-  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
-  const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
-  const cssWidth = desiredCssWidth * (activeZoom / PDF_DEFAULT_ZOOM);
-  return cssWidth * PDF_RENDER_QUALITY * effectiveDpr;
+  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : PDF_REFERENCE_DEVICE_PIXEL_RATIO;
+  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : PDF_REFERENCE_DEVICE_PIXEL_RATIO;
+  const zoomRatio = activeZoom / PDF_DEFAULT_ZOOM;
+  return PDF_PEN_REFERENCE_WIDTH * zoomRatio * (effectiveDpr / PDF_REFERENCE_DEVICE_PIXEL_RATIO);
 }
 
 function getPdfCanvasState(canvas) {
@@ -1115,7 +1115,7 @@ function isHandwritingStorageKey(key) {
 function shouldIncludeKeyForExport(key, mode) {
   const handwriting = isHandwritingStorageKey(key);
   if (mode === 'handwriting') return handwriting;
-  return !handwriting;
+  return true;
 }
 
 function shouldIncludeKeyForImport(key, mode) {
@@ -4650,8 +4650,11 @@ function isPdfToolbarTarget(target) {
 function handlePdfTouchBlocker(event) {
   if (!pdfIpadMode) return;
   if (isPdfToolbarTarget(event.target)) return;
-  if (!pdfStylusDrawingActive) return;
-  if (event.touches && event.touches.length <= 1) {
+  if (event.touches && event.touches.length >= 2) {
+    event.preventDefault();
+    return;
+  }
+  if (pdfStylusDrawingActive && event.touches && event.touches.length <= 1) {
     event.preventDefault();
   }
 }
@@ -4663,7 +4666,6 @@ function ensurePdfTouchBlocker() {
 }
 
 function preventPdfGestureZoom(event) {
-  if (!pdfIpadMode) return;
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   event.preventDefault();
   if (typeof event.stopImmediatePropagation === 'function') {
@@ -4674,7 +4676,6 @@ function preventPdfGestureZoom(event) {
 }
 
 function handlePdfGestureWheel(event) {
-  if (!pdfIpadMode) return;
   if (!event.ctrlKey) return;
   event.preventDefault();
 }
@@ -4729,10 +4730,8 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   }
   if (pdfIpadMode) {
     ensurePdfTouchBlocker();
-    attachPdfGestureBlockers();
   } else {
     detachPdfTouchBlocker();
-    detachPdfGestureBlockers();
     pdfStylusDrawingActive = false;
     resetPdfPinchPreview();
     pdfPinchState = null;
@@ -5032,6 +5031,7 @@ function clampPdfZoom(value) {
 async function setPdfZoom(targetZoom, { viewportState } = {}) {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   if (!lastPdfName) return;
+  if (pdfRenderingZoom) return;
   const clampedZoom = clampPdfZoom(targetZoom);
   if (!Number.isFinite(currentPdfZoom)) {
     currentPdfZoom = PDF_DEFAULT_ZOOM;
@@ -5039,7 +5039,7 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
   const state = viewportState || capturePdfViewportState();
   if (Math.abs(clampedZoom - currentPdfZoom) < 0.01) {
     if (state) {
-      restorePdfViewportState(state);
+      restorePdfPinchFocus(state);
     }
     return;
   }
@@ -5065,7 +5065,7 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
       return;
     }
     if (state) {
-      restorePdfViewportState(state);
+      restorePdfPinchFocus(state);
     }
     return;
   }
@@ -5075,26 +5075,27 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
   const renderScale = quality * dpr * clampedZoom;
   const updatedPages = [];
 
-  for (const wrapper of wrappers) {
-    const pageNumber = Number(wrapper.dataset.pageNumber);
-    if (!Number.isFinite(pageNumber)) continue;
-    updatedPages.push(pageNumber);
-    const canvas = wrapper.querySelector('canvas');
-    if (!(canvas instanceof HTMLCanvasElement)) continue;
-    const drawingLayer = wrapper.querySelector('.pdf-draw-layer');
-    const previousWidth = canvas.width || 1;
-    const previousHeight = canvas.height || 1;
+  pdfRenderingZoom = true;
+  try {
+    for (const wrapper of wrappers) {
+      const pageNumber = Number(wrapper.dataset.pageNumber);
+      if (!Number.isFinite(pageNumber)) continue;
+      updatedPages.push(pageNumber);
+      const canvas = wrapper.querySelector('canvas');
+      if (!(canvas instanceof HTMLCanvasElement)) continue;
+      const drawingLayer = wrapper.querySelector('.pdf-draw-layer');
+      const previousWidth = canvas.width || 1;
+      const previousHeight = canvas.height || 1;
 
-    try {
       const page = await pdf.getPage(pageNumber);
       const viewport = page.getViewport({ scale: renderScale });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       canvas.style.width = `${viewport.width / (quality * dpr)}px`;
       canvas.style.height = `${viewport.height / (quality * dpr)}px`;
-      canvas.style.maxWidth = '100%';
+      canvas.style.maxWidth = 'none';
       wrapper.style.width = canvas.style.width;
-      wrapper.style.maxWidth = '100%';
+      wrapper.style.maxWidth = 'none';
 
       await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
 
@@ -5113,9 +5114,11 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
         renderPdfCanvas(drawingLayer);
         applyPdfToolToLayer(drawingLayer);
       }
-    } catch (err) {
-      console.error('Falha ao redesenhar página do PDF durante ajuste de zoom', err);
     }
+  } catch (err) {
+    console.error('Falha ao redesenhar página do PDF durante ajuste de zoom', err);
+  } finally {
+    pdfRenderingZoom = false;
   }
 
   if (updatedPages.length) {
@@ -5124,7 +5127,7 @@ async function setPdfZoom(targetZoom, { viewportState } = {}) {
   currentPdfZoom = clampedZoom;
   if (state) {
     await waitNextFrame();
-    restorePdfViewportState(state);
+    restorePdfPinchFocus(state);
   }
 }
 
@@ -5156,6 +5159,53 @@ function resetPdfPinchPreview() {
   if (!wrapper) return;
   wrapper.style.transform = '';
   wrapper.style.transformOrigin = '';
+  wrapper.style.willChange = '';
+}
+
+function capturePdfPinchFocus(center) {
+  const scope = pdfPagesWrapper || pdfContainer;
+  if (!scope || !center) return null;
+  const wrappers = Array.from(scope.querySelectorAll('.pdf-page-wrapper[data-page-number]'));
+  for (const wrapper of wrappers) {
+    const rect = wrapper.getBoundingClientRect();
+    if (
+      center.x >= rect.left && center.x <= rect.right &&
+      center.y >= rect.top && center.y <= rect.bottom
+    ) {
+      const pageNumber = Number(wrapper.dataset.pageNumber);
+      if (!Number.isFinite(pageNumber)) continue;
+      const xRatio = rect.width > 0 ? Math.min(1, Math.max(0, (center.x - rect.left) / rect.width)) : 0.5;
+      const yRatio = rect.height > 0 ? Math.min(1, Math.max(0, (center.y - rect.top) / rect.height)) : 0;
+      const containerRect = pdfContainer.getBoundingClientRect();
+      return {
+        pageNumber,
+        xRatio,
+        yRatio,
+        containerX: center.x - containerRect.left,
+        containerY: center.y - containerRect.top
+      };
+    }
+  }
+  return capturePdfViewportState();
+}
+
+function restorePdfPinchFocus(focus) {
+  const scope = pdfPagesWrapper || pdfContainer;
+  if (!focus || !scope) return;
+  if (!Number.isFinite(focus.xRatio) || !Number.isFinite(focus.yRatio)) {
+    restorePdfViewportState(focus);
+    return;
+  }
+  const wrapper = scope.querySelector(`.pdf-page-wrapper[data-page-number="${focus.pageNumber}"]`);
+  if (!wrapper) return;
+  const targetLeft = wrapper.offsetLeft + wrapper.offsetWidth * focus.xRatio;
+  const targetTop = wrapper.offsetTop + wrapper.offsetHeight * focus.yRatio;
+  if (Number.isFinite(focus.containerX)) {
+    pdfContainer.scrollLeft = Math.max(0, targetLeft - focus.containerX);
+  }
+  if (Number.isFinite(focus.containerY)) {
+    pdfContainer.scrollTop = Math.max(0, targetTop - focus.containerY);
+  }
 }
 
 function releaseCurrentPdfDocument() {
@@ -5197,17 +5247,19 @@ async function loadPdfDocument(pdfName) {
 
 function handlePdfPinchStart(event) {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
-  if (!pdfIpadMode) return;
   if (event.touches.length < 2) return;
   if (isPdfToolbarTarget(event.target)) return;
+  event.preventDefault();
+  event.stopPropagation();
   const distance = getPdfTouchDistance(event.touches);
   if (!distance) return;
   const center = getPdfTouchCenter(event.touches);
-  const focus = getPdfViewportFocusFromPoint(center.x, center.y) || capturePdfViewportState();
+  const focus = capturePdfPinchFocus(center);
   const wrapper = pdfPagesWrapper || pdfContainer;
   if (wrapper) {
     const rect = wrapper.getBoundingClientRect();
     wrapper.style.transformOrigin = `${center.x - rect.left}px ${center.y - rect.top}px`;
+    wrapper.style.willChange = 'transform';
   }
   pdfPinchState = {
     startDistance: distance,
@@ -5215,12 +5267,13 @@ function handlePdfPinchStart(event) {
     lastZoom: Number.isFinite(currentPdfZoom) ? currentPdfZoom : PDF_DEFAULT_ZOOM,
     focus
   };
-  event.preventDefault();
 }
 
 function handlePdfPinchMove(event) {
   if (!pdfPinchState) return;
   if (event.touches.length < 2) return;
+  event.preventDefault();
+  event.stopPropagation();
   const distance = getPdfTouchDistance(event.touches);
   if (!distance || !pdfPinchState.startDistance) return;
   const scale = distance / pdfPinchState.startDistance;
@@ -5232,12 +5285,15 @@ function handlePdfPinchMove(event) {
     const previewScale = baseZoom ? targetZoom / baseZoom : 1;
     wrapper.style.transform = `scale(${previewScale})`;
   }
-  event.preventDefault();
 }
 
 function handlePdfPinchEnd(event) {
   if (!pdfPinchState) return;
   if (event.touches && event.touches.length >= 2) return;
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   resetPdfPinchPreview();
   const { lastZoom, focus } = pdfPinchState;
   pdfPinchState = null;
@@ -5246,11 +5302,8 @@ function handlePdfPinchEnd(event) {
     if (Math.abs(lastZoom - current) > 0.01) {
       setPdfZoom(lastZoom, { viewportState: focus });
     } else if (focus) {
-      restorePdfViewportState(focus);
+      restorePdfPinchFocus(focus);
     }
-  }
-  if (event) {
-    event.preventDefault();
   }
 }
 
@@ -5266,6 +5319,7 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
   ensurePdfPersistenceHandlers();
+  attachPdfGestureBlockers();
   pdfContainer.style.display = "flex";
   setBodyScrollLocked(true);
   if (wasHidden) {
@@ -5337,12 +5391,12 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
     canvas.dataset.pageNumber = String(num);
     canvas.style.width = `${viewport.width/(quality*dpr)}px`;
     canvas.style.height = `${viewport.height/(quality*dpr)}px`;
-    canvas.style.maxWidth = '100%';
+    canvas.style.maxWidth = 'none';
     const wrapper = document.createElement('div');
     wrapper.className = 'pdf-page-wrapper';
     wrapper.dataset.pageNumber = String(num);
     wrapper.style.width = canvas.style.width;
-    wrapper.style.maxWidth = '100%';
+    wrapper.style.maxWidth = 'none';
     wrapper.appendChild(canvas);
     const drawingLayer = createDrawingLayer(canvas, pdfName, num);
     wrapper.appendChild(drawingLayer);
@@ -5392,6 +5446,7 @@ function openGabarito(q){
 function closePdfViewer() {
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
+  detachPdfGestureBlockers();
   pdfContainer.style.display = "none";
   setBodyScrollLocked(false);
   clearPdfViewerContent();

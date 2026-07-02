@@ -516,7 +516,7 @@ button:hover { filter: brightness(1.2); }
   display: none;                        /* visível apenas ao abrir */
   flex-direction: column;
   align-items: center;
-  overflow-y: auto;
+  overflow: auto;
   z-index: 1000;
   padding: 0 16px 32px;
   -webkit-user-select: none;
@@ -526,15 +526,16 @@ button:hover { filter: brightness(1.2); }
   -webkit-tap-highlight-color: transparent;
 }
 #pdfViewerContainer.ipad-mode {
-  touch-action: pan-y;
+  touch-action: none;
   overscroll-behavior: contain;
 }
 #pdfViewerContainer.ipad-mode #pdfPagesWrapper,
 #pdfViewerContainer.ipad-mode .pdf-page-wrapper {
-  touch-action: pan-y;
+  touch-action: none;
 }
 #pdfPagesWrapper {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -671,16 +672,16 @@ button:hover { filter: brightness(1.2); }
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas {
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
 }
 #pdfViewerContainer.hand-mode .pdf-page-wrapper canvas:active {
   cursor: grabbing;
 }
 #pdfViewerContainer.ipad-mode .pdf-page-wrapper canvas {
-  touch-action: pan-x pan-y;
+  touch-action: none;
 }
 #pdfViewerContainer.ipad-mode .pdf-draw-layer {
-  touch-action: pan-x pan-y;
+  touch-action: none;
 }
 
 /* =====================================================================
