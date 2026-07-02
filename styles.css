@@ -1254,6 +1254,8 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.sem-assunto-hum      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 .trail-subject.sem-assunto-mat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 .trail-subject.trail-review         { background: #9fe3b1; color: #0a3a1f; }
+.trail-subject.trail-review-wrong   { background: #ff6b6b; color: #2b0000; }
+.trail-subject.trail-review-favorite{ background: #ffd36b; color: #3b2500; }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }

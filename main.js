@@ -2500,6 +2500,14 @@ function countMicroProgress(entry){
   return a;
 }
 
+function countDailyReviewed(dateStr, filter) {
+  if (!dateStr) return 0;
+  return collectNatReviewItems(filter).reduce((total, item) => {
+    const key = qKey(item.disc, item.sub, item.q.label);
+    return total + (localStorage.getItem(`reviewLog_${dateStr}_${key}`) === '1' ? 1 : 0);
+  }, 0);
+}
+
 function openPicker(callback){
   pickerDisc.innerHTML = '';
   pickerReviewDisc.innerHTML = '';
@@ -2754,6 +2762,7 @@ function renderTrailDay(day,expand){
         const subj=document.createElement('button');
         subj.className='trail-subject trail-review';
         const reviewKind = s.kind === 'favorite' ? 'favorite' : 'wrong';
+        subj.classList.add(reviewKind === 'favorite' ? 'trail-review-favorite' : 'trail-review-wrong');
         subj.textContent = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
         subj.onclick=()=>{
           trailReturn=dayStr;
@@ -2769,7 +2778,7 @@ function renderTrailDay(day,expand){
           modes: defaultModes,
           discs: getReviewDisciplinesForModes(defaultModes)
         };
-        count.textContent=countNatReviewItems(countFilter).toString();
+        count.textContent=countDailyReviewed(dayStr, countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
         rm.textContent='\u00D7';
@@ -3452,10 +3461,13 @@ function showNatReview(filter=null){
     };
     reviewBox.onclick = () => {
       reviewState = (reviewState + 1) % 3;
+      const reviewLogKey = `reviewLog_${getTodayStr()}_${key}`;
       if (reviewState === 0) {
         localStorage.removeItem(reviewKey);
+        localStorage.removeItem(reviewLogKey);
       } else {
         localStorage.setItem(reviewKey, reviewState);
+        localStorage.setItem(reviewLogKey, '1');
       }
       paintReview();
       syncWithReviewState();
