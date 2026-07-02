@@ -258,28 +258,49 @@ const UNCLASSIFIED_DISCIPLINES_BY_MODE = {
 function getReviewDisciplineOptions(mode){
   const list = DISCIPLINES_BY_MODE[mode] || [];
   const unclassified = UNCLASSIFIED_DISCIPLINES_BY_MODE[mode];
-  return unclassified ? list.filter(disc => disc !== unclassified) : list.slice();
+  return list.filter(disc => disc !== unclassified && disc !== 'Redação');
 }
 
+const REVIEW_DEFAULT_MODES = ['nat', 'mat'];
 const REVIEW_MODE_LABELS = { lin: 'Linguagens', hum: 'Humanas', nat: 'Natureza', mat: 'Matemática' };
 const REVIEW_MODES = Object.keys(REVIEW_MODE_LABELS);
 const REVIEW_ALL_DISC = '__review_all__';
+
+function getReviewDisciplinesForModes(modes = REVIEW_DEFAULT_MODES) {
+  return [...new Set(modes.flatMap(mode => getReviewDisciplineOptions(mode)))];
+}
+
+function normalizeReviewModes(modes) {
+  const normalized = Array.isArray(modes)
+    ? modes.filter(mode => REVIEW_MODES.includes(mode))
+    : [];
+  return [...new Set(normalized)];
+}
+
+function normalizeReviewDiscs(discs, modes) {
+  const allowed = new Set(getReviewDisciplinesForModes(modes));
+  const normalized = Array.isArray(discs)
+    ? discs.filter(disc => allowed.has(disc))
+    : [];
+  return [...new Set(normalized)];
+}
+
 const NAT_REVIEW_HIDDEN_PREFIX = 'natReviewHidden_';
 const NAT_REVIEW_AUTO_HIDDEN_PREFIX = 'natReviewAutoHidden_';
 const NAT_REVIEW_FAVORITE_PREFIX = 'natReviewFav_';
 const NAT_REVIEW_SOON_PREFIX = 'natReviewSoon_';
 const NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY = 'natReviewShowHidden';
-const NAT_REVIEW_SHOW_PENDING_STORAGE_KEY = 'natReviewShowPending';
 const natReviewDeferredAutoHide = new Set();
 
 const REVIEW_MODE_STORAGE_KEY = 'postReviewModeEnabled';
 
 const DEFAULT_NAT_REVIEW_STATE = {
-  mode: 'nat',
+  modes: REVIEW_DEFAULT_MODES.slice(),
+  discs: getReviewDisciplinesForModes(REVIEW_DEFAULT_MODES),
   disc: REVIEW_ALL_DISC,
   sub: null,
+  kind: 'wrong',
   showHidden: localStorage.getItem(NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY) === '1',
-  showPending: localStorage.getItem(NAT_REVIEW_SHOW_PENDING_STORAGE_KEY) === '1',
 };
 
 let natReviewState = { ...DEFAULT_NAT_REVIEW_STATE };
@@ -334,9 +355,18 @@ const importHandBtn = document.getElementById("importHandBtn");
 const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
+const favReviewBtn  = document.getElementById("favReviewBtn");
+const reviewMenuBtn = document.getElementById("reviewMenuBtn");
+const reviewMenu = document.getElementById("reviewMenu");
+const backupMenuBtn = document.getElementById("backupMenuBtn");
+const backupMenu = document.getElementById("backupMenu");
 const reviewModeBtn = document.getElementById("reviewModeBtn");
 const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
+const programmerBtn = document.getElementById("programmerBtn");
+const programmerMenu = document.getElementById("programmerMenu");
+const clearQuestionsBtn = document.getElementById("clearQuestionsBtn");
+const clearAllBtn = document.getElementById("clearAllBtn");
 const pickerModal   = document.getElementById("subjectPickerModal");
 const pickerDisc    = document.getElementById("pickerDisc");
 const pickerReviewDisc = document.getElementById("pickerReviewDisc");
@@ -359,8 +389,16 @@ const searchCloseBtn = document.getElementById("searchCloseBtn");
 
 function setNatReviewState(partial = {}) {
   const next = { ...natReviewState };
-  if (partial.mode !== undefined && partial.mode !== next.mode) {
-    next.mode = partial.mode;
+  if (partial.modes !== undefined || partial.mode !== undefined) {
+    const requestedModes = partial.modes !== undefined ? partial.modes : [partial.mode];
+    next.modes = normalizeReviewModes(requestedModes);
+    next.discs = normalizeReviewDiscs(partial.discs !== undefined ? partial.discs : next.discs, next.modes);
+    next.disc = REVIEW_ALL_DISC;
+    next.sub = null;
+  }
+  if (partial.discs !== undefined) {
+    const modes = normalizeReviewModes(next.modes);
+    next.discs = normalizeReviewDiscs(partial.discs, modes);
     next.disc = REVIEW_ALL_DISC;
     next.sub = null;
   }
@@ -368,36 +406,44 @@ function setNatReviewState(partial = {}) {
     next.disc = partial.disc;
     if (partial.disc === REVIEW_ALL_DISC) {
       next.sub = null;
-    } else if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
-      next.sub = null;
+    } else {
+      const modes = normalizeReviewModes(next.modes);
+      const allowed = new Set(getReviewDisciplinesForModes(modes));
+      if (allowed.has(partial.disc) && !next.discs.includes(partial.disc)) {
+        next.discs = [...next.discs, partial.disc];
+      }
+      if (partial.sub === undefined && natReviewState.disc !== partial.disc) {
+        next.sub = null;
+      }
     }
   }
   if (partial.sub !== undefined) {
     next.sub = partial.sub;
   }
+  if (partial.kind !== undefined) {
+    next.kind = partial.kind === 'favorite' ? 'favorite' : 'wrong';
+  }
   if (partial.showHidden !== undefined) {
     next.showHidden = !!partial.showHidden;
   }
-  if (partial.showPending !== undefined) {
-    next.showPending = !!partial.showPending;
-  }
-  if (!next.mode) {
-    next.mode = 'nat';
-  }
+  next.modes = normalizeReviewModes(next.modes);
+  next.discs = normalizeReviewDiscs(next.discs, next.modes);
   natReviewState = next;
   localStorage.setItem(
     NAT_REVIEW_SHOW_HIDDEN_STORAGE_KEY,
     natReviewState.showHidden ? '1' : '0'
   );
-  localStorage.setItem(
-    NAT_REVIEW_SHOW_PENDING_STORAGE_KEY,
-    natReviewState.showPending ? '1' : '0'
-  );
   return natReviewState;
 }
 
-function resetNatReviewState() {
-  setNatReviewState({ mode: 'nat', disc: REVIEW_ALL_DISC, sub: null });
+function resetNatReviewState(kind = 'wrong') {
+  setNatReviewState({
+    modes: REVIEW_DEFAULT_MODES.slice(),
+    discs: getReviewDisciplinesForModes(REVIEW_DEFAULT_MODES),
+    disc: REVIEW_ALL_DISC,
+    sub: null,
+    kind
+  });
 }
 
 function ensureReviewSettingsUI() {
@@ -464,17 +510,20 @@ function renderReviewSettingsMenu() {
 
   const areaWrap = document.createElement('div');
   areaWrap.className = 'review-menu-options';
-  const currentMode = natReviewState.mode || 'nat';
+  const currentModes = normalizeReviewModes(natReviewState.modes);
   REVIEW_MODES.forEach(mode => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
     btn.textContent = REVIEW_MODE_LABELS[mode] || mode;
-    if (mode === currentMode) btn.classList.add('active');
-    btn.addEventListener('click', () => {
-      setNatReviewState({ mode, disc: REVIEW_ALL_DISC, sub: null });
-      reviewSettingsMenu.style.display = 'none';
-      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    if (currentModes.includes(mode)) btn.classList.add('active');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const nextModes = currentModes.includes(mode)
+        ? currentModes.filter(item => item !== mode)
+        : [...currentModes, mode];
+      const nextDiscs = getReviewDisciplinesForModes(nextModes);
+      setNatReviewState({ modes: nextModes, discs: nextDiscs });
       showNatReview();
     });
     areaWrap.appendChild(btn);
@@ -488,58 +537,25 @@ function renderReviewSettingsMenu() {
 
   const optionsWrap = document.createElement('div');
   optionsWrap.className = 'review-menu-options';
-  const areaLabel = REVIEW_MODE_LABELS[currentMode] || 'Área';
-  const disciplineOptions = [REVIEW_ALL_DISC, ...getReviewDisciplineOptions(currentMode)];
+  const disciplineOptions = getReviewDisciplinesForModes(currentModes);
+  const selectedDisciplines = normalizeReviewDiscs(natReviewState.discs, currentModes);
   disciplineOptions.forEach(value => {
     const btn = document.createElement('button');
     btn.className = 'review-menu-option';
     btn.type = 'button';
-    btn.textContent = value === REVIEW_ALL_DISC ? areaLabel : value;
-    const isSelected =
-      (value === REVIEW_ALL_DISC && natReviewState.disc === REVIEW_ALL_DISC) ||
-      natReviewState.disc === value;
-    if (isSelected) btn.classList.add('active');
-    btn.addEventListener('click', () => {
-      setNatReviewState({ disc: value, sub: null });
-      reviewSettingsMenu.style.display = 'none';
-      reviewSettingsBtn.setAttribute('aria-expanded', 'false');
+    btn.textContent = value;
+    if (selectedDisciplines.includes(value)) btn.classList.add('active');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const nextDiscs = selectedDisciplines.includes(value)
+        ? selectedDisciplines.filter(item => item !== value)
+        : [...selectedDisciplines, value];
+      setNatReviewState({ discs: nextDiscs });
       showNatReview();
     });
     optionsWrap.appendChild(btn);
   });
   reviewSettingsMenu.appendChild(optionsWrap);
-
-  const divider = document.createElement('div');
-  divider.className = 'review-menu-divider';
-  reviewSettingsMenu.appendChild(divider);
-
-  const hiddenBtn = document.createElement('button');
-  hiddenBtn.className = 'review-menu-option review-menu-toggle';
-  hiddenBtn.type = 'button';
-  const showHidden = !!natReviewState.showHidden;
-  hiddenBtn.textContent = showHidden ? 'Ocultar' : 'Exibir Ocultas';
-  if (showHidden) hiddenBtn.classList.add('active');
-  hiddenBtn.addEventListener('click', () => {
-    setNatReviewState({ showHidden: !natReviewState.showHidden });
-    reviewSettingsMenu.style.display = 'none';
-    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
-    showNatReview();
-  });
-  reviewSettingsMenu.appendChild(hiddenBtn);
-
-  const pendingBtn = document.createElement('button');
-  pendingBtn.className = 'review-menu-option review-menu-toggle';
-  pendingBtn.type = 'button';
-  const showPending = !!natReviewState.showPending;
-  pendingBtn.textContent = showPending ? 'Ocultar Não Feitas' : 'Exibir Não Feitas';
-  if (showPending) pendingBtn.classList.add('active');
-  pendingBtn.addEventListener('click', () => {
-    setNatReviewState({ showPending: !natReviewState.showPending });
-    reviewSettingsMenu.style.display = 'none';
-    reviewSettingsBtn.setAttribute('aria-expanded', 'false');
-    showNatReview();
-  });
-  reviewSettingsMenu.appendChild(pendingBtn);
 
   if (wasOpen) {
     reviewSettingsMenu.style.display = 'flex';
@@ -1120,6 +1136,116 @@ function removeHandwritingEntriesFromLocalStorage() {
   });
 }
 
+
+function clearQuestionDataFromLocalStorage() {
+  if (typeof localStorage === 'undefined') return 0;
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!isHandwritingStorageKey(key) && !key.startsWith('summary_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key));
+  return keysToRemove.length;
+}
+
+
+function attachFavoriteQuestionMenu(row, qBtn, disc, sub, label, onChange = null) {
+  const key = qKey(disc, sub, label);
+  const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+  let isFavorite = localStorage.getItem(favoriteKey) === '1';
+
+  qBtn.classList.add('question-btn--with-menu');
+  row.classList.toggle('review-favorite', isFavorite);
+
+  const menuToggle = document.createElement('span');
+  menuToggle.className = 'question-menu-toggle';
+  menuToggle.textContent = '▾';
+  menuToggle.title = 'Ações da questão';
+  menuToggle.setAttribute('aria-haspopup', 'menu');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  qBtn.appendChild(menuToggle);
+
+  const actionMenu = document.createElement('div');
+  actionMenu.className = 'question-action-menu';
+  actionMenu.style.display = 'none';
+
+  const favoriteOption = document.createElement('button');
+  favoriteOption.type = 'button';
+  favoriteOption.className = 'question-action-option';
+  actionMenu.appendChild(favoriteOption);
+  row.appendChild(actionMenu);
+
+  const updateMenuToggle = () => {
+    menuToggle.classList.toggle('menu-active', isFavorite);
+  };
+
+  const paintFavorite = () => {
+    favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
+    favoriteOption.classList.toggle('active', isFavorite);
+    row.classList.toggle('review-favorite', isFavorite);
+    updateMenuToggle();
+  };
+
+  let menuOpen = false;
+  const onOutsideClick = event => {
+    if (!row.contains(event.target)) closeMenu();
+  };
+  const closeMenu = () => {
+    if (!menuOpen) return;
+    menuOpen = false;
+    actionMenu.style.display = 'none';
+    menuToggle.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onOutsideClick);
+    row.style.zIndex = '';
+  };
+  const openMenu = () => {
+    if (menuOpen) return;
+    menuOpen = true;
+    row.style.zIndex = '30';
+    actionMenu.style.display = 'block';
+    actionMenu.style.visibility = 'hidden';
+    const toggleRect = menuToggle.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const menuRect = actionMenu.getBoundingClientRect();
+    const maxLeft = Math.max(rowRect.width - menuRect.width, 0);
+    const desiredLeft = Math.max(toggleRect.right - rowRect.left - menuRect.width, 0);
+    actionMenu.style.left = `${Math.min(desiredLeft, maxLeft)}px`;
+    actionMenu.style.top = `${toggleRect.bottom - rowRect.top + 4}px`;
+    actionMenu.style.visibility = 'visible';
+    menuToggle.classList.add('open');
+    menuToggle.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onOutsideClick);
+  };
+
+  menuToggle.addEventListener('click', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (menuOpen) closeMenu();
+    else openMenu();
+  });
+
+  favoriteOption.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    isFavorite = !isFavorite;
+    if (isFavorite) localStorage.setItem(favoriteKey, '1');
+    else localStorage.removeItem(favoriteKey);
+    paintFavorite();
+    if (typeof onChange === 'function') onChange(isFavorite, { row, closeMenu });
+    closeMenu();
+  });
+
+  qBtn.addEventListener('click', () => {
+    if (menuOpen) closeMenu();
+  });
+
+  paintFavorite();
+  return { closeMenu, paintFavorite, get isFavorite() { return isFavorite; } };
+}
+
 function getExportFilenamePrefix(mode) {
   return mode === 'handwriting' ? 'Newtonius_handwriting' : 'Newtonius';
 }
@@ -1415,7 +1541,7 @@ function getEffectiveQuestionState(disc, sub, label) {
 
 function updateReviewModeButton() {
   if (!reviewModeBtn) return;
-  reviewModeBtn.textContent = postReviewMode ? 'Pré-Revisão' : 'Pós-Revisão';
+  reviewModeBtn.textContent = postReviewMode ? 'Estatísticas Pré-Revisão' : 'Estatísticas Pós-Revisão';
 }
 
 function refreshReviewModeUI() {
@@ -1648,6 +1774,24 @@ if (typeof sessionStorage !== 'undefined') {
   }
 }
 /* ---------------- MENU PRINCIPAL ---------------- */
+function getDisciplineQuestionStats(disc) {
+  const subjects = questoesData[disc] || {};
+  let correct = 0;
+  let answered = 0;
+  let total = 0;
+
+  Object.entries(subjects).forEach(([sub, questions]) => {
+    questions.forEach((q) => {
+      total += 1;
+      const state = getEffectiveQuestionState(disc, sub, q.label);
+      if (state === 1 || state === 2) answered += 1;
+      if (state === 1) correct += 1;
+    });
+  });
+
+  return { correct, answered, total };
+}
+
 function showMenu () {
   examListOpen=false;
   currentExam=null;
@@ -1719,7 +1863,6 @@ function showMenu () {
     const btn = Object.assign(
       document.createElement("button"), {
         className: `disc-btn ${discClasses[disc]}`,
-        textContent: disc,
         onclick: () => {
           if(disc === 'Redação') {
             currentDisc = disc;
@@ -1730,6 +1873,15 @@ function showMenu () {
           }
         },
       });
+    btn.appendChild(Object.assign(
+      document.createElement('span'),
+      { className: 'disc-btn-label', textContent: disc }
+    ));
+    const { correct, answered, total } = getDisciplineQuestionStats(disc);
+    btn.appendChild(Object.assign(
+      document.createElement('span'),
+      { className: 'disc-btn-stats', textContent: `${correct}/${answered}[${total}]` }
+    ));
     if(disc === 'Geografia e Sociologia') btn.style.padding='0 4px';
     line.appendChild(btn);
 
@@ -1751,17 +1903,50 @@ function showMenu () {
   toggleSettingsVisibility(true);   // mostra engrenagem
 }
 
+function closeSubmenu(menu, button) {
+  if (!menu || !button) return;
+  menu.style.display = 'none';
+  button.setAttribute('aria-expanded', 'false');
+}
+
+function closeProgrammerMenu() {
+  closeSubmenu(programmerMenu, programmerBtn);
+}
+
+function closeSettingsSubmenus() {
+  closeSubmenu(reviewMenu, reviewMenuBtn);
+  closeSubmenu(backupMenu, backupMenuBtn);
+  closeProgrammerMenu();
+}
+
+function closeSettingsMenu() {
+  settingsMenu.style.display = "none";
+  closeSettingsSubmenus();
+}
+
+function toggleSettingsSubmenu(menu, button) {
+  if (!menu || !button) return;
+  const expanded = menu.style.display === 'flex';
+  closeSettingsSubmenus();
+  menu.style.display = expanded ? 'none' : 'flex';
+  button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+}
+
 // Abre/fecha ao clicar na engrenagem
 settingsBtn.onclick = e => {
   e.stopPropagation();   // evita fechar imediatamente
-  settingsMenu.style.display =
-    settingsMenu.style.display === "flex" ? "none" : "flex";
+  if (settingsMenu.style.display === "flex") {
+    closeSettingsMenu();
+  } else {
+    closeSettingsSubmenus();
+    settingsMenu.style.display = "flex";
+  }
 };
 
 // Fecha se clicar fora do menu
 document.addEventListener("click", e=>{
   if(!settingsMenu.contains(e.target) && e.target!==settingsBtn){
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
   }
   if(
     reviewSettingsMenu && reviewSettingsBtn &&
@@ -1776,7 +1961,7 @@ document.addEventListener("click", e=>{
 function toggleSettingsVisibility(showHome){
   settingsBtn.style.display  = showHome ? 'block' : 'none';
   /* se saiu da home, fecha o menu para não ficar solto */
-  if (!showHome) settingsMenu.style.display = 'none';
+  if (!showHome) closeSettingsMenu();
   toggleReviewSettingsVisibility(false);
 }
 
@@ -1981,7 +2166,7 @@ function renderSearchResults(results){
 
 if(searchNotesBtn){
   searchNotesBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     openSearchOverlay();
   };
 }
@@ -2012,33 +2197,107 @@ document.addEventListener('keydown', e => {
 });
 
 exportBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   exportData('general');
 };
 if (exportHandBtn) {
   exportHandBtn.onclick = () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     exportData('handwriting');
   };
 }
 importBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   importFile.value = '';
   importFile.dataset.mode = 'general';
   importFile.click();
 };
 if (importHandBtn) {
   importHandBtn.onclick = () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     importFile.value = '';
     importFile.dataset.mode = 'handwriting';
     importFile.click();
   };
 }
 
+
+
+async function clearBrowserCaches() {
+  if (!("caches" in window)) return;
+  const cacheNames = await caches.keys();
+  await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
+}
+
+if (reviewMenuBtn && reviewMenu) {
+  reviewMenuBtn.onclick = (event) => {
+    event.stopPropagation();
+    toggleSettingsSubmenu(reviewMenu, reviewMenuBtn);
+  };
+}
+
+if (backupMenuBtn && backupMenu) {
+  backupMenuBtn.onclick = (event) => {
+    event.stopPropagation();
+    toggleSettingsSubmenu(backupMenu, backupMenuBtn);
+  };
+}
+
+if (programmerBtn && programmerMenu) {
+  programmerBtn.onclick = (event) => {
+    event.stopPropagation();
+    toggleSettingsSubmenu(programmerMenu, programmerBtn);
+  };
+}
+
+
+if (clearAllBtn) {
+  clearAllBtn.onclick = async () => {
+    closeSettingsMenu();
+    const confirmed = confirm(
+      'Deseja apagar tudo? Isso remove questões, comentários, revisões, resumos, manuscritos e cache. Essa ação não pode ser desfeita.'
+    );
+    if (!confirmed) return;
+
+    try {
+      pdfDirtyLayers.clear();
+    } catch (err) {
+      console.warn('Falha ao limpar a fila de camadas do PDF antes da limpeza total.', err);
+    }
+
+    try {
+      localStorage.clear();
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
+      await clearBrowserCaches();
+    } catch (err) {
+      console.error('Erro ao limpar todos os dados', err);
+      alert('Não foi possível concluir a limpeza total. Verifique o console para mais detalhes.');
+      return;
+    }
+
+    window.location.reload();
+  };
+}
+
+if (clearQuestionsBtn) {
+  clearQuestionsBtn.onclick = () => {
+    closeSettingsMenu();
+    const confirmed = confirm(
+      'Deseja apagar todos os dados de questões, comentários e revisão? Manuscritos e cache não serão apagados por esta ação.'
+    );
+    if (!confirmed) return;
+
+    const removedCount = clearQuestionDataFromLocalStorage();
+    alert(`${removedCount} dado(s) de questões foram apagados.`);
+    window.location.reload();
+  };
+}
+
 if (clearManuscriptsBtn) {
   clearManuscriptsBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     const confirmed = confirm(
       'Deseja apagar todos os manuscritos salvos nos PDFs? Essa ação não pode ser desfeita.'
     );
@@ -2065,7 +2324,7 @@ if (clearManuscriptsBtn) {
 
 if (clearCacheBtn) {
   clearCacheBtn.onclick = async () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     const confirmed = confirm(
       "Deseja limpar o cache?\nIsso faz o navegador baixar a versão mais recente sem apagar seu progresso."
     );
@@ -2075,10 +2334,7 @@ if (clearCacheBtn) {
     clearCacheBtn.textContent = "Limpando...";
 
     try {
-      if ("caches" in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
-      }
+      await clearBrowserCaches();
 
       const resources = new Set();
       const addLocalResource = url => {
@@ -2114,25 +2370,33 @@ if (clearCacheBtn) {
 
 /* ---------------- TRILHA ESTRATÉGICA ---------------- */
 trilhaBtn.onclick = () => {
-  settingsMenu.style.display = 'none';
+  closeSettingsMenu();
   showTrail();
 };
 
 examsBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   showExamMenu();
 };
 
 natReviewBtn.onclick = () => {
-  settingsMenu.style.display = 'none';
-  resetNatReviewState();
+  closeSettingsMenu();
+  resetNatReviewState('wrong');
   showNatReview();
 };
+
+if (favReviewBtn) {
+  favReviewBtn.onclick = () => {
+    closeSettingsMenu();
+    resetNatReviewState('favorite');
+    showNatReview();
+  };
+}
 
 if (reviewModeBtn) {
   updateReviewModeButton();
   reviewModeBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     setPostReviewMode(!postReviewMode);
   };
 }
@@ -2144,7 +2408,7 @@ function updateD1Btn(){
 toggleD1Btn.onclick = () => {
   d1Enabled = !d1Enabled;
   localStorage.setItem('d1Enabled', JSON.stringify(d1Enabled));
-  settingsMenu.style.display = 'none';
+  closeSettingsMenu();
   updateD1Btn();
   if(currentDisc === null) showMenu();
 };
@@ -2236,6 +2500,14 @@ function countMicroProgress(entry){
   return a;
 }
 
+function countDailyReviewed(dateStr, filter) {
+  if (!dateStr) return 0;
+  return collectNatReviewItems(filter).reduce((total, item) => {
+    const key = qKey(item.disc, item.sub, item.q.label);
+    return total + (localStorage.getItem(`reviewLog_${dateStr}_${key}`) === '1' ? 1 : 0);
+  }, 0);
+}
+
 function openPicker(callback){
   pickerDisc.innerHTML = '';
   pickerReviewDisc.innerHTML = '';
@@ -2304,60 +2576,16 @@ function openPicker(callback){
     }else if(selected==='__review__'){
       pickerComment.style.display='none';
       pickerMicro.style.display='none';
-      pickerExamMode.style.display='none';
+      pickerExamMode.style.display='';
       pickerExam.style.display='none';
-      pickerReviewDisc.style.display='';
-      pickerSub.style.display='';
+      pickerReviewDisc.style.display='none';
+      pickerSub.style.display='none';
       pickerReviewDisc.innerHTML='';
-      const reviewMode = natReviewState.mode || 'nat';
-      const reviewAreaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Área';
-      const optAllDisc=document.createElement('option');
-      optAllDisc.value=REVIEW_ALL_DISC;
-      optAllDisc.textContent=`Revisão: ${reviewAreaLabel}`;
-      pickerReviewDisc.appendChild(optAllDisc);
-      getReviewDisciplineOptions(reviewMode).forEach(disc=>{
-        const opt=document.createElement('option');
-        opt.value=disc;
-        opt.textContent=disc;
-        pickerReviewDisc.appendChild(opt);
-      });
-      if(!pickerReviewDisc.options.length){
-        pickerSub.innerHTML='';
-        pickerAdd.disabled = true;
-        return;
-      }
+      pickerSub.innerHTML='';
+      pickerExamMode.innerHTML =
+        '<option value="wrong">Erradas</option>'+
+        '<option value="favorite">Favoritas</option>';
       pickerAdd.disabled = false;
-      const populateReviewSubs = ()=>{
-        const disc = pickerReviewDisc.value;
-        pickerSub.innerHTML='';
-        if(!disc){
-          pickerAdd.disabled = true;
-          return;
-        }
-        pickerAdd.disabled = false;
-        const isAll = disc === REVIEW_ALL_DISC;
-        pickerSub.style.display = isAll ? 'none' : '';
-        if(isAll){
-          const opt=document.createElement('option');
-          opt.value=ALL_SUB;
-          opt.textContent=`Revisão: ${reviewAreaLabel}`;
-          pickerSub.appendChild(opt);
-          pickerSub.value=ALL_SUB;
-          return;
-        }
-        const optAll=document.createElement('option');
-        optAll.value=ALL_SUB;
-        optAll.textContent='Disciplina Inteira';
-        pickerSub.appendChild(optAll);
-        (SUBJECT_NAMES[disc]||[]).forEach((n,i)=>{
-          const o=document.createElement('option');
-          o.value=String(i+1).padStart(2,'0');
-          o.textContent=n;
-          pickerSub.appendChild(o);
-        });
-      };
-      pickerReviewDisc.onchange = populateReviewSubs;
-      populateReviewSubs();
     }else{
       hideReviewSelectors();
       pickerSub.style.display='';
@@ -2388,12 +2616,7 @@ function openPicker(callback){
     }else if(pickerDisc.value==='__exams__'){
       callback({exam:pickerExam.value,mode:pickerExamMode.value});
     }else if(pickerDisc.value==='__review__'){
-      const reviewDisc = pickerReviewDisc.value;
-      if(!reviewDisc){
-        alert('Selecione uma disciplina para revisar.');
-        return;
-      }
-      callback({review:true, mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
+      callback({review:true, kind: pickerExamMode.value === 'favorite' ? 'favorite' : 'wrong'});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -2538,32 +2761,24 @@ function renderTrailDay(day,expand){
       if(s.review){
         const subj=document.createElement('button');
         subj.className='trail-subject trail-review';
-        const isAllDisc = s.disc === REVIEW_ALL_DISC;
-        const hasAll = isAllDisc || s.sub === ALL_SUB;
-        const labelParts = ['Revisão'];
-        const mode = s.mode || natReviewState.mode || 'nat';
-        const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
-        if(isAllDisc){
-          labelParts.push(areaLabel);
-        }else{
-          labelParts.push(s.disc);
-          if(!hasAll){
-            labelParts.push(getFriendlyName(s.disc,s.sub));
-          }
-        }
-        subj.textContent=labelParts.join(': ');
+        const reviewKind = s.kind === 'favorite' ? 'favorite' : 'wrong';
+        subj.classList.add(reviewKind === 'favorite' ? 'trail-review-favorite' : 'trail-review-wrong');
+        subj.textContent = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
         subj.onclick=()=>{
           trailReturn=dayStr;
           trailReturnSub=false;
-          const filter = isAllDisc
-            ? {mode, disc:REVIEW_ALL_DISC}
-            : {mode, disc:s.disc, sub:s.sub};
-          showNatReview(filter);
+          resetNatReviewState(reviewKind);
+          showNatReview();
         };
         const count=document.createElement('span');
         count.className='trail-count';
-        const countFilter = isAllDisc ? { mode } : { mode, disc:s.disc, sub:s.sub };
-        count.textContent=countNatReviewItems(countFilter).toString();
+        const defaultModes = REVIEW_DEFAULT_MODES.slice();
+        const countFilter = {
+          kind: reviewKind,
+          modes: defaultModes,
+          discs: getReviewDisciplinesForModes(defaultModes)
+        };
+        count.textContent=countDailyReviewed(dayStr, countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
         rm.textContent='\u00D7';
@@ -2793,87 +3008,65 @@ function renderExamSummary(){
 }
 
 function collectNatReviewItems(filter=null){
-  const mode = filter?.mode || natReviewState.mode || 'nat';
+  const modes = normalizeReviewModes(filter?.modes || (filter?.mode ? [filter.mode] : natReviewState.modes));
+  const selectedDisciplines = new Set(normalizeReviewDiscs(filter?.discs || natReviewState.discs, modes));
+  const kind = filter?.kind || natReviewState.kind || 'wrong';
   const normalizedFilter = (() => {
     if (!filter) return null;
     const { disc, sub } = filter.disc === REVIEW_ALL_DISC ? { disc: null, sub: null } : filter;
-    return {
-      disc: disc ?? null,
-      sub: sub ?? null
-    };
+    return { disc: disc ?? null, sub: sub ?? null };
   })();
-  const areaData = examsDataByMode[mode] || {};
-  const examOrder = examOrderByMode[mode] || [];
-  const visited = new Set();
-  const allowed = new Set(DISCIPLINES_BY_MODE[mode] || []);
-  const matchesFilter = (disc, sub) => {
-    if(!allowed.has(disc)) return false;
-    if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
-    if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
-    return true;
-  };
   const combined = [];
-  const pushQuestionsFromExam = exam => {
-    const questions = areaData[exam] || [];
-    const upper = exam.toUpperCase();
-    const isEnem = upper.includes('ENEM');
-    const isSas  = upper.includes('SAS');
-    questions.forEach(({disc,sub,q})=>{
-      if(!matchesFilter(disc,sub)) return;
-      const key = qKey(disc,sub,q.label);
-      const state = getStoredQuestionState(disc, sub, q.label);
-      const effectiveState = getEffectiveStateFromKey(key, state);
-      const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-      const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
-      const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-      const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
-      const isHidden = localStorage.getItem(hiddenKey) === '1';
-      const isAutoHidden = localStorage.getItem(autoHiddenKey) === '1';
-      const isFavorite = localStorage.getItem(favoriteKey) === '1';
-      const isSoon = localStorage.getItem(soonKey) === '1';
-      if(effectiveState === 2){
-        combined.push({exam,mode,disc,sub,q,type:'wrong',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
-      }
-      if(isEnem && effectiveState === 0){
-        combined.push({exam,mode,disc,sub,q,type:'pending',hidden:isHidden,favorite:isFavorite,soon:isSoon,autoHidden:isAutoHidden});
-      }
+  modes.forEach(currentMode => {
+    const areaData = examsDataByMode[currentMode] || {};
+    const examOrder = examOrderByMode[currentMode] || [];
+    const visited = new Set();
+    const allowed = new Set(DISCIPLINES_BY_MODE[currentMode] || []);
+    const matchesFilter = (disc, sub) => {
+      if(!allowed.has(disc)) return false;
+      if(!selectedDisciplines.has(disc)) return false;
+      if(normalizedFilter?.disc && disc !== normalizedFilter.disc) return false;
+      if(normalizedFilter?.sub && normalizedFilter.sub !== ALL_SUB && sub !== normalizedFilter.sub) return false;
+      return true;
+    };
+    const pushQuestionsFromExam = exam => {
+      const questions = areaData[exam] || [];
+      questions.forEach(({disc,sub,q})=>{
+        if(!matchesFilter(disc,sub)) return;
+        const key = qKey(disc,sub,q.label);
+        const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
+        const isFavorite = localStorage.getItem(favoriteKey) === '1';
+        const effectiveState = getEffectiveQuestionState(disc, sub, q.label);
+        if(kind === 'favorite'){
+          if(isFavorite) combined.push({exam,mode:currentMode,disc,sub,q,type:'favorite',favorite:isFavorite});
+        }else if(effectiveState === 2){
+          combined.push({exam,mode:currentMode,disc,sub,q,type:'wrong',favorite:isFavorite});
+        }
+      });
+      visited.add(exam);
+    };
+    examOrder.forEach(exam => pushQuestionsFromExam(exam));
+    Object.keys(areaData).forEach(exam => {
+      if(!visited.has(exam)) pushQuestionsFromExam(exam);
     });
-    visited.add(exam);
-  };
-  examOrder.forEach(exam => pushQuestionsFromExam(exam));
-  Object.keys(areaData).forEach(exam => {
-    if(!visited.has(exam)) pushQuestionsFromExam(exam);
   });
   return combined;
 }
 
 function computeNatReviewSnapshot(items){
   if (typeof localStorage === 'undefined') {
-    return { wrongCount: 0, pendingCount: 0, totalCount: 0, reviewedCount: 0 };
+    return { totalCount: 0, reviewedCount: 0 };
   }
-  let wrongCount = 0;
-  let pendingCount = 0;
   let reviewedCount = 0;
   items.forEach(item=>{
     const key = qKey(item.disc,item.sub,item.q.label);
-    const state = getStoredQuestionState(item.disc, item.sub, item.q.label);
-    const effectiveState = getEffectiveStateFromKey(key, state);
-    const isWrongItem = item.type === 'wrong';
-    const qualifies = isWrongItem ? effectiveState === 2 : effectiveState === 0;
-    if(!qualifies) return;
-    if(isWrongItem){
-      wrongCount += 1;
-    }else{
-      pendingCount += 1;
-    }
     const reviewKey = `natReview_${key}`;
     const reviewState = +localStorage.getItem(reviewKey) || 0;
     if(reviewState > 0){
       reviewedCount += 1;
     }
   });
-  const totalCount = wrongCount + pendingCount;
-  return { wrongCount, pendingCount, totalCount, reviewedCount };
+  return { totalCount: items.length, reviewedCount };
 }
 
 function countNatReviewItems(filter=null){
@@ -2886,10 +3079,7 @@ function countNatReviewItems(filter=null){
     return next;
   })();
   const combined = collectNatReviewItems(effectiveFilter);
-  const showPending = natReviewState.showPending;
-  const filteredItems = combined.filter(item => showPending || item.type !== 'pending');
-  const visibleItems = filteredItems.filter(item => !item.hidden);
-  const snapshot = computeNatReviewSnapshot(visibleItems);
+  const snapshot = computeNatReviewSnapshot(combined);
   return Math.max(snapshot.totalCount - snapshot.reviewedCount, 0);
 }
 /* ---------------- LISTA DE ASSUNTOS ---------------- */
@@ -3006,6 +3196,7 @@ function showExam(exam){
       }
     });
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
     row.appendChild(Object.assign(document.createElement('button'),{
       textContent:'Gabarito',
       className:'small-btn',
@@ -3066,31 +3257,41 @@ function showNatReview(filter=null){
   if(filter){
     setNatReviewState(filter);
   }
-  const { mode: reviewMode = 'nat', disc, sub, showHidden, showPending } = natReviewState;
+  const { disc, sub, kind: reviewKind = 'wrong' } = natReviewState;
+  const reviewModes = normalizeReviewModes(natReviewState.modes);
+  const reviewDiscs = normalizeReviewDiscs(natReviewState.discs, reviewModes);
   const isAll = disc === REVIEW_ALL_DISC;
   const effectiveFilter = isAll
-    ? { mode: reviewMode }
-    : { mode: reviewMode, disc, sub };
+    ? { modes: reviewModes, discs: reviewDiscs, kind: reviewKind }
+    : { modes: reviewModes, discs: reviewDiscs, disc, sub, kind: reviewKind };
   currentDisc = null;
   currentSub = null;
   currentExam = null;
   examListOpen = false;
-  currentExamMode = reviewMode;
+  currentExamMode = reviewModes[0] || 'nat';
   currentView = 'review';
   currentMicroSimEntry = null;
+  const keepReviewFiltersOpen = !!(reviewSettingsMenu && reviewSettingsMenu.style.display === 'flex');
   leaveHome();
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
   renderReviewSettingsMenu();
-  const areaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Revisão';
-  let headerLabel = `Revisão: ${areaLabel}`;
+  if (keepReviewFiltersOpen && reviewSettingsMenu && reviewSettingsBtn) {
+    reviewSettingsMenu.style.display = 'flex';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'true');
+  }
+  const areaLabel = reviewModes.length
+    ? reviewModes.map(mode => REVIEW_MODE_LABELS[mode] || mode).join(' + ')
+    : 'Nenhuma área';
+  const reviewTitle = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
+  let headerLabel = `${reviewTitle}: ${areaLabel}`;
   if(!isAll){
-    headerLabel = `Revisão: ${disc}`;
+    headerLabel = `${reviewTitle}: ${disc}`;
     if(sub && sub !== ALL_SUB){
       headerLabel += `: ${getFriendlyName(disc, sub)}`;
     }
   }else{
-    headerLabel = `Revisão: ${areaLabel}`;
+    headerLabel = `${reviewTitle}: ${areaLabel}`;
   }
   updateHeader(true, headerLabel);
   summaryBtn.style.display = 'none';
@@ -3105,12 +3306,10 @@ function showNatReview(filter=null){
   clear();
   window.scrollTo(0,0);
 
-  const combined = collectNatReviewItems(effectiveFilter);
-  const itemsForView = combined.filter(item => showPending || item.type !== 'pending');
-  const pendingFilteredOut = !showPending && combined.some(item => item.type === 'pending');
+  const itemsForView = collectNatReviewItems(effectiveFilter);
   const baseEmptyText = (!isAll || (sub && sub !== ALL_SUB))
     ? 'Nenhuma questão para revisar no filtro escolhido.'
-    : 'Nenhuma questão errada ou pendente encontrada nos simulados.';
+    : (reviewKind === 'favorite' ? 'Nenhuma questão favorita encontrada.' : 'Nenhuma questão errada encontrada nos simulados.');
 
   const emptyMsg = document.createElement('p');
   emptyMsg.className = 'review-empty';
@@ -3120,23 +3319,15 @@ function showNatReview(filter=null){
     if (hasRow) {
       if (emptyMsg.isConnected) emptyMsg.remove();
     } else {
-      let message = baseEmptyText;
-      const hiddenSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => item.hidden && !item.favorite));
-      const visibleSnapshot = computeNatReviewSnapshot(itemsForView.filter(item => !item.hidden || item.favorite));
-      if (!showHidden && hiddenSnapshot.totalCount > 0 && visibleSnapshot.totalCount === 0) {
-        message = 'Todas as questões deste filtro estão ocultas. Use “Exibir Ocultas”.';
-      } else if (pendingFilteredOut) {
-        message = 'Ative “Exibir Não Feitas” para ver as questões pendentes.';
-      }
-      emptyMsg.textContent = message;
+      emptyMsg.textContent = baseEmptyText;
       if (!emptyMsg.isConnected) app.appendChild(emptyMsg);
     }
   };
 
   const refreshStats = () => {
     const snapshot = computeNatReviewSnapshot(itemsForView);
-    const { wrongCount, pendingCount, reviewedCount, totalCount } = snapshot;
-    const text = `Erradas (todos os simulados): ${wrongCount} | Não feitas ENEM: ${pendingCount} | Total visível: ${reviewedCount}/${totalCount}`;
+    const { reviewedCount, totalCount } = snapshot;
+    const text = `Revisadas: ${reviewedCount}/${totalCount}`;
     stats.textContent = text;
     stats.className = 'stat';
   };
@@ -3145,91 +3336,33 @@ function showNatReview(filter=null){
 
   itemsForView.forEach(item => {
     const key = qKey(item.disc, item.sub, item.q.label);
+    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
     let st = getStoredQuestionState(item.disc, item.sub, item.q.label);
     const qualifies = () => {
+      if (reviewKind === 'favorite') {
+        return localStorage.getItem(favoriteKey) === '1';
+      }
       const effective = getEffectiveStateFromKey(key, st);
-      if (item.type === 'wrong') return effective === 2;
-      return effective === 0;
+      return effective === 2;
     };
     if (!qualifies()) return;
 
-    const hiddenKey = `${NAT_REVIEW_HIDDEN_PREFIX}${key}`;
-    const autoHiddenKey = `${NAT_REVIEW_AUTO_HIDDEN_PREFIX}${key}`;
-    const favoriteKey = `${NAT_REVIEW_FAVORITE_PREFIX}${key}`;
-    const soonKey = `${NAT_REVIEW_SOON_PREFIX}${key}`;
-
-    let isHidden = !!item.hidden;
-    let autoHidden = localStorage.getItem(autoHiddenKey) === '1';
     let isFavorite = !!item.favorite;
-    let isSoon = !!item.soon;
 
     const reviewKey = `natReview_${key}`;
     let reviewState = +localStorage.getItem(reviewKey) || 0;
 
-    const syncWithReviewState = ({ deferAutoHide = false } = {}) => {
-      const shouldDefer = deferAutoHide || natReviewDeferredAutoHide.has(key);
-      if (reviewState === 1) {
-        if (isFavorite) {
-          natReviewDeferredAutoHide.delete(key);
-          if (isHidden) {
-            isHidden = false;
-            localStorage.removeItem(hiddenKey);
-          }
-          if (autoHidden) {
-            autoHidden = false;
-            localStorage.removeItem(autoHiddenKey);
-          }
-        } else {
-          if (!autoHidden) {
-            autoHidden = true;
-          }
-          localStorage.setItem(autoHiddenKey, '1');
-          if (shouldDefer) {
-            natReviewDeferredAutoHide.add(key);
-            if (isHidden) {
-              isHidden = false;
-              localStorage.removeItem(hiddenKey);
-            }
-          } else {
-            natReviewDeferredAutoHide.delete(key);
-            if (!isHidden) {
-              isHidden = true;
-            }
-            localStorage.setItem(hiddenKey, '1');
-          }
-        }
-      } else {
-        if (natReviewDeferredAutoHide.has(key)) {
-          natReviewDeferredAutoHide.delete(key);
-        }
-        if (autoHidden) {
-          autoHidden = false;
-          localStorage.removeItem(autoHiddenKey);
-          if (isHidden) {
-            isHidden = false;
-            localStorage.removeItem(hiddenKey);
-          }
-        }
-      }
-      item.hidden = isHidden;
-      item.autoHidden = autoHidden;
+    const syncWithReviewState = () => {
+      item.favorite = isFavorite;
     };
 
     syncWithReviewState();
 
-    if (!natReviewState.showHidden && isHidden && !isFavorite) {
-      return;
-    }
-
-    item.hidden = isHidden;
     item.favorite = isFavorite;
-    item.soon = isSoon;
 
     const row = document.createElement('div');
     row.className = 'question-row';
-    if (isHidden) row.classList.add('review-hidden');
     if (isFavorite) row.classList.add('review-favorite');
-    if (isSoon) row.classList.add('review-soon');
 
     const qBtn = document.createElement('button');
     qBtn.classList.add('btn', 'question-btn', 'two-line-btn', 'question-btn--with-menu');
@@ -3277,15 +3410,7 @@ function showNatReview(filter=null){
     const favoriteOption = document.createElement('button');
     favoriteOption.type = 'button';
     favoriteOption.className = 'question-action-option';
-    const soonOption = document.createElement('button');
-    soonOption.type = 'button';
-    soonOption.className = 'question-action-option';
-    const hideOption = document.createElement('button');
-    hideOption.type = 'button';
-    hideOption.className = 'question-action-option';
     actionMenu.appendChild(favoriteOption);
-    actionMenu.appendChild(soonOption);
-    actionMenu.appendChild(hideOption);
     row.appendChild(actionMenu);
 
     const controls = document.createElement('div');
@@ -3336,17 +3461,16 @@ function showNatReview(filter=null){
     };
     reviewBox.onclick = () => {
       reviewState = (reviewState + 1) % 3;
+      const reviewLogKey = `reviewLog_${getTodayStr()}_${key}`;
       if (reviewState === 0) {
         localStorage.removeItem(reviewKey);
+        localStorage.removeItem(reviewLogKey);
       } else {
         localStorage.setItem(reviewKey, reviewState);
+        localStorage.setItem(reviewLogKey, '1');
       }
       paintReview();
-      syncWithReviewState({ deferAutoHide: reviewState === 1 });
-      paintHide();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
-        row.remove();
-      }
+      syncWithReviewState();
       ensureEmptyState();
       refreshStats();
     };
@@ -3354,28 +3478,14 @@ function showNatReview(filter=null){
     controls.appendChild(reviewBox);
 
     const updateMenuToggle = () => {
-      const hasState = isHidden || isFavorite || isSoon;
+      const hasState = isFavorite;
       menuToggle.classList.toggle('menu-active', hasState);
-    };
-
-    const paintHide = () => {
-      hideOption.textContent = isHidden ? 'Exibir' : 'Ocultar';
-      hideOption.classList.toggle('active', isHidden);
-      row.classList.toggle('review-hidden', isHidden);
-      updateMenuToggle();
     };
 
     const paintFavorite = () => {
       favoriteOption.textContent = isFavorite ? 'Desfavoritar' : 'Favoritar';
       favoriteOption.classList.toggle('active', isFavorite);
       row.classList.toggle('review-favorite', isFavorite);
-      updateMenuToggle();
-    };
-
-    const paintSoon = () => {
-      soonOption.textContent = isSoon ? 'Remover Em Breve' : 'Em Breve';
-      soonOption.classList.toggle('active', isSoon);
-      row.classList.toggle('review-soon', isSoon);
       updateMenuToggle();
     };
 
@@ -3434,8 +3544,7 @@ function showNatReview(filter=null){
       }
       paintFavorite();
       syncWithReviewState();
-      paintHide();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
+      if (reviewKind === 'favorite' && !isFavorite) {
         row.remove();
       }
       ensureEmptyState();
@@ -3443,48 +3552,12 @@ function showNatReview(filter=null){
       closeMenu();
     });
 
-    soonOption.addEventListener('click', e => {
-      e.preventDefault();
-      isSoon = !isSoon;
-      item.soon = isSoon;
-      if (isSoon) {
-        localStorage.setItem(soonKey, '1');
-      } else {
-        localStorage.removeItem(soonKey);
-      }
-      paintSoon();
-      closeMenu();
-    });
-
-    hideOption.addEventListener('click', e => {
-      e.preventDefault();
-      isHidden = !isHidden;
-      item.hidden = isHidden;
-      if (isHidden) {
-        localStorage.setItem(hiddenKey, '1');
-      } else {
-        localStorage.removeItem(hiddenKey);
-      }
-      autoHidden = false;
-      localStorage.removeItem(autoHiddenKey);
-      natReviewDeferredAutoHide.delete(key);
-      paintHide();
-      syncWithReviewState();
-      if (!natReviewState.showHidden && isHidden && !isFavorite) {
-        row.remove();
-      }
-      ensureEmptyState();
-      refreshStats();
-      closeMenu();
-    });
 
     qBtn.addEventListener('click', () => {
       if (menuOpen) closeMenu();
     });
 
     paintFavorite();
-    paintSoon();
-    paintHide();
 
     row.appendChild(controls);
 
@@ -3719,6 +3792,7 @@ function showQuestions(disc, sub, fromStar = false, fromTrailSub = false) {
 
     qBtn.onclick = () => openPdf(q.QPDFName, q.page);
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
 
     /* Botão gabarito */
     row.appendChild(Object.assign(
@@ -5493,6 +5567,7 @@ function showMicroSim(entry) {
     }
     qBtn.onclick = () => openPdf(q.QPDFName, q.page);
     row.appendChild(qBtn);
+    attachFavoriteQuestionMenu(row, qBtn, disc, sub, q.label);
 
     row.appendChild(Object.assign(
       document.createElement('button'),{

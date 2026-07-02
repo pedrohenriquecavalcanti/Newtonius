@@ -221,8 +221,9 @@ button:hover { filter: brightness(1.2); }
 
 /* --- Botão da disciplina (com cor própria) --- */
 .disc-btn {
+  position: relative;
   width: 200px;
-  height: 33px;
+  height: 40px;
   font-size: 16px;
   color: #fff;
   font-weight: bold;
@@ -230,6 +231,20 @@ button:hover { filter: brightness(1.2); }
   align-items: center;         /* centra o conteúdo na altura          */
   justify-content: center;     /* já centraliza horizontalmente também */
   white-space: nowrap;
+}
+.disc-btn-label{
+  display:block;
+}
+.disc-btn-stats{
+  position:absolute;
+  right:6px;
+  bottom:3px;
+  color:#000;
+  font-size:10px;
+  line-height:1;
+  font-weight:800;
+  opacity:.9;
+  pointer-events:none;
 }
 .disc-btn.biologia             { background: var(--c-bio); }
 .disc-btn.quimica              { background: var(--c-qui); }
@@ -328,7 +343,7 @@ button:hover { filter: brightness(1.2); }
   opacity: 0.6;
 }
 
-.question-row.review-favorite .question-btn {
+.question-row.review-favorite .btn {
   box-shadow: 0 0 0 2px rgba(255, 211, 107, 0.35);
 }
 
@@ -1032,6 +1047,23 @@ button:hover { filter: brightness(1.2); }
   opacity:.45;
   cursor:default;
 }
+#settingsMenu .settings-hidden-control{
+  display:none;
+}
+.settings-programmer-group{
+  display:flex;
+  flex-direction:column;
+}
+#settingsMenu .settings-submenu{
+  display:none;
+  flex-direction:column;
+  margin-top:4px;
+  padding-left:10px;
+  border-left:1px solid var(--c-border-muted);
+}
+#settingsMenu .settings-submenu button{
+  font-size:13px;
+}
 /* === Trilha Estratégica (v2) === */
 .day-btn {
   width: 100%;
@@ -1222,6 +1254,8 @@ button:hover { filter: brightness(1.2); }
 .trail-subject.sem-assunto-hum      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 .trail-subject.sem-assunto-mat      { background: var(--c-sem-assunto); color: var(--c-bg-app); }
 .trail-subject.trail-review         { background: #9fe3b1; color: #0a3a1f; }
+.trail-subject.trail-review-wrong   { background: #ff6b6b; color: #2b0000; }
+.trail-subject.trail-review-favorite{ background: #ffd36b; color: #3b2500; }
 /* Exams */
 .trail-subject.exam-enem      { background: var(--c-exam-enem); }
 .trail-subject.exam-sas       { background: var(--c-exam-sas); }
