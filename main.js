@@ -2570,61 +2570,14 @@ function openPicker(callback){
       pickerMicro.style.display='none';
       pickerExamMode.style.display='';
       pickerExam.style.display='none';
+      pickerReviewDisc.style.display='none';
+      pickerSub.style.display='none';
+      pickerReviewDisc.innerHTML='';
+      pickerSub.innerHTML='';
       pickerExamMode.innerHTML =
         '<option value="wrong">Erradas</option>'+
         '<option value="favorite">Favoritas</option>';
-      pickerReviewDisc.style.display='';
-      pickerSub.style.display='';
-      pickerReviewDisc.innerHTML='';
-      const reviewMode = normalizeReviewModes(natReviewState.modes)[0] || 'nat';
-      const reviewAreaLabel = REVIEW_MODE_LABELS[reviewMode] || 'Área';
-      const optAllDisc=document.createElement('option');
-      optAllDisc.value=REVIEW_ALL_DISC;
-      optAllDisc.textContent=`Revisão: ${reviewAreaLabel}`;
-      pickerReviewDisc.appendChild(optAllDisc);
-      getReviewDisciplineOptions(reviewMode).forEach(disc=>{
-        const opt=document.createElement('option');
-        opt.value=disc;
-        opt.textContent=disc;
-        pickerReviewDisc.appendChild(opt);
-      });
-      if(!pickerReviewDisc.options.length){
-        pickerSub.innerHTML='';
-        pickerAdd.disabled = true;
-        return;
-      }
       pickerAdd.disabled = false;
-      const populateReviewSubs = ()=>{
-        const disc = pickerReviewDisc.value;
-        pickerSub.innerHTML='';
-        if(!disc){
-          pickerAdd.disabled = true;
-          return;
-        }
-        pickerAdd.disabled = false;
-        const isAll = disc === REVIEW_ALL_DISC;
-        pickerSub.style.display = isAll ? 'none' : '';
-        if(isAll){
-          const opt=document.createElement('option');
-          opt.value=ALL_SUB;
-          opt.textContent=`Revisão: ${reviewAreaLabel}`;
-          pickerSub.appendChild(opt);
-          pickerSub.value=ALL_SUB;
-          return;
-        }
-        const optAll=document.createElement('option');
-        optAll.value=ALL_SUB;
-        optAll.textContent='Disciplina Inteira';
-        pickerSub.appendChild(optAll);
-        (SUBJECT_NAMES[disc]||[]).forEach((n,i)=>{
-          const o=document.createElement('option');
-          o.value=String(i+1).padStart(2,'0');
-          o.textContent=n;
-          pickerSub.appendChild(o);
-        });
-      };
-      pickerReviewDisc.onchange = populateReviewSubs;
-      populateReviewSubs();
     }else{
       hideReviewSelectors();
       pickerSub.style.display='';
@@ -2655,12 +2608,7 @@ function openPicker(callback){
     }else if(pickerDisc.value==='__exams__'){
       callback({exam:pickerExam.value,mode:pickerExamMode.value});
     }else if(pickerDisc.value==='__review__'){
-      const reviewDisc = pickerReviewDisc.value;
-      if(!reviewDisc){
-        alert('Selecione uma disciplina para revisar.');
-        return;
-      }
-      callback({review:true, kind: pickerExamMode.value === 'favorite' ? 'favorite' : 'wrong', mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
+      callback({review:true, kind: pickerExamMode.value === 'favorite' ? 'favorite' : 'wrong'});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -2805,32 +2753,22 @@ function renderTrailDay(day,expand){
       if(s.review){
         const subj=document.createElement('button');
         subj.className='trail-subject trail-review';
-        const isAllDisc = s.disc === REVIEW_ALL_DISC;
-        const hasAll = isAllDisc || s.sub === ALL_SUB;
         const reviewKind = s.kind === 'favorite' ? 'favorite' : 'wrong';
-        const labelParts = [reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)'];
-        const mode = s.mode || normalizeReviewModes(natReviewState.modes)[0] || 'nat';
-        const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
-        if(isAllDisc){
-          labelParts.push(areaLabel);
-        }else{
-          labelParts.push(s.disc);
-          if(!hasAll){
-            labelParts.push(getFriendlyName(s.disc,s.sub));
-          }
-        }
-        subj.textContent=labelParts.join(': ');
+        subj.textContent = reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)';
         subj.onclick=()=>{
           trailReturn=dayStr;
           trailReturnSub=false;
-          const filter = isAllDisc
-            ? {mode, kind: reviewKind, disc:REVIEW_ALL_DISC}
-            : {mode, kind: reviewKind, disc:s.disc, sub:s.sub};
-          showNatReview(filter);
+          resetNatReviewState(reviewKind);
+          showNatReview();
         };
         const count=document.createElement('span');
         count.className='trail-count';
-        const countFilter = isAllDisc ? { mode, kind: reviewKind } : { mode, kind: reviewKind, disc:s.disc, sub:s.sub };
+        const defaultModes = REVIEW_DEFAULT_MODES.slice();
+        const countFilter = {
+          kind: reviewKind,
+          modes: defaultModes,
+          discs: getReviewDisciplinesForModes(defaultModes)
+        };
         count.textContent=countNatReviewItems(countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
