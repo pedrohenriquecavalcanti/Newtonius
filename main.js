@@ -1079,7 +1079,7 @@ function reorderExamsByFamily(order){
     if(Array.isArray(exams)){
       exams
         .slice()
-        .sort(compareExamRecency)
+        .sort(compareExamChronology)
         .forEach(exam => normalized.push(exam));
     }
   });
@@ -1101,13 +1101,13 @@ function parseExamOrderParts(exam){
   };
 }
 
-function compareExamRecency(a, b){
+function compareExamChronology(a, b){
   const pa = parseExamOrderParts(a);
   const pb = parseExamOrderParts(b);
   if(pa && pb){
-    if(pa.year !== pb.year) return pb.year - pa.year;
-    if(pa.editionNumber !== pb.editionNumber) return pb.editionNumber - pa.editionNumber;
-    const textCmp = pb.editionText.localeCompare(pa.editionText, 'pt-BR', { numeric: true });
+    if(pa.year !== pb.year) return pa.year - pb.year;
+    if(pa.editionNumber !== pb.editionNumber) return pa.editionNumber - pb.editionNumber;
+    const textCmp = pa.editionText.localeCompare(pb.editionText, 'pt-BR', { numeric: true });
     if(textCmp !== 0) return textCmp;
   }else if(pa || pb){
     return pa ? -1 : 1;
