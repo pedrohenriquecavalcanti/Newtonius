@@ -1077,10 +1077,42 @@ function reorderExamsByFamily(order){
   familyOrder.forEach(family => {
     const exams = groups.get(family);
     if(Array.isArray(exams)){
-      exams.forEach(exam => normalized.push(exam));
+      exams
+        .slice()
+        .sort(compareExamRecency)
+        .forEach(exam => normalized.push(exam));
     }
   });
   return normalized;
+}
+
+function parseExamOrderParts(exam){
+  if(typeof exam !== 'string') return null;
+  const match = exam.match(/^(.*?)[-\s](\d{4})(?:[-\s]([A-Za-z]+|\d+))?/);
+  if(!match) return null;
+  const year = Number(match[2]);
+  if(!Number.isFinite(year)) return null;
+  const editionRaw = match[3] || '';
+  const editionNumber = /^\d+$/.test(editionRaw) ? Number(editionRaw) : null;
+  return {
+    year,
+    editionNumber: Number.isFinite(editionNumber) ? editionNumber : -1,
+    editionText: editionRaw.toUpperCase()
+  };
+}
+
+function compareExamRecency(a, b){
+  const pa = parseExamOrderParts(a);
+  const pb = parseExamOrderParts(b);
+  if(pa && pb){
+    if(pa.year !== pb.year) return pb.year - pa.year;
+    if(pa.editionNumber !== pb.editionNumber) return pb.editionNumber - pa.editionNumber;
+    const textCmp = pb.editionText.localeCompare(pa.editionText, 'pt-BR', { numeric: true });
+    if(textCmp !== 0) return textCmp;
+  }else if(pa || pb){
+    return pa ? -1 : 1;
+  }
+  return String(a).localeCompare(String(b), 'pt-BR', { numeric: true });
 }
 
 function getExamFamily(exam){
