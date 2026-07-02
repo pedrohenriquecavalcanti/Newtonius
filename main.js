@@ -356,6 +356,10 @@ const trilhaBtn     = document.getElementById("trilhaBtn");
 const examsBtn      = document.getElementById("examsBtn");
 const natReviewBtn  = document.getElementById("natReviewBtn");
 const favReviewBtn  = document.getElementById("favReviewBtn");
+const reviewMenuBtn = document.getElementById("reviewMenuBtn");
+const reviewMenu = document.getElementById("reviewMenu");
+const backupMenuBtn = document.getElementById("backupMenuBtn");
+const backupMenu = document.getElementById("backupMenu");
 const reviewModeBtn = document.getElementById("reviewModeBtn");
 const clearManuscriptsBtn = document.getElementById("clearManuscriptsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
@@ -1897,15 +1901,33 @@ function showMenu () {
   toggleSettingsVisibility(true);   // mostra engrenagem
 }
 
+function closeSubmenu(menu, button) {
+  if (!menu || !button) return;
+  menu.style.display = 'none';
+  button.setAttribute('aria-expanded', 'false');
+}
+
 function closeProgrammerMenu() {
-  if (!programmerMenu || !programmerBtn) return;
-  programmerMenu.style.display = 'none';
-  programmerBtn.setAttribute('aria-expanded', 'false');
+  closeSubmenu(programmerMenu, programmerBtn);
+}
+
+function closeSettingsSubmenus() {
+  closeSubmenu(reviewMenu, reviewMenuBtn);
+  closeSubmenu(backupMenu, backupMenuBtn);
+  closeProgrammerMenu();
 }
 
 function closeSettingsMenu() {
   settingsMenu.style.display = "none";
-  closeProgrammerMenu();
+  closeSettingsSubmenus();
+}
+
+function toggleSettingsSubmenu(menu, button) {
+  if (!menu || !button) return;
+  const expanded = menu.style.display === 'flex';
+  closeSettingsSubmenus();
+  menu.style.display = expanded ? 'none' : 'flex';
+  button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
 }
 
 // Abre/fecha ao clicar na engrenagem
@@ -1914,7 +1936,7 @@ settingsBtn.onclick = e => {
   if (settingsMenu.style.display === "flex") {
     closeSettingsMenu();
   } else {
-    closeProgrammerMenu();
+    closeSettingsSubmenus();
     settingsMenu.style.display = "flex";
   }
 };
@@ -2142,7 +2164,7 @@ function renderSearchResults(results){
 
 if(searchNotesBtn){
   searchNotesBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     openSearchOverlay();
   };
 }
@@ -2173,24 +2195,24 @@ document.addEventListener('keydown', e => {
 });
 
 exportBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   exportData('general');
 };
 if (exportHandBtn) {
   exportHandBtn.onclick = () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     exportData('handwriting');
   };
 }
 importBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   importFile.value = '';
   importFile.dataset.mode = 'general';
   importFile.click();
 };
 if (importHandBtn) {
   importHandBtn.onclick = () => {
-    settingsMenu.style.display = "none";
+    closeSettingsMenu();
     importFile.value = '';
     importFile.dataset.mode = 'handwriting';
     importFile.click();
@@ -2205,12 +2227,24 @@ async function clearBrowserCaches() {
   await Promise.all(cacheNames.map(name => caches.delete(name).catch(() => {})));
 }
 
+if (reviewMenuBtn && reviewMenu) {
+  reviewMenuBtn.onclick = (event) => {
+    event.stopPropagation();
+    toggleSettingsSubmenu(reviewMenu, reviewMenuBtn);
+  };
+}
+
+if (backupMenuBtn && backupMenu) {
+  backupMenuBtn.onclick = (event) => {
+    event.stopPropagation();
+    toggleSettingsSubmenu(backupMenu, backupMenuBtn);
+  };
+}
+
 if (programmerBtn && programmerMenu) {
   programmerBtn.onclick = (event) => {
     event.stopPropagation();
-    const expanded = programmerMenu.style.display === 'flex';
-    programmerMenu.style.display = expanded ? 'none' : 'flex';
-    programmerBtn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    toggleSettingsSubmenu(programmerMenu, programmerBtn);
   };
 }
 
@@ -2334,24 +2368,24 @@ if (clearCacheBtn) {
 
 /* ---------------- TRILHA ESTRATÉGICA ---------------- */
 trilhaBtn.onclick = () => {
-  settingsMenu.style.display = 'none';
+  closeSettingsMenu();
   showTrail();
 };
 
 examsBtn.onclick = () => {
-  settingsMenu.style.display = "none";
+  closeSettingsMenu();
   showExamMenu();
 };
 
 natReviewBtn.onclick = () => {
-  settingsMenu.style.display = 'none';
+  closeSettingsMenu();
   resetNatReviewState('wrong');
   showNatReview();
 };
 
 if (favReviewBtn) {
   favReviewBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     resetNatReviewState('favorite');
     showNatReview();
   };
@@ -2360,7 +2394,7 @@ if (favReviewBtn) {
 if (reviewModeBtn) {
   updateReviewModeButton();
   reviewModeBtn.onclick = () => {
-    settingsMenu.style.display = 'none';
+    closeSettingsMenu();
     setPostReviewMode(!postReviewMode);
   };
 }
@@ -2372,7 +2406,7 @@ function updateD1Btn(){
 toggleD1Btn.onclick = () => {
   d1Enabled = !d1Enabled;
   localStorage.setItem('d1Enabled', JSON.stringify(d1Enabled));
-  settingsMenu.style.display = 'none';
+  closeSettingsMenu();
   updateD1Btn();
   if(currentDisc === null) showMenu();
 };
