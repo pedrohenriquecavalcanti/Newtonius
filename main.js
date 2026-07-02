@@ -1115,7 +1115,7 @@ function isHandwritingStorageKey(key) {
 function shouldIncludeKeyForExport(key, mode) {
   const handwriting = isHandwritingStorageKey(key);
   if (mode === 'handwriting') return handwriting;
-  return !handwriting;
+  return true;
 }
 
 function shouldIncludeKeyForImport(key, mode) {
