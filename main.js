@@ -648,11 +648,10 @@ function smoothPdfPoint(target, previous, rawPrevious) {
 
 function getPdfEffectivePenWidth(zoom = currentPdfZoom) {
   const activeZoom = Number.isFinite(zoom) ? zoom : PDF_DEFAULT_ZOOM;
-  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
-  const desiredCssWidth = PDF_PEN_REFERENCE_WIDTH / (PDF_RENDER_QUALITY * PDF_REFERENCE_DEVICE_PIXEL_RATIO);
-  const cssWidth = desiredCssWidth * (activeZoom / PDF_DEFAULT_ZOOM);
-  return cssWidth * PDF_RENDER_QUALITY * effectiveDpr;
+  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio : PDF_REFERENCE_DEVICE_PIXEL_RATIO;
+  const effectiveDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : PDF_REFERENCE_DEVICE_PIXEL_RATIO;
+  const zoomRatio = activeZoom / PDF_DEFAULT_ZOOM;
+  return PDF_PEN_REFERENCE_WIDTH * zoomRatio * (effectiveDpr / PDF_REFERENCE_DEVICE_PIXEL_RATIO);
 }
 
 function getPdfCanvasState(canvas) {
@@ -1115,7 +1114,7 @@ function isHandwritingStorageKey(key) {
 function shouldIncludeKeyForExport(key, mode) {
   const handwriting = isHandwritingStorageKey(key);
   if (mode === 'handwriting') return handwriting;
-  return !handwriting;
+  return true;
 }
 
 function shouldIncludeKeyForImport(key, mode) {
@@ -4663,7 +4662,6 @@ function ensurePdfTouchBlocker() {
 }
 
 function preventPdfGestureZoom(event) {
-  if (!pdfIpadMode) return;
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
   event.preventDefault();
   if (typeof event.stopImmediatePropagation === 'function') {
@@ -4674,7 +4672,6 @@ function preventPdfGestureZoom(event) {
 }
 
 function handlePdfGestureWheel(event) {
-  if (!pdfIpadMode) return;
   if (!event.ctrlKey) return;
   event.preventDefault();
 }
@@ -4729,10 +4726,8 @@ function setPdfIpadMode(enabled, { forcePen = false } = {}) {
   }
   if (pdfIpadMode) {
     ensurePdfTouchBlocker();
-    attachPdfGestureBlockers();
   } else {
     detachPdfTouchBlocker();
-    detachPdfGestureBlockers();
     pdfStylusDrawingActive = false;
     resetPdfPinchPreview();
     pdfPinchState = null;
@@ -5197,7 +5192,6 @@ async function loadPdfDocument(pdfName) {
 
 function handlePdfPinchStart(event) {
   if (!pdfContainer || pdfContainer.style.display !== 'flex') return;
-  if (!pdfIpadMode) return;
   if (event.touches.length < 2) return;
   if (isPdfToolbarTarget(event.target)) return;
   const distance = getPdfTouchDistance(event.touches);
@@ -5266,6 +5260,7 @@ async function openPdf(pdfName, pages, quality = PDF_RENDER_QUALITY, zoom = null
   const wasHidden = pdfContainer.style.display !== "flex";
   cleanupStalePdfDrawings();
   ensurePdfPersistenceHandlers();
+  attachPdfGestureBlockers();
   pdfContainer.style.display = "flex";
   setBodyScrollLocked(true);
   if (wasHidden) {
@@ -5392,6 +5387,7 @@ function openGabarito(q){
 function closePdfViewer() {
   persistCurrentPdfDrawings();
   setPdfIpadMode(false);
+  detachPdfGestureBlockers();
   pdfContainer.style.display = "none";
   setBodyScrollLocked(false);
   clearPdfViewerContent();

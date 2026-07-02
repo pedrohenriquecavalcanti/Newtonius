@@ -526,12 +526,12 @@ button:hover { filter: brightness(1.2); }
   -webkit-tap-highlight-color: transparent;
 }
 #pdfViewerContainer.ipad-mode {
-  touch-action: pan-y;
+  touch-action: none;
   overscroll-behavior: contain;
 }
 #pdfViewerContainer.ipad-mode #pdfPagesWrapper,
 #pdfViewerContainer.ipad-mode .pdf-page-wrapper {
-  touch-action: pan-y;
+  touch-action: none;
 }
 #pdfPagesWrapper {
   width: 100%;

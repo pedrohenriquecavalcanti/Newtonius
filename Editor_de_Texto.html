@@ -210,7 +210,7 @@ button:hover{background:var(--accent);}button:active{transform:scale(.96);}#mess
 
   <button id="hideBtn">🤫 Ocultar Texto</button>
   <button id="clearBtn">🧹 Limpar Formatação</button>
-  <button id="insertImgBtn">📷 Inserir Imagem</button>
+  <button id="insertImgBtn" disabled aria-disabled="true" title="Inserção direta de arquivos desabilitada. Use um link de imagem (Firebase, etc.).">📷 Inserir Imagem</button>
   <input type="file" id="fileInput" accept="image/*" hidden />
 
   <button id="insertBtn">◼️ Ocultar Imagem (Tarja)</button>
@@ -552,16 +552,16 @@ clearBtn.onclick = () => {
 
 
 /* ---------- INSERIR IMAGEM ---------- */
-insertImgBtn.onclick = ()=>{saveSel();fileInput.click();};
-fileInput.onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=ev=>{insertImg(ev.target.result);fileInput.value='';};r.readAsDataURL(f);
-};
+insertImgBtn.disabled = true;
+insertImgBtn.setAttribute('aria-disabled', 'true');
+insertImgBtn.onclick = (event)=>{event.preventDefault();};
+fileInput.onchange=e=>{fileInput.value='';};
 editor.addEventListener('paste',e=>{
   for(const it of e.clipboardData.items){
     if(it.type.startsWith('image/')){
-      const f=it.getAsFile();const r=new FileReader();
-      r.onload=ev=>insertImg(ev.target.result);r.readAsDataURL(f);e.preventDefault();
+      e.preventDefault();
+      message.textContent = 'Inserção direta de imagens desabilitada. Cole um link de imagem (Firebase, etc.).';
+      break;
     }
   }
   setTimeout(()=>replaceArrows(editor,true),0);
@@ -569,7 +569,9 @@ editor.addEventListener('paste',e=>{
 editor.addEventListener('drop',e=>{
   for(const f of e.dataTransfer.files){
     if(f.type.startsWith('image/')){
-      const r=new FileReader();r.onload=ev=>insertImg(ev.target.result);r.readAsDataURL(f);e.preventDefault();
+      e.preventDefault();
+      message.textContent = 'Inserção direta de imagens desabilitada. Use um link de imagem.';
+      break;
     }
   }
 });
