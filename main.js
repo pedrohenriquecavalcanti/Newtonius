@@ -517,7 +517,8 @@ function renderReviewSettingsMenu() {
     btn.type = 'button';
     btn.textContent = REVIEW_MODE_LABELS[mode] || mode;
     if (currentModes.includes(mode)) btn.classList.add('active');
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       const nextModes = currentModes.includes(mode)
         ? currentModes.filter(item => item !== mode)
         : [...currentModes, mode];
@@ -544,7 +545,8 @@ function renderReviewSettingsMenu() {
     btn.type = 'button';
     btn.textContent = value;
     if (selectedDisciplines.includes(value)) btn.classList.add('active');
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       const nextDiscs = selectedDisciplines.includes(value)
         ? selectedDisciplines.filter(item => item !== value)
         : [...selectedDisciplines, value];
@@ -2566,8 +2568,11 @@ function openPicker(callback){
     }else if(selected==='__review__'){
       pickerComment.style.display='none';
       pickerMicro.style.display='none';
-      pickerExamMode.style.display='none';
+      pickerExamMode.style.display='';
       pickerExam.style.display='none';
+      pickerExamMode.innerHTML =
+        '<option value="wrong">Erradas</option>'+
+        '<option value="favorite">Favoritas</option>';
       pickerReviewDisc.style.display='';
       pickerSub.style.display='';
       pickerReviewDisc.innerHTML='';
@@ -2655,7 +2660,7 @@ function openPicker(callback){
         alert('Selecione uma disciplina para revisar.');
         return;
       }
-      callback({review:true, mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
+      callback({review:true, kind: pickerExamMode.value === 'favorite' ? 'favorite' : 'wrong', mode: reviewMode, disc: reviewDisc, sub: pickerSub.value});
     }else{
       callback({disc: pickerDisc.value, sub: pickerSub.value});
     }
@@ -2802,7 +2807,8 @@ function renderTrailDay(day,expand){
         subj.className='trail-subject trail-review';
         const isAllDisc = s.disc === REVIEW_ALL_DISC;
         const hasAll = isAllDisc || s.sub === ALL_SUB;
-        const labelParts = ['Revisão'];
+        const reviewKind = s.kind === 'favorite' ? 'favorite' : 'wrong';
+        const labelParts = [reviewKind === 'favorite' ? 'Revisão (Favoritas)' : 'Revisão (Erradas)'];
         const mode = s.mode || normalizeReviewModes(natReviewState.modes)[0] || 'nat';
         const areaLabel = REVIEW_MODE_LABELS[mode] || 'Área';
         if(isAllDisc){
@@ -2818,13 +2824,13 @@ function renderTrailDay(day,expand){
           trailReturn=dayStr;
           trailReturnSub=false;
           const filter = isAllDisc
-            ? {mode, disc:REVIEW_ALL_DISC}
-            : {mode, disc:s.disc, sub:s.sub};
+            ? {mode, kind: reviewKind, disc:REVIEW_ALL_DISC}
+            : {mode, kind: reviewKind, disc:s.disc, sub:s.sub};
           showNatReview(filter);
         };
         const count=document.createElement('span');
         count.className='trail-count';
-        const countFilter = isAllDisc ? { mode } : { mode, disc:s.disc, sub:s.sub };
+        const countFilter = isAllDisc ? { mode, kind: reviewKind } : { mode, kind: reviewKind, disc:s.disc, sub:s.sub };
         count.textContent=countNatReviewItems(countFilter).toString();
         const rm=document.createElement('button');
         rm.className='trail-remove';
@@ -3318,10 +3324,15 @@ function showNatReview(filter=null){
   currentExamMode = reviewModes[0] || 'nat';
   currentView = 'review';
   currentMicroSimEntry = null;
+  const keepReviewFiltersOpen = !!(reviewSettingsMenu && reviewSettingsMenu.style.display === 'flex');
   leaveHome();
   toggleSettingsVisibility(false);
   toggleReviewSettingsVisibility(true);
   renderReviewSettingsMenu();
+  if (keepReviewFiltersOpen && reviewSettingsMenu && reviewSettingsBtn) {
+    reviewSettingsMenu.style.display = 'flex';
+    reviewSettingsBtn.setAttribute('aria-expanded', 'true');
+  }
   const areaLabel = reviewModes.length
     ? reviewModes.map(mode => REVIEW_MODE_LABELS[mode] || mode).join(' + ')
     : 'Nenhuma área';
